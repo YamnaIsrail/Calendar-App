@@ -1,6 +1,9 @@
 import 'dart:ui';
+import 'package:calender_app/screens/question/ques_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../widgets/scrollable wheel.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -31,14 +34,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFFEB1D98).withOpacity(0.5),
-
-                      Color(0xFFffff).withOpacity(0.5),
-                    ]
-                  ),
-                  ),
+                  gradient: LinearGradient(colors: [
+                    Color(0xFFEB1D98).withOpacity(0.5),
+                    Color(0xFFffff).withOpacity(0.5),
+                  ]),
+                ),
               ),
             ),
             Positioned(
@@ -75,7 +75,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image(image: AssetImage("img.png"), height: 234, width: 345,),
+                  Image(
+                    image: AssetImage("assets/img.png"),
+                    height: 234,
+                    width: 345,
+                  ),
                   SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.all(15),
@@ -85,38 +89,46 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        minimumSize: Size(double.infinity, 50), // Expand to full width with a minimum height
-
+                        minimumSize: Size(double.infinity,
+                            50), // Expand to full width with a minimum height
                       ),
-                      onPressed: ()
-                      {
-                       // Navigator.push(context, MaterialPageRoute(builder: (context)=>question1()));
+                      onPressed: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => ques(
+                                Statement: "How many days does your period usually last?",
+                              Caption: "Bleeding usually lasts between 4-7 days"
+
+                            )
+                            )
+                        );
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(10),
                         child: Text.rich(
                             textAlign: TextAlign.center,
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: "Let's start\n", // First line with a newline
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16, // Increased font size for the first line
-                                  fontWeight: FontWeight.bold, // Bold style for the first line
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text:
+                                      "Let's start\n", // First line with a newline
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize:
+                                        16, // Increased font size for the first line
+                                    fontWeight: FontWeight
+                                        .bold, // Bold style for the first line
+                                  ),
                                 ),
-                              ),
-                              TextSpan(
-                                text: "I am a new member",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14, // Normal font size for the second line
+                                TextSpan(
+                                  text: "I am a new member",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize:
+                                        14, // Normal font size for the second line
+                                  ),
                                 ),
-                              ),
-                            ],
-
-                          )
-                        ),
+                              ],
+                            )),
                       ),
                     ),
                   ),
@@ -129,8 +141,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        minimumSize: Size(double.infinity, 50), // Expand to full width with a minimum height
-
+                        minimumSize: Size(double.infinity,
+                            50), // Expand to full width with a minimum height
                       ),
                       onPressed: () {},
                       child: Padding(
@@ -140,28 +152,29 @@ class _HomeScreenState extends State<HomeScreen> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: "Partner mode \n", // First line with a newline
+                                  text:
+                                      "Partner mode \n", // First line with a newline
                                   style: TextStyle(
                                     color: Colors.black,
-                                    fontSize: 16, // Increased font size for the first line
-                                    fontWeight: FontWeight.bold, // Bold style for the first line
+                                    fontSize:
+                                        16, // Increased font size for the first line
+                                    fontWeight: FontWeight
+                                        .bold, // Bold style for the first line
                                   ),
                                 ),
                                 TextSpan(
                                   text: "I have an invitation code",
                                   style: TextStyle(
                                     color: Colors.black,
-                                    fontSize: 14, // Normal font size for the second line
+                                    fontSize:
+                                        14, // Normal font size for the second line
                                   ),
                                 ),
                               ],
-
-                            )
-                        ),
+                            )),
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),
