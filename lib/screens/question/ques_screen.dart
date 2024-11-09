@@ -1,53 +1,61 @@
-import 'package:calender_app/widgets/scrollable%20wheel.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/buttons.dart';
+import '../../widgets/question_appbar.dart';// Import your custom button
 
-class ques extends StatelessWidget {
-  String Statement;
-  String Caption;
-   ques({required String this.Statement, required String this.Caption});
+class QuestionScreen extends StatelessWidget {
+  final String statement;
+  final String caption;
+  final Widget wheel;
+  final VoidCallback onNextPressed;
+
+  QuestionScreen({
+    Key? key,
+    required this.statement,
+    required this.caption,
+    required this.wheel,
+    required this.onNextPressed,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Text(Statement, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
-          Text(Caption),
-          Container(
-            height: 200,
-              child: wheel()),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFEB1D98),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                minimumSize: Size(double.infinity,
-                    50), // Expand to full width with a minimum height
-              ),
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => ques(
-                        Statement: "How many days does your period usually last?",
-                        Caption: "Bleeding usually lasts between 4-7 days"
+      body: Container(
+        padding: EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          image: DecorationImage(
 
-                    )
-                    )
-                );
-              },
-              child: Text("Next", style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16
-              ),),
-            ),
+            image: AssetImage('assets/bg.jpg'),
+            fit: BoxFit.cover,
           ),
-          Text("I am not sure")
-        ],
+          gradient: LinearGradient(
+            colors: [Color(0xFFE8EAF6), Color(0xFFF3E5F5)], // Light gradient background
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(
+              statement,
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              caption,
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            Container(height: 200, child: wheel),
+            // Use CustomButton with a custom color
+            CustomButton(
+              text: "Next",
+              onPressed: onNextPressed,
+              backgroundColor: Color(0xFFEB1D98), // Example of a different color
+            ),
+            Text("I am not sure"),
+          ],
+        ),
       ),
     );
   }

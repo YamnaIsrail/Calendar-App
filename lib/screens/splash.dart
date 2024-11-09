@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   width: showRipple ? 208 : 0,  // Animate width
                   height: showRipple ? 58 : 0,   // Animate height
                   decoration: BoxDecoration(
-                    color: Color.fromRGBO(243, 243, 243, 1),
+                    color: Color.fromRGBO(215, 210, 210, 1.0),
                     borderRadius: BorderRadius.all(Radius.elliptical(208, 58)),
                   ),
                 ),
