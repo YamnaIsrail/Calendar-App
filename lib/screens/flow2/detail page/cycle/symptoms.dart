@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../cycle_page_components/category_grid.dart';
-import '../cycle_page_components/category_selection.dart';
-
+import 'cycle_page_components/category_grid.dart';
 class symptoms extends StatelessWidget {
   const symptoms({Key? key}) : super(key: key);
 

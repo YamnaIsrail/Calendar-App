@@ -1,9 +1,11 @@
-import 'package:calender_app/screens/flow2/today.dart';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'analysis.dart';
-import 'calendar.dart';
-import 'my_cycle.dart';
+import 'detail page/self_care/foot.dart';
+import 'detail page/self_care/self_care.dart';
+import 'flow_2_screens_main/analysis_main.dart';
+import 'flow_2_screens_main/calendar.dart';
+import 'flow_2_screens_main/my_cycle_main.dart';
+import 'flow_2_screens_main/today.dart';
 
 
 class Flow2Page extends StatefulWidget {
@@ -18,7 +20,7 @@ class _Flow2PageState extends State<Flow2Page> {
     CycleStatusScreen(),
     CustomCalendar(),
     CycleTrackerScreen(),
-    HeartScreen(),
+    SelfCare(),
     Analysis(),
   ];
 

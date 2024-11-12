@@ -1,7 +1,7 @@
-// lib/widgets/water_intake_section.dart
 import 'package:flutter/material.dart';
 
-import '../detail page/settings.dart';
+import '../water.dart';
+
 
 class WaterIntakeSection extends StatelessWidget {
   @override

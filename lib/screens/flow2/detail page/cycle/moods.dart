@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
 
-import '../cycle_page_components/category_grid.dart';
-
+import 'cycle_page_components/category_grid.dart';
 class moods extends StatelessWidget {
   const moods({Key? key}) : super(key: key);
 

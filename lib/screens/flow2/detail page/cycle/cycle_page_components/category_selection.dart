@@ -1,9 +1,8 @@
-import 'package:calender_app/screens/flow2/cycle_page_components/category_grid.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
-import 'dart:async';
-import 'package:flutter_svg/flutter_svg.dart';
+
+import 'category_grid.dart';
 
 class CategorySection extends StatelessWidget {
   final String title;

@@ -1,6 +1,5 @@
+import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
-
-import '../../../widgets/contain.dart';
 
 class CycleInfoCard extends StatelessWidget {
   final String title;

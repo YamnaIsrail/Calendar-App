@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import '../../widgets/contain.dart';
-import 'cycle_page_components/category_selection.dart';
-import 'cycle_page_components/cycle_info_card.dart';
-import 'cycle_page_components/date_navigation.dart';
-import 'cycle_page_components/flow_section.dart';
-import 'cycle_page_components/note_section.dart';
-import 'cycle_page_components/periods_button.dart';
-import 'cycle_page_components/water_intake_section.dart';
-import 'detail page/cycle/intercourse.dart';
-import 'detail page/medicine.dart';
-import 'detail page/cycle/moods.dart';
-import 'detail page/cycle/my_cycle.dart';
-import 'detail page/ovulation_screen.dart';
-import 'detail page/cycle/symptoms.dart';
+import '../../../widgets/contain.dart';
+import '../detail page/cycle/cycle_page_components/category_selection.dart';
+import '../detail page/cycle/cycle_page_components/cycle_info_card.dart';
+import '../detail page/cycle/cycle_page_components/date_navigation.dart';
+import '../detail page/cycle/cycle_page_components/flow_section.dart';
+import '../detail page/cycle/cycle_page_components/note_section.dart';
+import '../detail page/cycle/cycle_page_components/periods_button.dart';
+import '../detail page/cycle/cycle_page_components/water_intake_section.dart';
+import '../detail page/cycle/intercourse.dart';
+import '../detail page/cycle/medicine.dart';
+import '../detail page/cycle/moods.dart';
+import '../detail page/cycle/my_cycle.dart';
+import '../detail page/cycle/ovulation_screen.dart';
+import '../detail page/cycle/symptoms.dart';
 
 class CycleTrackerScreen extends StatelessWidget {
   @override

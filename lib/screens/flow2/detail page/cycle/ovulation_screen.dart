@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../widgets/buttons.dart';
+import '../../../../widgets/buttons.dart';
 
 class OvulationScreen extends StatelessWidget {
   @override
