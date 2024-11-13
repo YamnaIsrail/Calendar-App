@@ -55,6 +55,7 @@ class Welldone extends StatelessWidget {
                     height: 40,
                   ),
                   CustomButton(
+                    backgroundColor: primaryColor,
                     text: "Done",
                     onPressed: () {
                       Navigator.push(context,

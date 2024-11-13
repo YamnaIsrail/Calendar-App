@@ -11,6 +11,8 @@ DateTime lastPeriodStartDate = DateTime(2020, 1, 1); // Default start date
 Color primaryColor= Color(0xFFEB1D98);
 
 Color secondaryColor= Color(0xFFCFDCFF);
+Color greyBlueColor= Color(0xFFBAC3E3);
+
 
 class AppTheme {
   static const LinearGradient primaryGradient = LinearGradient(

@@ -1,4 +1,5 @@
 import 'package:calender_app/screens/flow2/detail%20page/self_care/pain_relief.dart';
+import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/background.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -89,7 +90,7 @@ class foot extends StatelessWidget {
               )
               );
 
-            })
+            }, backgroundColor: primaryColor,)
 
           ],
         )

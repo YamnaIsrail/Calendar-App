@@ -1,7 +1,7 @@
 import 'package:calender_app/screens/question/q1.dart';
 import 'package:flutter/material.dart';
 import '../widgets/background.dart';
-import '../x.dart';
+import 'partner_mode/partner_enter_code.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -71,7 +71,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => pic()));
+                      MaterialPageRoute(builder: (context) => PartnerEnterCode()));
 
                 },
                 child: Padding(

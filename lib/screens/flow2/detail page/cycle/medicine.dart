@@ -1,3 +1,4 @@
+import 'package:calender_app/screens/globals.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../widgets/buttons.dart';
@@ -89,7 +90,7 @@ class ContraceptivePage extends StatelessWidget {
             ),
 
             CustomButton(
-
+                backgroundColor: primaryColor,
               onPressed: () {
                 // Handle the "Choose" action here
                 // For example, show a dialog or navigate to another screen

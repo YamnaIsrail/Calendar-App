@@ -1,3 +1,4 @@
+import 'package:calender_app/screens/globals.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../widgets/buttons.dart';
@@ -35,8 +36,9 @@ class OvulationScreen extends StatelessWidget {
             SizedBox(height: 20),
             CustomButton(
               text: 'Save',
-              onPressed: () {  }
-              ,)
+              onPressed: () {  },
+                backgroundColor: primaryColor),
+
           ],
         ),
       ),

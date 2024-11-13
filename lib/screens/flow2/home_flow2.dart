@@ -52,15 +52,4 @@ class _Flow2PageState extends State<Flow2Page> {
   }
 }
 
-class HeartScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Heart Page',
-        style: TextStyle(fontSize: 24),
-      ),
-    );
-  }
-}
 

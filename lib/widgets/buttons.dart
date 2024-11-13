@@ -9,7 +9,7 @@ class CustomButton extends StatelessWidget {
     Key? key,
     required this.text,
     required this.onPressed,
-    this.backgroundColor = const Color(0xFFEB1D98),
+    required this.backgroundColor,
   }) : super(key: key);
 
   @override
@@ -20,7 +20,7 @@ class CustomButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(15),
           ),
           minimumSize: const Size(double.infinity, 50), // Full width with minimum height
         ),

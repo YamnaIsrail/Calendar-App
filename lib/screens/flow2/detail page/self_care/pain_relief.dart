@@ -114,7 +114,9 @@ class painRelief extends StatelessWidget {
                 ),
               ),
             ),
-            CustomButton(text: "Start", onPressed: ()
+            CustomButton(text: "Start",
+            backgroundColor: primaryColor,
+                onPressed: ()
             {
 
               Navigator.push(
