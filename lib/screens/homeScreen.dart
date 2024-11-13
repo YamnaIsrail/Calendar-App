@@ -1,6 +1,7 @@
 import 'package:calender_app/screens/question/q1.dart';
 import 'package:flutter/material.dart';
 import '../widgets/background.dart';
+import '../x.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -68,7 +69,11 @@ class HomeScreen extends StatelessWidget {
                   ),
                   minimumSize: Size(double.infinity, 50),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => pic()));
+
+                },
                 child: Padding(
                   padding: const EdgeInsets.all(10),
                   child: Text.rich(
