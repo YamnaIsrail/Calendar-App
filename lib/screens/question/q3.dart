@@ -24,19 +24,33 @@ class _QuestionScreen3State extends State<QuestionScreen3> {
       "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
 
-    return Scaffold(
-      appBar: QuestionAppBar(
-        currentPage: 3,
-        totalPages: 3,
-        onBack: () {
-          Navigator.pop(context);
-        },
-        onCancel: () {
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-        },
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        image: DecorationImage(
+
+          image: AssetImage('assets/bg.jpg'),
+          fit: BoxFit.cover,
+        ),
+        gradient: LinearGradient(
+          colors: [Color(0xFFE8EAF6), Color(0xFFF3E5F5)], // Light gradient background
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
       ),
-      body: BackgroundWidget(
-        child: QuestionScreen(
+      child: Scaffold(
+        backgroundColor: Colors.transparent, // Set transparent to show the gradient
+        appBar: QuestionAppBar(
+          currentPage: 3,
+          totalPages: 3,
+          onBack: () {
+            Navigator.pop(context);
+          },
+          onCancel: () {
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+          },
+        ),
+        body: QuestionScreen(
           statement: "What’s the start date of your last period?",
           caption: "",
           wheel: Stack(

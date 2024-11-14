@@ -14,7 +14,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     appBar: AppBar(
+      backgroundColor: Colors.transparent, // Set transparent to show the gradient
+      appBar: AppBar(
         backgroundColor: Colors.transparent, // Set transparent to show the gradient
         elevation: 0, // Remove shadow if needed
         leading: IconButton(

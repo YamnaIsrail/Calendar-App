@@ -15,15 +15,10 @@ class QuestionAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'), // Use AssetImage for local images
-          fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
-        ),
-      ),
-      child: AppBar(
-        backgroundColor: Colors.transparent, // Set transparent to show the gradient
+    return Scaffold(
+      backgroundColor: Colors.transparent,  
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,  
         elevation: 0, // Remove shadow if needed
         leading: IconButton(
           icon: Icon(Icons.arrow_back),

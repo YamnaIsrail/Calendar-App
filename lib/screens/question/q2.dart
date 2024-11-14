@@ -20,62 +20,78 @@ class _QuestionScreen2State extends State<QuestionScreen2> {
   Widget build(BuildContext context) {
     List<String> cycleDays = List.generate(31, (index) => (index + 1).toString());
 
-    return Scaffold(
-      appBar: QuestionAppBar(
-        currentPage: 2,
-        totalPages: 3,
-        onBack: () {
-          Navigator.pop(context);
-        },
-        onCancel: () {
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-        },
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        image: DecorationImage(
+
+          image: AssetImage('assets/bg.jpg'),
+          fit: BoxFit.cover,
+        ),
+        gradient: LinearGradient(
+          colors: [Color(0xFFE8EAF6), Color(0xFFF3E5F5)], // Light gradient background
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
       ),
-      body: QuestionScreen(
-        statement: "How often does your cycle occur?",
-        caption: "Your cycle usually happens every 21-35 days.",
-        wheel: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Align(
-                alignment: Alignment(0, -0.5),
-                child: Container(
-                  color: Color(0xFFAFD1F3).withOpacity(0.3),
-                  height: 40,
-                  width: double.infinity,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: QuestionAppBar(
+          currentPage: 2,
+          totalPages: 3,
+          onBack: () {
+            Navigator.pop(context);
+          },
+          onCancel: () {
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+          },
+        ),
+        body: QuestionScreen(
+          statement: "How often does your cycle occur?",
+          caption: "Your cycle usually happens every 21-35 days.",
+          wheel: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Align(
+                  alignment: Alignment(0, -0.5),
+                  child: Container(
+                    color: Color(0xFFAFD1F3).withOpacity(0.3),
+                    height: 40,
+                    width: double.infinity,
+                  ),
                 ),
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Wheel(
-                  items: cycleDays,
-                  selectedColor: Colors.black,
-                  unselectedColor: Colors.grey,
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      globals.selectedCycleDays = index + 1; // Use the global variable
-                    });
-                  },
-                ),
-                Text(
-                  "Days",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Wheel(
+                    items: cycleDays,
+                    selectedColor: Colors.black,
+                    unselectedColor: Colors.grey,
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        globals.selectedCycleDays = index + 1; // Use the global variable
+                      });
+                    },
+                  ),
+                  Text(
+                    "Days",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          onNextPressed: () {
+            print("Selected Cycle Days: ${globals.selectedCycleDays}");
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => QuestionScreen3()),
+            );
+          },
         ),
-        onNextPressed: () {
-          print("Selected Cycle Days: ${globals.selectedCycleDays}");
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => QuestionScreen3()),
-          );
-        },
       ),
     );
   }

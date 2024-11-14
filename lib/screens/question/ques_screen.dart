@@ -19,19 +19,7 @@ class QuestionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        image: DecorationImage(
 
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover,
-        ),
-        gradient: LinearGradient(
-          colors: [Color(0xFFE8EAF6), Color(0xFFF3E5F5)], // Light gradient background
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
