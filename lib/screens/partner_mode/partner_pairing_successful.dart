@@ -18,7 +18,9 @@ class PartnerPairing extends StatelessWidget {
         ),
       ),
       child: Scaffold(
-       body: Padding(
+        backgroundColor: Colors.transparent,
+
+        body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -47,21 +49,7 @@ class PartnerPairing extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextFormField(
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          hintText: "Enter code",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),

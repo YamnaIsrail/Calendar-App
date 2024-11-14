@@ -17,6 +17,7 @@ class PartnerEnterCode extends StatelessWidget {
         ),
       ),
       child: Scaffold(
+        backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text("Partner Mode"),
             leading: CircleAvatar(
@@ -51,7 +52,7 @@ class PartnerEnterCode extends StatelessWidget {
                         "The code can be found in the message your partner has sent you.",
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: Colors.black,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -59,13 +60,13 @@ class PartnerEnterCode extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[200],
+                          color: Color(0xFFD9D9D9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: TextFormField(
                           textAlign: TextAlign.center,
                           decoration: InputDecoration(
-                            hintText: "Enter code",
+                          //  hintText: "Enter code",
                             border: InputBorder.none,
                           ),
                         ),

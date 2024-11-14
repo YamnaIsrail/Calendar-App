@@ -46,7 +46,7 @@ class PartnerNicknameScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -110,7 +110,7 @@ class PartnerNicknameScreen extends StatelessWidget {
                   "Enter a nickname that your partner prefers.",
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.grey[600],
+                    color: Colors.black,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -118,13 +118,13 @@ class PartnerNicknameScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Color(0xFFD9D9D9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextFormField(
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
-                      hintText: "Enter nickname",
+                      //hintText: "Enter nickname",
                       border: InputBorder.none,
                     ),
                   ),

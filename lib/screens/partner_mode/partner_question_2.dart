@@ -18,19 +18,73 @@ class PartnerSweetNicknameScreen extends StatelessWidget {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
+        appBar:AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Gradient Progress Bar
+              Container(
+                width: 100, // Adjust width for the progress bar
+                height: 4,  // Height for the progress bar
+                decoration: BoxDecoration(
+                  color: Colors.grey[300], // Background color of progress bar
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Stack(
+                  children: [
+                    // Background of the progress bar
+                    Container(
+                      width: double.infinity,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    // Gradient-filled progress
+                    FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: 1.0, // Adjust based on progress (0.0 to 1.0)
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(2),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.purpleAccent, // Start color of gradient
+                              Colors.pinkAccent,   // End color of gradient
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
-              onPressed: () {}, // Add skip functionality here
-              child: Text("Skip", style: TextStyle(color: Colors.grey[700])),
+              onPressed: () {
+                // Define skip functionality
+              },
+              child: Text(
+                "Skip",
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+          centerTitle: true,
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -72,6 +126,7 @@ class PartnerSweetNicknameScreen extends StatelessWidget {
                 child: CustomButton(
                   text: "Next",
                   onPressed: () {
+                    // Navigate to next screen
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => HomePartnerFlow()),

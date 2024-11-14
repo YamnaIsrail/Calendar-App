@@ -1,4 +1,6 @@
 import 'package:calender_app/screens/cycle_phase/fertile.dart';
+import 'package:calender_app/screens/settings/settings_page.dart';
+import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
 import '../../../widgets/cycle_phase_card.dart';
 
@@ -9,13 +11,22 @@ class CycleStatusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Menstrual Cycle Tracker'),
+      backgroundColor: Colors.pinkAccent,
+      appBar: CustomAppBar(
+        pageTitle: "",
+        onCancel: () {  },
+        onBack: () {
+          Navigator.push(context,
+            MaterialPageRoute(
+                builder:
+                    (context)=> SettingsPage()
+            )
+        ); },
       ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/bg.jpg'), // Use AssetImage for local images
+            image: AssetImage('assets/bg.jpg'),
             fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
           ),
         ),
