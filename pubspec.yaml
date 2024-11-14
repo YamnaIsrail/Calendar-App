@@ -50,8 +50,10 @@ flutter:
     - assets/self_care/
     - assets/phases/
     - assets/partner_mode/
+    - assets/pregnancy/
 
-      #    - assets/emoji/
+
+    #    - assets/emoji/
 #    - assets/drink/
   # fonts:
   #   - family: Schyler

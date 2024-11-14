@@ -10,28 +10,27 @@ import '../../globals.dart' as globals;
 class CycleStatusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.pinkAccent,
-      appBar: CustomAppBar(
-        pageTitle: "",
-        onCancel: () {  },
-        onBack: () {
-          Navigator.push(context,
-            MaterialPageRoute(
-                builder:
-                    (context)=> SettingsPage()
-            )
-        ); },
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/bg.jpg'),
-            fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/bg.jpg'),
+          fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
         ),
-
-        child: Column(
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent, // Set transparent to show the gradient
+        appBar: CustomAppBar(
+          pageTitle: "",
+          onCancel: () {  },
+          onBack: () {
+            Navigator.push(context,
+              MaterialPageRoute(
+                  builder:
+                      (context)=> SettingsPage()
+              )
+          ); },
+        ),
+        body: Column(
           children: [
             Expanded(
               child: Stack(

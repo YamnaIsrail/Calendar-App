@@ -3,41 +3,39 @@ import 'package:flutter/material.dart';
 class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  final Color backgroundColor; // Add this line
+  final Color backgroundColor;
+  final Color? textColor; // Optional text color parameter
 
   const CustomButton({
     Key? key,
     required this.text,
     required this.onPressed,
     required this.backgroundColor,
+    this.textColor, // Allow passing a custom text color
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          minimumSize: const Size(double.infinity, 50), // Full width with minimum height
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
         ),
-        onPressed: onPressed,
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+        minimumSize: const Size(double.infinity, 50), // Full width with minimum height
+      ),
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: TextStyle(
+          color: textColor ?? Colors.white, // Use provided textColor or default to white
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
         ),
       ),
     );
   }
 }
-
 
 class CustomButton2 extends StatelessWidget {
   final String text;
@@ -69,7 +67,7 @@ class CustomButton2 extends StatelessWidget {
           style: const TextStyle(
             color: Color(0xFF301B86),
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 14,
           ),
         ),
       ),

@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class BackgroundWidget extends StatelessWidget {
-  final Widget child; // To allow other widgets to be placed on top of the background
-
+  final Widget child;
   const BackgroundWidget({Key? key, required this.child}) : super(key: key);
 
   @override

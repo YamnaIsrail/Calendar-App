@@ -1,3 +1,5 @@
+import 'package:calender_app/screens/settings/settings_page.dart';
+import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -21,106 +23,130 @@ class CustomCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Custom Calendar'),
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/bg.jpg'),
+          fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
+        ),
       ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: CustomAppBar(
+        pageTitle: "",
+        onCancel: () {  },
+        onBack: () {
+          Navigator.push(context,
+              MaterialPageRoute(
+                  builder:
+                      (context)=> SettingsPage()
+              )
+          ); },
+      ),
+
       body: SingleChildScrollView(
 
-        child: Column(
-          children: [
-            SizedBox(
-              height: 350,
-             // width: 350,
-              child: TableCalendar(
-                firstDay: DateTime.utc(2024, 1, 1),
-                lastDay: DateTime.utc(2024, 12, 31),
-                focusedDay: DateTime.now(),
-                calendarBuilders: CalendarBuilders(
-                  defaultBuilder: (context, date, focusedDay) {
-                    if (cycleDays.contains(date)) {
-                      return Container(
-                        color: Colors.red,
-                        child: Center(
-                          child: Text(
-                            date.day.toString(),
-                            style: TextStyle(color: Colors.black),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Text("Good Morning"),
+              ),
+              Container(
+                color: Colors.white,
+                height: 350,
+               // width: 350,
+                child: TableCalendar(
+                  firstDay: DateTime.utc(2024, 1, 1),
+                  lastDay: DateTime.utc(2024, 12, 31),
+                  focusedDay: DateTime.now(),
+                  calendarBuilders: CalendarBuilders(
+                    defaultBuilder: (context, date, focusedDay) {
+                      if (cycleDays.contains(date)) {
+                        return Container(
+                          color: Colors.red,
+                          child: Center(
+                            child: Text(
+                              date.day.toString(),
+                              style: TextStyle(color: Colors.black),
+                            ),
                           ),
-                        ),
-                      );
-                    } else if (predictedPeriod.contains(date)) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.blue, width: 2),
-                        ),
-                        child: Center(child: Text(date.day.toString())),
-                      );
-                    } else if (fertileWindow.contains(date)) {
-                      return Container(
-                        color: Colors.purple[100],
-                        child: Center(child: Text(date.day.toString())),
-                      );
-                    }
-                    return null;
-                  },
-                ),
-                calendarStyle: CalendarStyle(
-                  defaultTextStyle: TextStyle(color: Colors.black),
-                  weekendTextStyle: TextStyle(color: Colors.red),
-                ),
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
+                        );
+                      } else if (predictedPeriod.contains(date)) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.blue, width: 2),
+                          ),
+                          child: Center(child: Text(date.day.toString())),
+                        );
+                      } else if (fertileWindow.contains(date)) {
+                        return Container(
+                          color: Colors.purple[100],
+                          child: Center(child: Text(date.day.toString())),
+                        );
+                      }
+                      return null;
+                    },
+                  ),
+                  calendarStyle: CalendarStyle(
+                    defaultTextStyle: TextStyle(color: Colors.black),
+                    weekendTextStyle: TextStyle(color: Colors.red),
+                  ),
+                  headerStyle: HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
 
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCycleInfoCard(
-                    title: ' Started June 27',
-                    subtitle: '18 days ago',
-                    progressLabelStart: 'Oct 3',
-                    progressLabelEnd: 'Today',
-                    progressValue: 0.55, icon: Icons.timer_outlined,
-                  ),
-                  SizedBox(height: 16),
-                  _buildCycleInfoCard(
-                    icon: Icons.water_drop,
-                    title: 'Period Length 4 days',
-                    subtitle: 'Normal',
-                    progressLabelStart: 'Oct 3',
-                    progressLabelEnd: 'Today',
-                    progressValue: 0.55,
-                  ),
-                  SizedBox(height: 16),
-                  _buildCycleInfoCard(
-                    icon: Icons.replay_5,
-                    title: 'cycle length',
-                    subtitle: 'HIGH - Chance of getting periods',
-                    progressLabelStart: 'Oct 3',
-                    progressLabelEnd: 'Today',
-                    progressValue: 0.55,
-                  ),
-                ],
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCycleInfoCard(
+                      title: ' Started June 27',
+                      subtitle: '18 days ago',
+                      progressLabelStart: 'Oct 3',
+                      progressLabelEnd: 'Today',
+                      progressValue: 0.55, icon: Icons.timer_outlined,
+                    ),
+                    SizedBox(height: 16),
+                    _buildCycleInfoCard(
+                      icon: Icons.water_drop,
+                      title: 'Period Length 4 days',
+                      subtitle: 'Normal',
+                      progressLabelStart: 'Oct 3',
+                      progressLabelEnd: 'Today',
+                      progressValue: 0.55,
+                    ),
+                    SizedBox(height: 16),
+                    _buildCycleInfoCard(
+                      icon: Icons.replay_5,
+                      title: 'cycle length',
+                      subtitle: 'HIGH - Chance of getting periods',
+                      progressLabelStart: 'Oct 3',
+                      progressLabelEnd: 'Today',
+                      progressValue: 0.55,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            //   child: ElevatedButton(
-            //     onPressed: () {},
-            //     style: ElevatedButton.styleFrom(
-            //       foregroundColor: Colors.white,
-            //       backgroundColor: Colors.pink[500],
-            //     ),
-            //     child: Text('Update Cycle Data'),
-            //   ),
-            // ),
-          ],
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              //   child: ElevatedButton(
+              //     onPressed: () {},
+              //     style: ElevatedButton.styleFrom(
+              //       foregroundColor: Colors.white,
+              //       backgroundColor: Colors.pink[500],
+              //     ),
+              //     child: Text('Update Cycle Data'),
+              //   ),
+              // ),
+            ],
+          ),
         ),
       ),
     );
