@@ -30,8 +30,7 @@ Future<List<CategoryItem>> loadCategoryItems(String folderName) async {
 
 class CategoryGrid extends StatelessWidget {
   final String folderName;
-  final int? itemCount; // Optional parameter for item count
-
+  final int? itemCount;
   const CategoryGrid({required this.folderName, this.itemCount, Key? key}) : super(key: key);
 
   @override
