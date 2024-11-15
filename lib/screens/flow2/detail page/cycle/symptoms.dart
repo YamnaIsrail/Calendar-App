@@ -12,11 +12,23 @@ class symptoms extends StatelessWidget {
         scrollDirection: Axis.vertical,
         child: Column(
           children: [
+            Text("Head", style: TextStyle(fontWeight: FontWeight.bold),),
             CategoryGrid(folderName: 'head',),
+
+            Text("Body", style: TextStyle(fontWeight: FontWeight.bold),),
             CategoryGrid(folderName: 'body',),
+
+            Text("Cervix", style: TextStyle(fontWeight: FontWeight.bold),),
             CategoryGrid(folderName: 'cervix',),
+
+            Text("Fluid", style: TextStyle(fontWeight: FontWeight.bold),),
             CategoryGrid(folderName: 'fluid',),
-            CategoryGrid(folderName: 'head',),
+
+            Text("Abdomen", style: TextStyle(fontWeight: FontWeight.bold),),
+            CategoryGrid(folderName: 'abdomen',),
+
+            Text("Mental", style: TextStyle(fontWeight: FontWeight.bold),),
+            CategoryGrid(folderName: 'mental',),
 
 
           ],
@@ -25,3 +37,4 @@ class symptoms extends StatelessWidget {
     );
   }
 }
+

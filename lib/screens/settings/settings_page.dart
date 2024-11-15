@@ -1,4 +1,5 @@
 import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/screens/settings/calendar_setting.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'partner_info.dart';
 import 'period_length.dart';
 import 'pregnancy_mode/pregnancy_mode_on.dart';
 import 'reminder.dart';
+import 'show_hide_option.dart';
 import 'track_cycle.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -91,7 +93,7 @@ class UserProfileSection extends StatelessWidget {
       ),
       child: Row(children: [
         CircleAvatar(
-          backgroundImage: AssetImage('assets/profile.jpg'),
+          //backgroundImage: AssetImage('assets/profile.jpg'),
           child: Icon(
             Icons.person,
           ),
@@ -279,8 +281,21 @@ class LanguageOptionSection extends StatelessWidget {
       child: Column(
         children: [
           SettingsOption(icon: Icons.language, title: "Language Options"),
-          SettingsOption(icon: Icons.visibility, title: "Show or Hide Options"),
-          SettingsOption(icon: Icons.calendar_today, title: "Calendar"),
+          SettingsOption(icon: Icons.visibility, title: "Show or Hide Options",  onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ShowHideOption()),
+            );
+          }),
+          SettingsOption(icon: Icons.calendar_today, title: "Calendar",
+            onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CalendarSetting()),
+            );
+          }
+
+          ),
         ],
       ),
     );
