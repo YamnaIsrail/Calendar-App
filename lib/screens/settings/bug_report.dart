@@ -14,61 +14,93 @@ class FeedbackScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            SvgPicture.asset("assets/Chat.svg"),
-            Text(
-              'What are you not satisfied with?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            SvgPicture.asset(
+              "assets/Chat.svg",
+              width: 100,
+              height: 100,
+              placeholderBuilder: (BuildContext context) =>
+                  Icon(Icons.chat),
             ),
-            SizedBox(height: 16),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FeedbackOption(label: 'Prediction'),
-                    SizedBox(width: 20), // Add space between buttons
-                    FeedbackOption(label: 'Design'),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FeedbackOption(label: 'Reminders'),
-                    SizedBox(width: 20),
-                    FeedbackOption(label: 'Ads'),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FeedbackOption(label: 'Translation'),
-                    SizedBox(width: 20),
-                    FeedbackOption(label: 'Others'),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FeedbackOption(label: 'Backup & Restore'),
-                  ],
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'What are you not satisfied with?',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FeedbackOption(label: 'Prediction'),
+                          SizedBox(width: 20), // Add space between buttons
+                          FeedbackOption(label: 'Design'),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FeedbackOption(label: 'Reminders'),
+                          SizedBox(width: 20),
+                          FeedbackOption(label: 'Ads'),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FeedbackOption(label: 'Translation'),
+                          SizedBox(width: 20),
+                          FeedbackOption(label: 'Others'),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FeedbackOption(label: 'Backup & Restore'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             SizedBox(height: 24),
-            Text(
-              'Kindly send us a detailed explanation of your issue via email to ensure a quicker resolution.',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Kindly send us a detailed explanation of your issue via email to ensure a quicker resolution.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    color: Colors.grey,
+                    size: 76,
+                  ),
+                ],
+              ),
             ),
-            Icon(Icons.add_photo_alternate_outlined, size: 76,),
             Spacer(),
             CustomButton(
               text: 'Submit',
