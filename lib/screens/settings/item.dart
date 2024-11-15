@@ -7,25 +7,46 @@ class CustomItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(title),
-      trailing: Switch(value: false, onChanged: (bool value) {}),
+    return  Container(
+      margin: EdgeInsets.symmetric(vertical: 5),
+      color: Colors.white,
+      child: ListTile(
+        title: Text(title,
+        style: TextStyle(
+          fontSize: 16
+        ),
+        ),
+        trailing: Switch(value: false, onChanged: (bool value) {}),
+      ),
     );
   }
 }
 
 class SectionHeader extends StatelessWidget {
   final String title;
-  const SectionHeader({required this.title});
+  final String? caption;
+
+  const SectionHeader({required this.title, this.caption, });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Text(
-        title,
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          if(caption!=null) Text(
+            caption!,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1C1CAD)),
+          )
+
+        ],
       ),
+
     );
   }
 }
