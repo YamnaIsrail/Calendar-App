@@ -3,10 +3,13 @@ import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
+import 'FAQ.dart';
+import 'bug_report.dart';
 import 'ovulation.dart';
 import 'partner_info.dart';
 import 'period_length.dart';
 import 'pregnancy_mode/pregnancy_mode_on.dart';
+import 'reminder.dart';
 import 'track_cycle.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -54,6 +57,13 @@ class SettingsPage extends StatelessWidget {
                   child: SettingsOption(
                     icon: Icons.notifications,
                     title: "Reminders",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ReminderScreen()),
+                      );
+                    },
+
                     trailing: Text("6 Days"),
                   ),
                 ),
@@ -289,9 +299,25 @@ class FAQOptionSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          SettingsOption(icon: Icons.question_answer, title: "FAQ"),
+          SettingsOption(icon: Icons.question_answer,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FAQScreen()),
+                );
+              },
+
+              title: "FAQ"),
           SettingsOption(
-              icon: Icons.bug_report, title: "Bug report & Feedback"),
+              icon: Icons.bug_report,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FeedbackScreen()),
+                );
+              },
+
+              title: "Bug report & Feedback"),
           SettingsOption(
               icon: Icons.featured_play_list, title: "Request a new feature"),
           SettingsOption(icon: Icons.star, title: "Rate us on Google Play"),
@@ -319,7 +345,7 @@ class SettingsOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: Colors.pink),
+      leading: Icon(icon, color: primaryColor),
       title: Text(title),
       trailing: trailing,
       onTap: onTap ??
