@@ -1,45 +1,56 @@
+
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 class ShareCodeScreen extends StatelessWidget {
   final String code = "VKjMd9"; // Example code
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.pinkAccent, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+    return bgContainer(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text(
+              "Partner Mode",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 27),
+            ),
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
           ),
-        ),
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Share your invitation code',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 30),
-            Text(
-              code,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text("The code is valid for 24 hours."),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {},
-              child: Text("Share my code"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.pinkAccent,
+          body:  Padding(
+            padding: const EdgeInsets.all(35),
+            child: Center(
+              child: Column(
+                children: [
+                  SvgPicture.asset("assets/partner_mode/Isolation_Mode.svg"),
+                  SizedBox(height: 30),
+                 Text(
+                    'Share your invitation code',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 10),
+
+                  Text(
+                    'The code is valid for 24 hours',
+                    style: TextStyle(fontSize: 14,),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 30),
+                  Text(
+                    '$code',
+                    style: TextStyle(fontSize: 14,),
+                    textAlign: TextAlign.center,
+                  ),
+
+
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }
 

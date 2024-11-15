@@ -3,6 +3,8 @@ import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
+import 'share_invitation_code.dart';
+
 class PartnerLinkScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -74,8 +76,7 @@ class PartnerLinkScreen extends StatelessWidget {
                 child: CustomButton(
                   backgroundColor: primaryColor,
                   onPressed: () {
-                    // Add your button functionality here
-                  },
+                   Navigator.push(context, MaterialPageRoute(builder: (context)=>ShareCodeScreen())); },
                   text: "Continue",
 
                 ),

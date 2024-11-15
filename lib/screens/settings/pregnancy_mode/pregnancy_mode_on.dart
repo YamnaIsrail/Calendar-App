@@ -66,8 +66,9 @@ class congrats extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Image.asset("assets/pregnancy/tiles.png"),
-                  Image.asset("assets/pregnancy/blocks.png"),
+
+                  SvgPicture.asset("assets/pregnancy/tiles.svg"),
+                  SvgPicture.asset("assets/pregnancy/blocks.svg"),
 
                 ],
               )
