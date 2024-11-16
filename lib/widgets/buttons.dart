@@ -40,11 +40,12 @@ class CustomButton extends StatelessWidget {
 class CustomButton2 extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  final Color backgroundColor; // Add this line
+  final Color backgroundColor; final Color? textColor; // Optional text color parameter
 
   const CustomButton2({
     Key? key,
     required this.text,
+    this.textColor,
     required this.onPressed,
     this.backgroundColor = const Color(0xFFCFDCFF),
   }) : super(key: key);
@@ -64,8 +65,8 @@ class CustomButton2 extends StatelessWidget {
         onPressed: onPressed,
         child: Text(
           text,
-          style: const TextStyle(
-            color: Color(0xFF301B86),
+          style: TextStyle(
+            color: textColor ?? Color(0xFF301B86),
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),

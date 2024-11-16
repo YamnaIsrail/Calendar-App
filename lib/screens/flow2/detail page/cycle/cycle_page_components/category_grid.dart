@@ -31,7 +31,15 @@ Future<List<CategoryItem>> loadCategoryItems(String folderName) async {
 class CategoryGrid extends StatelessWidget {
   final String folderName;
   final int? itemCount;
-  const CategoryGrid({required this.folderName, this.itemCount, Key? key}) : super(key: key);
+
+  final bool isLabel; // New optional parameter
+
+  const CategoryGrid({
+    required this.folderName,
+    this.itemCount,
+    this.isLabel = true, // Default value is true
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -68,9 +76,14 @@ class CategoryGrid extends StatelessWidget {
                 item.iconPath.endsWith('.svg')
                     ? SvgPicture.asset(item.iconPath,height: 30, width: 30, fit: BoxFit.contain)
                     : Image.asset(item.iconPath, height: 30, width: 30, fit: BoxFit.contain),
-                SizedBox(height: 4),
-                Text(item.label, style: TextStyle(fontSize: 12), textAlign: TextAlign.center),
-              ],
+                 if (isLabel)
+
+                  Text(
+                    item.label,
+                    style: TextStyle(fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
             );
           },
         );
