@@ -37,11 +37,14 @@ class _SetTimeAndDoseScreenState extends State<SetTimeAndDoseScreen> {
             },
           ),
           SizedBox(height: 20),
-         CustomButton(text: "Save",
-             onPressed: (){
-               Navigator.pop(context);
-             },
-             backgroundColor: primaryColor),
+         Padding(
+           padding: const EdgeInsets.symmetric(horizontal: 20.0),
+           child: CustomButton(text: "Save",
+               onPressed: (){
+                 Navigator.pop(context);
+               },
+               backgroundColor: primaryColor),
+         ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);

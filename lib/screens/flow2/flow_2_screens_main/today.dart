@@ -1,5 +1,6 @@
 import 'package:calender_app/screens/flow2/detail%20page/today_cycle_phase/period_phase.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
 import '../../../widgets/cycle_phase_card.dart';
@@ -9,13 +10,7 @@ import '../../globals.dart' as globals;
 class CycleStatusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
-        ),
-      ),
+    return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent, // Set transparent to show the gradient
         appBar: CustomAppBar(
@@ -31,33 +26,37 @@ class CycleStatusScreen extends StatelessWidget {
         ),
         body: Column(
           children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  Image.asset("assets/cal.png"),
-                  Positioned(
-                    top: 130, // Adjust this value to position vertically
-                    left: 0,
-                    right: 0,
-                    child: Column(
-                      children: [
-                        Text(
-                          "13 Days Left",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 20, color: Colors.black), // Style as needed
-                        ),
-                        SizedBox(height: 5), // Add space between texts
-                        Text(
-                          "Next periods will start on",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.black), // Style as needed
-                        ),
-                      ],
+            Container(
+              height: 280,
+              width: 280,
+              alignment: Alignment.center, // Centers the child within the container
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: AssetImage("assets/cal.png"),
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Ensures the column takes up minimal vertical space
+                  mainAxisAlignment: MainAxisAlignment.center, // Centers its children vertically
+                  children: [
+                    Text(
+                      "13 Days Left",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 20, color: Colors.black), // Style as needed
                     ),
-                  ),
-                ],
+                    SizedBox(height: 5), // Space between the two texts
+                    Text(
+                      "Next periods will start on",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Colors.black), // Style as needed
+                    ),
+                  ],
+                ),
               ),
             ),
+
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(

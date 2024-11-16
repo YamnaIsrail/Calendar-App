@@ -1,4 +1,5 @@
 import 'package:calender_app/screens/flow2/flow_2_screens_main/self_care.dart';
+import 'package:calender_app/screens/flow2/home_flow2.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
@@ -59,7 +60,7 @@ class Welldone extends StatelessWidget {
                     text: "Done",
                     onPressed: () {
                       Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => SelfCare()));
+                          MaterialPageRoute(builder: (context) => Flow2Page()));
                     },
                   ),
                   SizedBox(

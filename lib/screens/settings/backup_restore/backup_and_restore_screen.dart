@@ -1,5 +1,6 @@
 // import 'package:calender_app/screens/settings/calendar_setting/calendar_setting_date.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
+import 'package:calender_app/screens/settings/track_cycle.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 
@@ -49,6 +50,12 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                 SettingsOption(
                   icon: Icons.group,
                   title: "Track others cycles",
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => TrackCycleScreen()),
+                    );
+                  },
                   trailing: Switch(
                     value: isTrackingOthers,
                     onChanged: (value) {
@@ -59,15 +66,16 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   ),
                 ),
 
-                // Backup reminder
+//backup reminder
                 SettingsOption(
                   icon: Icons.notifications,
                   title: "Backup reminder",
+                  onTap: () {
+                    DialogHelper.showReminderFrequencyDialog(context);
+                  },
                   trailing: Switch(
                     value: isBackupReminderEnabled,
                     onChanged: (value) {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context)=> BackupAndRestoreScreen2()));
                       setState(() {
                         isBackupReminderEnabled = value;
                       });
@@ -87,6 +95,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                     });
                   },
                 ),
+
 
                 // Delete Account
                 SettingsOption(
@@ -117,10 +126,8 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   title: "Other backup methods",
                   trailing: Text("Email attachment, Cloud storage"),
                   onTap: () {
-                    DialogHelper.showDataLostPopup(context, () {
-                      print("Backup method selected");
-                      // Handle other backup method logic
-                    });
+                    DialogHelper.showOtherBackupMethods(context);
+
                   },
                 ),
 
@@ -135,7 +142,9 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                     });
                   },
                 ),
-              ],
+
+
+                             ],
             ),
           ],
         ),

@@ -91,7 +91,7 @@ class Analysis extends StatelessWidget {
 
                     child: CustomButton2(
                             onPressed: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=> monthWeight()));
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=> MonthWeight()));
 
                             },
                             text: "Add Weight"
@@ -139,7 +139,7 @@ class Analysis extends StatelessWidget {
 
                     child: CustomButton2(
                             onPressed: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=> tempChart()));
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=> TempChart()));
 
                             },
                             text: "Add Temperature"

@@ -3,7 +3,7 @@ import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/homeScreen.dart';
 import 'package:calender_app/screens/splash.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/date_symbol_data_file.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget_base.dart';
 
 void main() {
@@ -12,7 +12,7 @@ void main() {
     secretKey: "11a1215l0119a140409p0919",
     ivKey: "23a1dfr5lyhd9a1404845001",
   );
-  initializeDateFormatting('en_US', "null").then((_) =>
+  initializeDateFormatting().then((_) =>
       runApp(CalenderApp())
   );
 }

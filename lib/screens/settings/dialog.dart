@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class DialogHelper {
-
   // New Dialog: showRatingPopup
-  static void showRatingPopup(BuildContext context, ValueChanged<int> onRatingSelected) {
-    int _rating = 0;  // Initial rating set to 0
+  static void showRatingPopup(
+      BuildContext context, ValueChanged<int> onRatingSelected) {
+    int _rating = 0; // Initial rating set to 0
 
     showDialog(
       context: context,
@@ -19,7 +19,7 @@ class DialogHelper {
             children: [
               Text(
                 "We are working hard for a better user experience. "
-                    "We would greatly appreciate it if you can rate us.",
+                "We would greatly appreciate it if you can rate us.",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16),
               ),
@@ -38,7 +38,7 @@ class DialogHelper {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
                           5,
-                              (index) => GestureDetector(
+                          (index) => GestureDetector(
                             onTap: () {
                               setState(() {
                                 _rating = index + 1;
@@ -56,7 +56,8 @@ class DialogHelper {
                       SizedBox(height: 10),
                       Text(
                         'Current Rating: $_rating',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ],
                   );
@@ -130,7 +131,9 @@ class DialogHelper {
                     text: 'Sign out',
                   ),
                 ),
-                SizedBox(width: 5,),
+                SizedBox(
+                  width: 5,
+                ),
                 Expanded(
                   child: CustomButton(
                     onPressed: () {
@@ -138,7 +141,6 @@ class DialogHelper {
                     },
                     backgroundColor: blueColor,
                     text: 'Cancel',
-
                   ),
                 ),
               ],
@@ -150,13 +152,15 @@ class DialogHelper {
   }
 
   // New Dialog: Delete Account
-  static void showDeleteAccountPopup(BuildContext context, VoidCallback onDelete) {
+  static void showDeleteAccountPopup(
+      BuildContext context, VoidCallback onDelete) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Delete Account?"),
-          content: Text("All your cloud and local data will be completely cleared."),
+          content:
+              Text("All your cloud and local data will be completely cleared."),
           actions: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -171,7 +175,9 @@ class DialogHelper {
                     text: 'Delete',
                   ),
                 ),
-                SizedBox(width: 5,),
+                SizedBox(
+                  width: 5,
+                ),
                 Expanded(
                   child: CustomButton(
                     onPressed: () {
@@ -179,7 +185,6 @@ class DialogHelper {
                     },
                     backgroundColor: blueColor,
                     text: 'Keep',
-
                   ),
                 ),
               ],
@@ -202,7 +207,7 @@ class DialogHelper {
             children: [
               Text(
                 "We've upgraded our backup system to make it more secure and convenient."
-                    "\n If you find data lost, please log in to the previous backup account again, we will help to retrieve your data.",
+                "\n If you find data lost, please log in to the previous backup account again, we will help to retrieve your data.",
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 10),
@@ -244,7 +249,7 @@ class DialogHelper {
                     title: Text('Cloud Storage'),
                     textColor: primaryColor,
                   ),
-                 ],
+                ],
               ),
             ],
           ),
@@ -254,7 +259,8 @@ class DialogHelper {
   }
 
   // New Dialog: Rename
-  static void showRenamePopup(BuildContext context, ValueChanged<String> onRename) {
+  static void showRenamePopup(
+      BuildContext context, ValueChanged<String> onRename) {
     TextEditingController _nameController = TextEditingController();
 
     showDialog(
@@ -308,15 +314,25 @@ class DialogHelper {
   }
 
   //Calendar Setting Day
-  static void showFirstDayOfWeekDialog(BuildContext context, String selectedDay, Function(String) onSelected) {
+  static void showFirstDayOfWeekDialog(
+      BuildContext context, String selectedDay, Function(String) onSelected) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        List<String> daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        List<String> daysOfWeek = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ];
         return AlertDialog(
           title: Text("Select first day of week"),
           content: Container(
-            width: double.maxFinite, // Allow the container to take the max width
+            width:
+                double.maxFinite, // Allow the container to take the max width
             child: ListView(
               shrinkWrap: true,
               children: daysOfWeek.map((day) {
@@ -347,7 +363,8 @@ class DialogHelper {
   }
 
   //Calendar Setting Date
-  static void showDateFormatDialog(BuildContext context, String selectedFormat, Function(String) onSelected) {
+  static void showDateFormatDialog(BuildContext context, String selectedFormat,
+      Function(String) onSelected) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -366,7 +383,8 @@ class DialogHelper {
         return AlertDialog(
           title: Text("Select Date Format"),
           content: Container(
-            width: double.maxFinite, // Allow the container to take the max width
+            width:
+                double.maxFinite, // Allow the container to take the max width
             child: ListView(
               shrinkWrap: true,
               children: dateFormats.map((format) {
@@ -407,10 +425,80 @@ class DialogHelper {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Transfer: 336 Files x 24 Hugs"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xffE893FF),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text("Transfer to Android"),
+                        Icon(
+                          Icons.android_rounded,
+                          color: Colors.white,
+                        )
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                     decoration: BoxDecoration(
+                       color: Color(0xff939AFF),
+                       borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text("Transfer to Ios"),
+                        Icon(
+                          Icons.apple,
+                          color: Colors.white,
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               SizedBox(height: 10),
-              Text("Cloud storage"),
-              Text("Email attachment"),
+              ListTile(
+                title: Text("Cloud storage"),
+                leading: Icon(
+                  Icons.cloud,
+                  color: Colors.blue,
+                ),
+              ),
+              ListTile(
+                title: Text("Email attachment"),
+                leading: Icon(
+                  Icons.mail,
+                  color: Colors.black,
+                ),
+              ),
             ],
           ),
           actions: [
@@ -465,7 +553,25 @@ class DialogHelper {
       },
     );
   }
+//other backups
+  static void showOtherBackupMethods(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Other Backup Methods"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Email Attachment"),
+              Text("Cloud Storage"),
 
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   // Import From Others Dialog
   static void showImportFromOthersDialog(BuildContext context) {
@@ -493,16 +599,18 @@ class DialogHelper {
       },
     );
   }
-
 }
+
 class CalendarDialogHelper {
   // 1. Pregnancy Date Picker Dialog
-  static void showPregnancyDateDialog(BuildContext context, ValueChanged<DateTime> onDateSelected) {
+  static void showPregnancyDateDialog(
+      BuildContext context, ValueChanged<DateTime> onDateSelected) {
     // Implementation remains the same as before
   }
 
   // 2. Period Length Dialog
-  static void showPeriodLengthDialog(BuildContext context, ValueChanged<int> onPeriodLengthSelected) {
+  static void showPeriodLengthDialog(
+      BuildContext context, ValueChanged<int> onPeriodLengthSelected) {
     List<String> days = List.generate(31, (index) => (index + 1).toString());
     int selectedIndex = 0;
 
@@ -510,7 +618,8 @@ class CalendarDialogHelper {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Period Length", style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text("Period Length",
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -544,15 +653,22 @@ class CalendarDialogHelper {
   }
 
   // 3. Last Months Dialog
-  static void showLastMonthsDialog(BuildContext context, ValueChanged<String> onSelectionChanged) {
-    List<String> options = ["Last 1 Month", "Last 3 Months", "Last 6 Months", "Smart Calculate"];
+  static void showLastMonthsDialog(
+      BuildContext context, ValueChanged<String> onSelectionChanged) {
+    List<String> options = [
+      "Last 1 Month",
+      "Last 3 Months",
+      "Last 6 Months",
+      "Smart Calculate"
+    ];
     int selectedIndex = 0;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Last Months", style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text("Last Months",
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(options.length, (index) {
