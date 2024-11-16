@@ -46,7 +46,6 @@ flutter:
     - assets/symptoms/
     - assets/fluid/
     - assets/head/
-    - assets/head/dizzy.svg
     - assets/abdomen/
     - assets/body/
     - assets/cervix/

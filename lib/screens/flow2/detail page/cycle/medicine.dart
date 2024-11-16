@@ -1,31 +1,28 @@
 import 'package:calender_app/screens/globals.dart';
 import 'package:flutter/material.dart';
-
 import '../../../../widgets/buttons.dart';
 
-
 class ContraceptivePage extends StatelessWidget {
-  // List of contraceptive methods with their icons/images (network URLs in this case)
-  final List<Map<String, String>> contraceptives = [
-    {'name': 'V-Ring', 'image': 'https://www.example.com/vring_image.png'},
-    {'name': 'Patch', 'image': 'https://www.example.com/patch_image.png'},
-    {'name': 'Injection', 'image': 'https://www.example.com/injection_image.png'},
-    {'name': 'IUD', 'image': 'https://www.example.com/iud_image.png'},
-    {'name': 'Implant', 'image': 'https://www.example.com/implant_image.png'},
+  // List of contraceptive methods with their names and corresponding icons
+  final List<Map<String, dynamic>> contraceptives = [
+    {'name': 'Contraceptives', 'icon': Icons.add_circle}, // Replace with your desired icon
+
+    {'name': 'V-Ring', 'icon': Icons.circle}, // Replace with your desired icon
+    {'name': 'Patch', 'icon': Icons.adjust},  // Replace with your desired icon
+    {'name': 'Injection', 'icon': Icons.local_hospital}, // Replace with your desired icon
+    {'name': 'IUD', 'icon': Icons.medical_services}, // Replace with your desired icon
+    {'name': 'Implant', 'icon': Icons.pause}, // Replace with your desired icon
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Contraceptive Methods'),
-        backgroundColor: Colors.blue,
-        elevation: 0,
-      ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Heading for the page
             Text(
@@ -38,18 +35,17 @@ class ContraceptivePage extends StatelessWidget {
             ),
             SizedBox(height: 20), // Space between heading and items
 
-            // Displaying contraceptive methods with their images/icons
+            // Displaying contraceptive methods with their icons
             Expanded(
               child: ListView.builder(
                 itemCount: contraceptives.length,
                 itemBuilder: (context, index) {
                   final contraceptive = contraceptives[index];
                   return ListTile(
-                    leading: Image.network(
-                      contraceptive['image']!,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
+                    leading: Icon(
+                      contraceptive['icon'], // Using icons instead of images
+                      size: 40,  // Adjust the size as needed
+                      color: Color(0xff3049B2), // Adjust the color of the icon
                     ),
                     title: Text(
                       contraceptive['name']!,
@@ -63,13 +59,11 @@ class ContraceptivePage extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 20), // Space between items and button
-
-            // Choose button
-            ElevatedButton(
+            SizedBox(height: 20),
+            CustomButton(
+              backgroundColor: primaryColor,
               onPressed: () {
                 // Handle the "Choose" action here
-                // For example, show a dialog or navigate to another screen
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -86,30 +80,7 @@ class ContraceptivePage extends StatelessWidget {
                   ),
                 );
               },
-              child: Text('Choose'),
-            ),
-
-            CustomButton(
-                backgroundColor: primaryColor,
-              onPressed: () {
-                // Handle the "Choose" action here
-                // For example, show a dialog or navigate to another screen
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Contraceptive Chosen'),
-                    content: Text('You have successfully selected a contraceptive method.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('OK'),
-                      ),
-                    ],
-                  ),
-                );
-              }, text: 'Choose',
+              text: 'Choose',
             )
           ],
         ),

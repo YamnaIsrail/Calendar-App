@@ -10,7 +10,7 @@ class moods extends StatelessWidget {
       appBar: AppBar(title: Text('Moods')),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: CategoryGrid(folderName: 'emoji'), // Use the folder name for "Moods"
+        child: CategoryGrid(folderName: 'emoji', isLabel: false,), // Use the folder name for "Moods"
       ),
     );
   }

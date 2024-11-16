@@ -17,18 +17,20 @@ import '../detail page/cycle/my_cycle.dart';
 import '../detail page/cycle/ovulation_screen.dart';
 import '../detail page/cycle/symptoms.dart';
 
-class  CycleTrackerScreen extends StatelessWidget {
+class CycleTrackerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-
           image: AssetImage('assets/bg.jpg'),
           fit: BoxFit.cover,
         ),
         gradient: LinearGradient(
-          colors: [Color(0xFFE8EAF6), Color(0xFFF3E5F5)], // Light gradient background
+          colors: [
+            Color(0xFFE8EAF6),
+            Color(0xFFF3E5F5)
+          ], // Light gradient background
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -37,16 +39,12 @@ class  CycleTrackerScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         appBar: CustomAppBar(
           pageTitle: "Today",
-          onCancel: () {  },
+          onCancel: () {},
           onBack: () {
             Navigator.push(context,
-                MaterialPageRoute(
-                    builder:
-                        (context)=> SettingsPage()
-                )
-            ); },
+                MaterialPageRoute(builder: (context) => SettingsPage()));
+          },
         ),
-
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -94,7 +92,8 @@ class  CycleTrackerScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween, // To space out the text and button
+                        mainAxisAlignment: MainAxisAlignment
+                            .spaceBetween, // To space out the text and button
                         children: [
                           Text(
                             "Ovulation",
@@ -106,10 +105,9 @@ class  CycleTrackerScreen extends StatelessWidget {
                           IconButton(
                             onPressed: () {
                               Navigator.push(
-                                  context, MaterialPageRoute(
-                                  builder: (context)=> OvulationScreen()
-                              )
-                              );
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => OvulationScreen()));
                             }, // Action to be performed on button click
                             icon: Icon(Icons.arrow_forward_ios_rounded),
                           ),
@@ -117,50 +115,63 @@ class  CycleTrackerScreen extends StatelessWidget {
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
-
                         children: [
-
-
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 10),
                             //  height: 50,
                             //width: 100,
                             decoration: BoxDecoration(
                               color: Color(0xFF5EB1E7),
                               borderRadius: BorderRadius.circular(30),
-
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SvgPicture.asset("assets/ovulation/pos.svg", height: 15, width: 20,),
-                                SizedBox(width: 10,),
-                                Text("Positive", style: TextStyle(fontWeight: FontWeight.bold),)
+                                SvgPicture.asset(
+                                  "assets/ovulation/pos.svg",
+                                  height: 15,
+                                  width: 20,
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  "Positive",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                )
                               ],
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                          //  height: 50,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 10),
+                            //  height: 50,
                             //width: 100,
                             decoration: BoxDecoration(
                               color: Color(0xFF5EB1E7),
                               borderRadius: BorderRadius.circular(30),
-
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SvgPicture.asset("assets/ovulation/neg.svg", height: 20, width: 20,),
-                                SizedBox(width: 10,),
-                                Text("Negative", style: TextStyle(fontWeight: FontWeight.bold),)
+                                SvgPicture.asset(
+                                  "assets/ovulation/neg.svg",
+                                  height: 20,
+                                  width: 20,
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  "Negative",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                )
                               ],
                             ),
                           ),
-
                         ],
                       ),
-
                     ],
                   ),
                 ),
@@ -168,7 +179,8 @@ class  CycleTrackerScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween, // To space out the text and button
+                        mainAxisAlignment: MainAxisAlignment
+                            .spaceBetween, // To space out the text and button
                         children: [
                           Text(
                             "Medicine",
@@ -179,12 +191,20 @@ class  CycleTrackerScreen extends StatelessWidget {
                           ),
                           IconButton(
                             onPressed: () {
-                              Navigator.push(
-                                  context, MaterialPageRoute(
-                                  builder: (context)=> ContraceptivePage()
-                              )
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child:
+                                        ContraceptivePage(), // Your ContraceptivePage widget here
+                                  );
+                                },
                               );
-                            }, // Action to be performed on button click
+                            },
+                            // Action to be performed on button click
                             icon: Icon(Icons.arrow_forward_ios_rounded),
                           ),
                         ],
@@ -193,14 +213,11 @@ class  CycleTrackerScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           SvgPicture.asset("assets/ovulation/drug.svg"),
-
                         ],
                       ),
-
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 20),
                 WaterIntakeSection(),
               ],

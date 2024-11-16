@@ -1,37 +1,30 @@
 import 'package:calender_app/screens/globals.dart';
-import 'package:calender_app/screens/settings/calendar_setting.dart';
+// import 'package:calender_app/screens/settings/calendar_setting/calendar_setting.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
+import 'package:calender_app/screens/settings/language_option.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
 import 'FAQ.dart';
+import 'auth/password/create_password.dart';
+import 'backup_restore/backup_and_restore_screen.dart';
 import 'bug_report.dart';
+import 'calendar_setting/calendar_setting.dart';
+// import 'dialog.dart';
+import 'dialog.dart';
 import 'ovulation.dart';
-import 'partner_info.dart';
+import 'partner_mode/partner_info.dart';
 import 'period_length.dart';
 import 'pregnancy_mode/pregnancy_mode_on.dart';
 import 'reminder.dart';
-import 'show_hide_option.dart';
+import 'show_hide_option/show_hide_option.dart';
 import 'track_cycle.dart';
 
 class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover,
-        ),
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFFE8EAF6),
-            Color(0xFFF3E5F5)
-          ], // Light gradient background
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
+    return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -40,15 +33,18 @@ class SettingsPage extends StatelessWidget {
             "Settings",
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          leading: IconButton(onPressed: () {}, icon: Icon(Icons.close)),
+          leading: IconButton(onPressed: () {
+            Navigator.pop(context);
+          }, icon: Icon(Icons.close)),
         ),
         body: SingleChildScrollView(
+
           child: Padding(
             padding: const EdgeInsets.all(2.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                UserProfileSection(),
+                UserProfileSection1(),
                 GoalSection(),
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 16.0),
@@ -72,6 +68,22 @@ class SettingsPage extends StatelessWidget {
                 SettingsOptionSection(),
                 LanguageOptionSection(),
                 FAQOptionSection(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                        onTap: () {
+                          // Call showFirstDayOfWeekDialog
+                          DialogHelper.showConfirmPopup(context, (){});  },
+
+                        child: Text("Delete All Data",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: primaryColor)
+                          ,)
+                    ),
+                  ],
+                )
+
               ],
             ),
           ),
@@ -81,8 +93,7 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-// Define individual sections
-class UserProfileSection extends StatelessWidget {
+class UserProfileSection1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -105,6 +116,8 @@ class UserProfileSection extends StatelessWidget {
           children: [
             Text(
               "Sign in and Synchronize your data",
+              softWrap: true,           // Ensures text will wrap if necessary
+              overflow: TextOverflow.visible,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -160,7 +173,10 @@ class GoalSection extends StatelessWidget {
               Expanded(
                 child: CustomButton(
                   text: "Track my period",
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => PeriodLength()));
+                  },
                   backgroundColor: primaryColor,
                 ),
               ),
@@ -201,7 +217,8 @@ class GoalSection extends StatelessWidget {
                   );
                 },
 
-              ), SettingsOption(
+              ),
+              SettingsOption(
                 icon: Icons.calendar_today,
                 title: "Ovulation and fertile",
                  onTap: () {
@@ -213,15 +230,7 @@ class GoalSection extends StatelessWidget {
 
               ),
 
-              SettingsOption(
-                icon: Icons.lock,
-                title: "Password",
-                trailing: Switch(
-                  value: false,
-                  onChanged: (bool newValue) {},
-                ),
-              ),
-            ],
+               ],
           ),
         ],
       ),
@@ -241,8 +250,26 @@ class SettingsOptionSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          SettingsOption(icon: Icons.backup, title: "Backup & Restore"),
-          SettingsOption(icon: Icons.lock, title: "Password"),
+          SettingsOption(
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => BackupAndRestoreScreen()),
+                );
+              },
+              icon: Icons.backup,
+              title: "Backup & Restore"),
+          SettingsOption(
+              icon: Icons.lock,
+              title: "Password",
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreatePasswordScreen()),
+                );
+              }
+
+          ),
           SettingsOption(icon: Icons.person,
               onTap: () {
                 Navigator.push(
@@ -280,8 +307,17 @@ class LanguageOptionSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          SettingsOption(icon: Icons.language, title: "Language Options"),
-          SettingsOption(icon: Icons.visibility, title: "Show or Hide Options",  onTap: () {
+          SettingsOption(icon: Icons.language, title: "Language Options",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (
+                      context) => LanguageOptionScreen()),
+                );
+              }),
+          SettingsOption(icon: Icons.visibility,
+              title: "Show or Hide Options",
+              onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => ShowHideOption()),
@@ -335,7 +371,14 @@ class FAQOptionSection extends StatelessWidget {
               title: "Bug report & Feedback"),
           SettingsOption(
               icon: Icons.featured_play_list, title: "Request a new feature"),
-          SettingsOption(icon: Icons.star, title: "Rate us on Google Play"),
+          SettingsOption(icon: Icons.star, title: "Rate us on Google Play",
+            onTap: () {
+              // Call showFirstDayOfWeekDialog
+              DialogHelper.showRatingPopup(context, (rating) {
+                print('Selected Rating: $rating');
+              });
+            },
+          ),
           SettingsOption(icon: Icons.share, title: "Share with friends"),
           SettingsOption(icon: Icons.privacy_tip, title: "Privacy"),
         ],

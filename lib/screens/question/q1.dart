@@ -1,3 +1,4 @@
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 import '../globals.dart' as globals; // Import the globals file
 import 'package:calender_app/screens/question/q2.dart';
@@ -16,13 +17,7 @@ class _QuestionScreen1State extends State<QuestionScreen1> {
   Widget build(BuildContext context) {
     List<String> dates = List.generate(31, (index) => (index + 1).toString());
 
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
-        ),
-      ),
+    return bgContainer(
       child: Scaffold(
 
         backgroundColor: Colors.transparent,
@@ -36,52 +31,55 @@ class _QuestionScreen1State extends State<QuestionScreen1> {
             Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           },
         ),
-        body: QuestionScreen(
-            statement: "How many days does your period usually last?",
-            caption: "Bleeding usually lasts between 4-7 days.",
-            wheel: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Align(
-                    alignment: Alignment(0, -0.5),
-                    child: Container(
-                      color: Color(0xFFAFD1F3).withOpacity(0.3),
-                      height: 40,
-                      width: double.infinity,
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 15),
+          child: QuestionScreen(
+              statement: "How many days does your period usually last?",
+              caption: "Bleeding usually lasts between 4-7 days.",
+              wheel: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Align(
+                      alignment: Alignment(0, -0.5),
+                      child: Container(
+                        color: Color(0xFFAFD1F3).withOpacity(0.3),
+                        height: 40,
+                        width: double.infinity,
+                      ),
                     ),
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Wheel(
-                      items: dates,
-                      selectedColor: Colors.black,
-                      unselectedColor: Colors.grey,
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          globals.selectedDays = index + 1; // Use the global variable
-                        });
-                      },
-                    ),
-                    Text(
-                      "Days",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Wheel(
+                        items: dates,
+                        selectedColor: Colors.black,
+                        unselectedColor: Colors.grey,
+                        onSelectedItemChanged: (index) {
+                          setState(() {
+                            globals.selectedDays = index + 1; // Use the global variable
+                          });
+                        },
+                      ),
+                      Text(
+                        "Days",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              onNextPressed: () {
+                print("Selected Days: ${globals.selectedDays}");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => QuestionScreen2(selectedDays: globals.selectedDays)),
+                );
+              },
             ),
-            onNextPressed: () {
-              print("Selected Days: ${globals.selectedDays}");
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => QuestionScreen2(selectedDays: globals.selectedDays)),
-              );
-            },
-          ),
+        ),
       ),
     );
   }
