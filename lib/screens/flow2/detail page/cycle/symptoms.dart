@@ -10,7 +10,9 @@ class symptoms extends StatelessWidget {
       appBar: AppBar(title: Text('Symptoms')),
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
+        padding: EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Head", style: TextStyle(fontWeight: FontWeight.bold),),
             CategoryGrid(folderName: 'head',),
