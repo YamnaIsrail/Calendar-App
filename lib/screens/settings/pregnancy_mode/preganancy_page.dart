@@ -2,6 +2,8 @@ import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 
+import 'congratualtions_screen.dart';
+
 class PregnancyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -114,37 +116,6 @@ class PregnancyOptionTile extends StatelessWidget {
                 ),
               ),
              ],
-        ),
-      ),
-    );
-  }
-}
-
-class CongratulationsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Congratulations"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Congratulations! Mom to be!",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            Icon(Icons.cake, size: 100, color: Colors.pink),
-            SizedBox(height: 20),
-            Text(
-              "Here you can:\n\n• Count down the days until your baby is born.\n• Track your weight & health data and share it with your doctor.",
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          ],
         ),
       ),
     );

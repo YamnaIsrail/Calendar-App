@@ -13,7 +13,7 @@ class monthWeight extends StatelessWidget {
         title: Text("Weight"),
         centerTitle: true,
         backgroundColor: Colors.transparent,
-        elevation: 0, // Remove shadow for a cleaner gradient effect
+        elevation: 0,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

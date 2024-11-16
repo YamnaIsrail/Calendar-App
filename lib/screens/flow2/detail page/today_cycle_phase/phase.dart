@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'cycle_phase_widgets/CervicalMucusSection.dart';
 import 'cycle_phase_widgets/SymptomsSection.dart';
 import 'cycle_phase_widgets/phase_info.dart';
 
@@ -66,11 +65,7 @@ class PhaseScreen extends StatelessWidget {
             severity: "LOW",
           ),
           SizedBox(height: 16),
-          CervicalMucusSection(
-            mucusType: "Sticky",
-            chanceOfConception: "LOW",
-            chartData: [1, 2, 1.5, 2.5, 3],
-          ),
+
         ],
       ),
     );

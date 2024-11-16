@@ -1,6 +1,7 @@
 import 'package:calender_app/screens/globals.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/buttons.dart';
+import 'medicine_reminder/medicine_reminder_form.dart';
 
 class ContraceptivePage extends StatelessWidget {
   // List of contraceptive methods with their names and corresponding icons
@@ -63,21 +64,9 @@ class ContraceptivePage extends StatelessWidget {
             CustomButton(
               backgroundColor: primaryColor,
               onPressed: () {
-                // Handle the "Choose" action here
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Contraceptive Chosen'),
-                    content: Text('You have successfully selected a contraceptive method.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('OK'),
-                      ),
-                    ],
-                  ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MedicineReminderScreen()),
                 );
               },
               text: 'Choose',

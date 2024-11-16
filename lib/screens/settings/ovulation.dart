@@ -1,3 +1,4 @@
+import 'package:calender_app/screens/settings/dialog.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 
@@ -44,6 +45,12 @@ class Ovulation extends StatelessWidget {
                 child: ListTile(
                   title: Text("Luteal phase Length"),
                   trailing: Text("14 days"),
+                  onTap: () {
+                    CalendarDialogHelper.showPeriodLengthDialog(context, (selectedLength) {
+                      print("Selected period length: $selectedLength days");
+                    });
+                  },
+
                 )
             ),
             Padding(
@@ -70,7 +77,12 @@ class Ovulation extends StatelessWidget {
                   ),
                   trailing: Switch(
                     value: false,
-                    onChanged: (bool newValue) {},
+                    onChanged: (bool newValue) {
+                      CalendarDialogHelper.showLastMonthsDialog(context, (selection) {
+                        print("Selected option: $selection");
+                      });
+                    },
+
 
 
                   ),

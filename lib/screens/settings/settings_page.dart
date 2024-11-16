@@ -102,47 +102,54 @@ class UserProfileSection1 extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(children: [
-        CircleAvatar(
-          //backgroundImage: AssetImage('assets/profile.jpg'),
-          child: Icon(
-            Icons.person,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start, // Align items at the top
+        children: [
+          CircleAvatar(
+            child: Icon(
+              Icons.person,
+            ),
+            radius: 35,
           ),
-          radius: 35,
-        ),
-        SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              "Sign in and Synchronize your data",
-              softWrap: true,           // Ensures text will wrap if necessary
-              overflow: TextOverflow.visible,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-            SizedBox(height: 8),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              decoration: BoxDecoration(
-                color: Color(0xff142d7f),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                "Sync Data",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
+          SizedBox(width: 16),
+          Expanded( // Ensures text and button fit within the available space
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, // Align text to the start
+              children: [
+                Text(
+                  "Sign in and Synchronize your data",
+                  softWrap: true, // Enables text wrapping
+                  overflow: TextOverflow.clip, // Prevents text overflow
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
+                SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft, // Align button to the left
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Color(0xff142d7f),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      "Sync Data",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ]),
+          ),
+        ],
+      ),
     );
   }
 }

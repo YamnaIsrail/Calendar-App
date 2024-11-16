@@ -1,5 +1,6 @@
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/buttons.dart';
+import 'package:calender_app/widgets/wheel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -332,11 +333,12 @@ class DialogHelper {
             ),
           ),
           actions: [
-            ElevatedButton(
+            CustomButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Save"),
+              backgroundColor: primaryColor,
+              text: 'Save',
             ),
           ],
         );
@@ -381,11 +383,12 @@ class DialogHelper {
             ),
           ),
           actions: [
-            ElevatedButton(
+            CustomButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Save"),
+              backgroundColor: primaryColor,
+              text: 'Save',
             ),
           ],
         );
@@ -450,9 +453,12 @@ class DialogHelper {
             ],
           ),
           actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Save"),
+            CustomButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              backgroundColor: primaryColor,
+              text: 'Save',
             ),
           ],
         );
@@ -488,4 +494,84 @@ class DialogHelper {
     );
   }
 
+}
+class CalendarDialogHelper {
+  // 1. Pregnancy Date Picker Dialog
+  static void showPregnancyDateDialog(BuildContext context, ValueChanged<DateTime> onDateSelected) {
+    // Implementation remains the same as before
+  }
+
+  // 2. Period Length Dialog
+  static void showPeriodLengthDialog(BuildContext context, ValueChanged<int> onPeriodLengthSelected) {
+    List<String> days = List.generate(31, (index) => (index + 1).toString());
+    int selectedIndex = 0;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Period Length", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Wheel(
+                    items: days,
+                    selectedColor: Colors.black,
+                    unselectedColor: Colors.grey,
+                    onSelectedItemChanged: (index) {
+                      selectedIndex = index;
+                    },
+                  ),
+                  Text("Days", style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              SizedBox(height: 20),
+              CustomButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                backgroundColor: primaryColor,
+                text: 'Save',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 3. Last Months Dialog
+  static void showLastMonthsDialog(BuildContext context, ValueChanged<String> onSelectionChanged) {
+    List<String> options = ["Last 1 Month", "Last 3 Months", "Last 6 Months", "Smart Calculate"];
+    int selectedIndex = 0;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Last Months", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(options.length, (index) {
+              return ListTile(
+                leading: Radio<int>(
+                  value: index,
+                  groupValue: selectedIndex,
+                  onChanged: (value) {
+                    selectedIndex = value!;
+                    onSelectionChanged(options[selectedIndex]);
+                    Navigator.pop(context); // Close after selection
+                  },
+                ),
+                title: Text(options[index]),
+              );
+            }),
+          ),
+        );
+      },
+    );
+  }
 }

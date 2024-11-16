@@ -30,8 +30,7 @@ class PartnerSweetNicknameScreen extends StatelessWidget {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Gradient Progress Bar
-              Container(
+               Container(
                 width: 100, // Adjust width for the progress bar
                 height: 4,  // Height for the progress bar
                 decoration: BoxDecoration(
@@ -73,7 +72,10 @@ class PartnerSweetNicknameScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                // Define skip functionality
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePartnerFlow()),
+                );
               },
               child: Text(
                 "Skip",

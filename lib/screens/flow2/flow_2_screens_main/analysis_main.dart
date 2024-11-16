@@ -174,10 +174,6 @@ class Analysis extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> IntercourseAnalysis()));
-              },
-                  icon: Icon(Icons.arrow_forward_ios_rounded))
             ],
           )
         ),

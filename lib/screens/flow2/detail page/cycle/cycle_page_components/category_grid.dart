@@ -62,6 +62,7 @@ class CategoryGrid extends StatelessWidget {
         }
 
         return GridView.builder(
+          scrollDirection: Axis.vertical,
           shrinkWrap: true,
           itemCount: categoryItems.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

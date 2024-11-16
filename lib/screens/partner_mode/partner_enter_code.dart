@@ -21,8 +21,9 @@ class PartnerEnterCode extends StatelessWidget {
           appBar: AppBar(
             title: Text("Partner Mode"),
             leading: CircleAvatar(
-              backgroundColor: Colors.transparent, // to remove extra background color
-              child: Icon(Icons.arrow_back, color: Colors.black),
+              backgroundColor: Color(0xffFFC4E8),// to remove extra background color
+              child: IconButton(
+                  color: Colors.black, icon: Icon(Icons.arrow_back), onPressed: () { Navigator.pop(context); },),
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,

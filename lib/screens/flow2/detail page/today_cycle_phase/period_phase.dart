@@ -1,42 +1,32 @@
-import '../globals.dart';
+import 'package:calender_app/screens/flow2/home_flow2.dart';
+import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'cycle_phase_widgets/phase_header.dart';
 import 'package:flutter/material.dart';
-
-import 'cycle_phase_widgets/CervicalMucusSection.dart';
-import 'cycle_phase_widgets/SymptomsSection.dart';
-import 'cycle_phase_widgets/phase_info.dart';
 import 'fertile.dart';
 
 class PeriodPhaseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Period Phase"),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+    return bgContainer(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Flow2Page()),
+              )),
+
         ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0x3DFFABCB),
-              Color(0x5CF6D92A),
-              Color(0x51C3D8FF),
-            ],
-            stops: [0.1, 0.5, 0.9], // Adjust stops to create smooth blending
-          ),
-        ),
-        child: ListView(
-           padding: EdgeInsets.all(8.0),
+        body: ListView(
+          padding: EdgeInsets.all(8.0),
           children: [
             PhaseHeader(
-                iconPath: 'assets/phases/periods_phase_icon.svg',
-                phaseName: "Period Phase",
+              iconPath: 'assets/phases/periods_phase_icon.svg',
+              phaseName: "Period Phase",
               rightPage: fertile(),
             ),
             SizedBox(height: 16),
@@ -150,11 +140,6 @@ class PeriodPhaseScreen extends StatelessWidget {
                       " creating an environment that does not support the implantation of a fertilized egg."),
                 ],
               ),
-            ),
-            CervicalMucusSection(
-              mucusType: "Sticky",
-              chanceOfConception: "LOW",
-              chartData: [1, 2, 1.5, 2.5, 3],
             ),
           ],
         ),

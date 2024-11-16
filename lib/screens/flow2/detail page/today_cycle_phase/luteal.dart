@@ -1,32 +1,35 @@
-import '../globals.dart';
 import 'cycle_phase_widgets/phase_header.dart';
+import 'ovulation.dart';
+import 'package:calender_app/screens/flow2/home_flow2.dart';
+
+import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 
-import 'cycle_phase_widgets/CervicalMucusSection.dart';
-import 'cycle_phase_widgets/SymptomsSection.dart';
-import 'cycle_phase_widgets/phase_info.dart';
-import 'fertile.dart';
+import 'phase.dart';
 
-class Ovulation extends StatelessWidget {
+class luteal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return bgContainer(
+        child: Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text("Ovulation Phase"),
+        backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+            icon: Icon(Icons.close),
+            onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Flow2Page()),
+                )),
       ),
       body: ListView(
-          padding: EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(8.0),
         children: [
           PhaseHeader(
-              iconPath: 'assets/phases/periods_phase_icon.svg',
-
-              phaseName: "Ovulation Phase",
-            leftPage: fertile(),
-
+            iconPath: 'assets/phases/periods_phase_icon.svg',
+            phaseName: "Luteal Phase",
+            leftPage: Ovulation(),
           ),
           SizedBox(height: 16),
           Container(
@@ -106,13 +109,8 @@ class Ovulation extends StatelessWidget {
               ],
             ),
           ),
-          // CervicalMucusSection(
-          //   mucusType: "Sticky",
-          //   chanceOfConception: "LOW",
-          //   chartData: [1, 2, 1.5, 2.5, 3],
-          // ),
         ],
       ),
-    );
+    ));
   }
 }

@@ -1,10 +1,9 @@
-import 'package:calender_app/screens/cycle_phase/fertile.dart';
+import 'package:calender_app/screens/flow2/detail%20page/today_cycle_phase/period_phase.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
 import '../../../widgets/cycle_phase_card.dart';
 
-import '../../cycle_phase/period_phase.dart';
 import '../../globals.dart' as globals;
 
 class CycleStatusScreen extends StatelessWidget {

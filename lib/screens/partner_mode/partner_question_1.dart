@@ -74,7 +74,10 @@ class PartnerNicknameScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                // Define skip functionality
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PartnerSweetNicknameScreen()),
+                );
               },
               child: Text(
                 "Skip",

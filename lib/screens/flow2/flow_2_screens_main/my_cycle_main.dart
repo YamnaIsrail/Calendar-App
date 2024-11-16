@@ -1,3 +1,4 @@
+import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +73,7 @@ class CycleTrackerScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 NoteSection(),
+
                 const SizedBox(height: 40),
                 CategorySection(
                   title: "Intercourse",
@@ -103,12 +105,21 @@ class CycleTrackerScreen extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => OvulationScreen()));
-                            }, // Action to be performed on button click
+                            onPressed: ()  {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Container(
+                                    child: OvulationScreen(), // Your ContraceptivePage widget here
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                             icon: Icon(Icons.arrow_forward_ios_rounded),
                           ),
                         ],
@@ -198,8 +209,11 @@ class CycleTrackerScreen extends StatelessWidget {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20),
                                     ),
-                                    child:
-                                        ContraceptivePage(), // Your ContraceptivePage widget here
+                                      child: Container(
+                                        height: 400,  // Adjust the height as per your requirement
+                                        width: 300,   // Adjust the width as per your requirement
+                                        child: ContraceptivePage(), // Your ContraceptivePage widget here
+                                      ),
                                   );
                                 },
                               );

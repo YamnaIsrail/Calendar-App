@@ -1,4 +1,4 @@
-import 'package:calender_app/screens/cycle_phase/period_phase.dart';
+import 'period_phase.dart';
 import 'package:flutter/material.dart';
 
 import 'phase.dart';

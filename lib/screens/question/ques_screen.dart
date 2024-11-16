@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/backgroundcontainer.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/question_appbar.dart';// Import your custom button
 
@@ -18,7 +19,7 @@ class QuestionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return bgContainer(
 
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -42,7 +43,10 @@ class QuestionScreen extends StatelessWidget {
               onPressed: onNextPressed,
               backgroundColor: Color(0xFFEB1D98), // Example of a different color
             ),
-            Text("I am not sure"),
+            TextButton(
+            onPressed: onNextPressed,
+            child: Text("I am not sure"),
+            ),
           ],
         ),
       ),
