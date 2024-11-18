@@ -1,6 +1,8 @@
 import 'package:calender_app/screens/question/ques_screen.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../provider/cycle_provider.dart';
 import '../globals.dart' as globals; // Import the globals file
 import 'package:calender_app/screens/question/q3.dart';
 import '../../widgets/background.dart';
@@ -75,6 +77,7 @@ class _QuestionScreen2State extends State<QuestionScreen2> {
               ],
             ),
             onNextPressed: () {
+              Provider.of<CycleProvider>(context, listen: false).updateCycleLength(globals.selectedCycleDays);
               print("Selected Cycle Days: ${globals.selectedCycleDays}");
               Navigator.push(
                 context,

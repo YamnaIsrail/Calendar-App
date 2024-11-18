@@ -1,5 +1,7 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../globals.dart' as globals; // Import the globals file
 import 'package:calender_app/screens/question/q2.dart';
 import '../../widgets/background.dart';
@@ -71,14 +73,15 @@ class _QuestionScreen1State extends State<QuestionScreen1> {
                   ),
                 ],
               ),
-              onNextPressed: () {
-                print("Selected Days: ${globals.selectedDays}");
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => QuestionScreen2(selectedDays: globals.selectedDays)),
-                );
-              },
-            ),
+            onNextPressed: () {
+              Provider.of<CycleProvider>(context, listen: false).updatePeriodLength(globals.selectedDays);
+              print("Selected Days: ${globals.selectedDays}");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => QuestionScreen2(selectedDays: globals.selectedDays)),
+              );
+            },
+                 ),
         ),
       ),
     );

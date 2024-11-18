@@ -20,6 +20,22 @@ class CycleProvider with ChangeNotifier {
     _periodLength = periodLength;
     notifyListeners();
   }
+  //update period length
+  void updatePeriodLength(int periodLength) {
+    _periodLength = periodLength;
+    notifyListeners();
+  }
+
+  // Update only the cycle length
+  void updateCycleLength(int cycleLength) {
+    _cycleLength = cycleLength;
+    notifyListeners();
+  }
+  // Update only the last period start date
+  void updateLastPeriodStart(DateTime lastPeriodStart) {
+    _lastPeriodStart = lastPeriodStart;
+    notifyListeners();
+  }
 
   // Add a symptom
   void addSymptom(String symptom) {

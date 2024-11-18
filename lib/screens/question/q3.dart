@@ -1,5 +1,7 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/question/ques_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/backgroundcontainer.dart';
 import '../globals.dart' as globals; // Import the globals file
 import '../../widgets/background.dart';
@@ -94,14 +96,15 @@ class _QuestionScreen3State extends State<QuestionScreen3> {
               ],
             ),
             onNextPressed: () {
-              globals.lastPeriodStartDate = DateTime(selectedYear, selectedMonthIndex + 1, selectedDate); // Save the last period date
-              print("Selected Date: ${globals.lastPeriodStartDate}");
+              DateTime lastPeriodStart = DateTime(selectedYear, selectedMonthIndex + 1, selectedDate);
+              Provider.of<CycleProvider>(context, listen: false).updateLastPeriodStart(lastPeriodStart);
+              print("Selected Date: $lastPeriodStart");
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => Flow2Page()),
               );
             },
-          ),
+               ),
         ),
       ),
     );
