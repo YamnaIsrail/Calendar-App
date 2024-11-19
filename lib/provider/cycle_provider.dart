@@ -30,6 +30,12 @@ class CycleProvider with ChangeNotifier {
     return _widget!;
   }
 
+  int _totalCyclesLogged = 0; // Tracks the total number of cycles logged
+
+// Getter for accessing the total cycles logged
+  int get totalCyclesLogged => _totalCyclesLogged;
+
+
   // Calculate the number of days elapsed since the last period
   int get daysElapsed {
     return DateTime.now().difference(_lastPeriodStart).inDays;
@@ -76,6 +82,9 @@ class CycleProvider with ChangeNotifier {
     _lastPeriodStart = lastPeriod;
     _cycleLength = cycleLength;
     _periodLength = periodLength;
+    _totalCyclesLogged++; // Increment the count
+    print("Cycle info updated. Total cycles logged: $_totalCyclesLogged");
+
 
     // Recalculate all related cycle data when core data is updated
     _initializeCycleData();
@@ -159,4 +168,6 @@ class CycleProvider with ChangeNotifier {
     _initializeCycleData();
     notifyListeners();
   }
+
+
 }

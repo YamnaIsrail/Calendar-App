@@ -150,7 +150,10 @@ class IntercourseScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child:CustomButton(text: "Analysis",
                       onPressed: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=> IntercourseAnalysis()));
+                        Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (
+                                    context)=> IntercourseAnalysis()));
                       },
                       textColor: Colors.black,
                       backgroundColor: secondaryColor),

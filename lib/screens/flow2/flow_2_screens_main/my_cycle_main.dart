@@ -1,8 +1,11 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
+import 'package:calender_app/widgets/date_format.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
 import '../../../widgets/contain.dart';
 import '../detail page/cycle/cycle_page_components/category_selection.dart';
 import '../detail page/cycle/cycle_page_components/cycle_info_card.dart';
@@ -21,6 +24,8 @@ import '../detail page/cycle/symptoms.dart';
 class CycleTrackerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cycleProvider = Provider.of<CycleProvider>(context);
+
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -58,12 +63,13 @@ class CycleTrackerScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 FlowSection(),
                 const SizedBox(height: 20),
+
                 CycleInfoCard(
                   title: "My Cycles",
-                  subtitle: "1 cycle logged",
-                  progressLabelStart: "Oct 3",
-                  progressLabelEnd: "Oct 8",
-                  progressValue: 0.25,
+                  subtitle: "${cycleProvider.totalCyclesLogged} cycles logged", // Dynamic subtitle
+                  progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
+                  progressLabelEnd: formatDate(cycleProvider.getNextPeriodDate()),
+                  progressValue: (cycleProvider.daysElapsed / cycleProvider.cycleLength).clamp(0.0, 1.0),
                   click: () {
                     Navigator.push(
                       context,
@@ -71,6 +77,7 @@ class CycleTrackerScreen extends StatelessWidget {
                     );
                   },
                 ),
+
                 const SizedBox(height: 20),
                 NoteSection(),
 
