@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'cycle_page_components/category_grid.dart';
-class symptoms extends StatelessWidget {
-  const symptoms({Key? key}) : super(key: key);
+
+class Symptoms extends StatelessWidget {
+  const Symptoms({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +26,7 @@ class symptoms extends StatelessWidget {
                 "Head",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
+              // Directly using GridView inside Column
               CategoryGrid(folderName: 'head'),
 
               Text(

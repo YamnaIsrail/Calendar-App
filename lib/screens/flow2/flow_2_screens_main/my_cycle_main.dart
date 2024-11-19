@@ -90,7 +90,7 @@ class CycleTrackerScreen extends StatelessWidget {
                 CategorySection(
                   title: "Symptoms",
                   folderName: "symptoms",
-                  targetPage: symptoms(),
+                  targetPage: Symptoms(),
                 ),
                 CategorySection(
                   title: "Moods",
