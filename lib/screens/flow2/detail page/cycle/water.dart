@@ -82,16 +82,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  buildCupOption(1, 'assets/drink/water_glass_add.svg'),
-                  buildCupOption(2, 'assets/drink/water_glass_add.svg'),
-                  buildCupOption(3, 'assets/drink/water_glass_add.svg'),
+                  buildCupOption(1, 'assets/drink/glass-of-water.png'),
+                  buildCupOption(2, 'assets/drink/plastic-cup.png'),
+                  buildCupOption(3, 'assets/drink/water-bottle1.png'),
                 ],
               ),
               Spacer(),
               CustomButton(
-                onPressed: () {
-
-                },
+                onPressed: () {},
                backgroundColor: primaryColor,
                 text: 'Save',
 
@@ -106,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget buildCupOption(int value, String imagePath) {
     return Column(
       children: [
-        SvgPicture.asset(
+        Image.asset(
           imagePath,
           height: 60,
           width: 60,

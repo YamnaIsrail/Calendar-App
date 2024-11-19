@@ -21,11 +21,11 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget_base.dart';
 //   );
 // }
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  MenstrualCycleWidget.init(
-      secretKey: "11a1215l0119a140409p0919",
-      ivKey: "23a1dfr5lyhd9a1404845001"
-  );
+  // WidgetsFlutterBinding.ensureInitialized();
+  // MenstrualCycleWidget.init(
+  //     secretKey: "11a1215l0119a140409p0919",
+  //     ivKey: "23a1dfr5lyhd9a1404845001"
+  // );
   runApp(
     MultiProvider(
       providers: [

@@ -17,7 +17,7 @@ class QuestionScreen1 extends StatefulWidget {
 class _QuestionScreen1State extends State<QuestionScreen1> {
   @override
   Widget build(BuildContext context) {
-    List<String> dates = List.generate(31, (index) => (index + 1).toString());
+    List<String> dates = List.generate(9, (index) => (index + 3).toString());
 
     return bgContainer(
       child: Scaffold(
@@ -61,7 +61,7 @@ class _QuestionScreen1State extends State<QuestionScreen1> {
                         unselectedColor: Colors.grey,
                         onSelectedItemChanged: (index) {
                           setState(() {
-                            globals.selectedDays = index + 1; // Use the global variable
+                            globals.selectedDays = index + 3; // Use the global variable
                           });
                         },
                       ),

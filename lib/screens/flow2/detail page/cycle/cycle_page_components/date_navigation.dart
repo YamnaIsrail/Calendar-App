@@ -1,25 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // For date manipulation
 
 class DateNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-    final dates = [9, 10, 11, 12, 13, 14, 15]; // Example dates
+
+    // Get current date and week
+    DateTime now = DateTime.now();
+    DateTime startOfWeek = now.subtract(Duration(days: now.weekday % 7)); // Sunday
+    List<DateTime> weekDates = List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       height: 140,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(dayNames.length, (index) {
-          bool isSelected = (index == 2);
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(dayNames.length, (index) {
+            bool isSelected = (weekDates[index].day == now.day);
 
-          return Expanded(
-            child: Container(
+            return Container(
+              width: 52, // Adjust width for items
               margin: EdgeInsets.symmetric(horizontal: 4.0),
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: isSelected
+                    ? LinearGradient(
+                  colors: [
+                    Color(0xFFD6A4F8),
+                    Color(0xFF5A5FE3),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+                    : LinearGradient(
                   colors: [
                     Color(0xFFE8EAF6),
                     Color(0xFFE6BAEE),
@@ -44,13 +59,13 @@ class DateNavigation extends StatelessWidget {
                     dayNames[index],
                     style: TextStyle(
                       fontSize: 14,
-                      color: isSelected ? Colors.black : Colors.black,
+                      color: isSelected ? Colors.white : Colors.black,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${dates[index]}',
+                    '${weekDates[index].day}', // Dynamic date
                     style: TextStyle(
                       fontSize: 16,
                       color: isSelected ? Colors.white : Colors.black,
@@ -59,9 +74,9 @@ class DateNavigation extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ),
     );
   }

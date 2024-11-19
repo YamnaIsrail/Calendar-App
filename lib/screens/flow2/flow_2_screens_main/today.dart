@@ -2,6 +2,7 @@ import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/today_cycle_phase/period_phase.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
+import 'package:calender_app/widgets/cycle_info_card.dart';
 import 'package:calender_app/widgets/cycle_phase_card.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
@@ -9,13 +10,15 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class CycleStatusScreen extends StatelessWidget {
-  // Helper function to format DateTime in the desired format
+
   String formatDate(DateTime date) {
     return DateFormat('dd-MM-yyyy').format(date);
   }
 
   @override
   Widget build(BuildContext context) {
+    final cycleProvider = Provider.of<CycleProvider>(context);
+
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -59,7 +62,7 @@ class CycleStatusScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          "Next period will start on ${formatDate(nextPeriodDate)}",
+                          "Next period will start\n on ${formatDate(nextPeriodDate)}",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 12, color: Colors.black),
                         ),
@@ -132,10 +135,10 @@ class CycleStatusScreen extends StatelessWidget {
                                         date: "Start Date: ${formatDate(cycleProvider.lastPeriodStart.add(Duration(days: cycleProvider.cycleLength - 14 + 14)))}",
                                       ),
                                       CyclePhaseCard(
-                                        icon: Icons.wb_sunny,
+                                        icon: Icons.water_drop,
                                         color: Colors.orange[100]!,
-                                        phase: "Luteal Phase",
-                                        date: "Start Date: ${formatDate(cycleProvider.lastPeriodStart.add(Duration(days: cycleProvider.cycleLength - 14 + 15)))}",
+                                        phase: "Next Period",
+                                        date: "Start Date: ${formatDate(cycleProvider.getNextPeriodDate())}",
                                       ),
                                     ],
                                   ),
@@ -144,55 +147,19 @@ class CycleStatusScreen extends StatelessWidget {
                             ),
                           ),
                           SizedBox(height: 20),
+
                           // Today's Cycle Status
-                          Container(
-                            padding: const EdgeInsets.all(16.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.3),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
+                          buildCycleInfoCard(
+                            icon: Icons.replay_5,
+                            title: ' Today - Cycle Day $currentCycleDay ',
+                            subtitle: 'High chance of getting periods',
+                            progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
+                            progressLabelEnd: formatDate(
+                              cycleProvider.lastPeriodStart.add(
+                                Duration(days: cycleProvider.periodLength),
+                              ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Today - Cycle Day $currentCycleDay',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'HIGH - Chance of getting periods',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                                SizedBox(height: 16),
-                                Row(
-                                  children: [
-                                    Text("Oct 3"),
-                                    Expanded(
-                                      child: LinearProgressIndicator(
-                                        value: currentCycleDay / cycleProvider.cycleLength,
-                                        color: Colors.pink,
-                                        backgroundColor: Colors.grey[300],
-                                      ),
-                                    ),
-                                    Text("Today"),
-                                  ],
-                                ),
-                              ],
-                            ),
+                            progressValue: currentCycleDay / cycleProvider.cycleLength,
                           ),
                         ],
                       ),
