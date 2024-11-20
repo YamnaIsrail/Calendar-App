@@ -15,7 +15,7 @@ class QuestionScreen3 extends StatefulWidget {
 }
 
 class _QuestionScreen3State extends State<QuestionScreen3> {
-  int selectedYear = 2024;
+  int selectedYear = 2020;
   int selectedMonthIndex = 0;
   int selectedDate = 1;
 

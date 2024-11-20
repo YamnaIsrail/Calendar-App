@@ -56,16 +56,22 @@ class CycleStatusScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "$daysUntilNextPeriod Days Left",
+                          daysUntilNextPeriod < 0
+                              ? "0 Days Left"
+                              : "$daysUntilNextPeriod Days Left",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 20, color: Colors.black),
                         ),
                         SizedBox(height: 5),
                         Text(
-                          "Next period will start\n on ${formatDate(nextPeriodDate)}",
+                          daysUntilNextPeriod < 0
+                              ? "Next period was expected\non ${formatDate(nextPeriodDate)}."
+
+                              : "Next period will start\non ${formatDate(nextPeriodDate)}",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 12, color: Colors.black),
                         ),
+
                       ],
                     ),
                   ),
