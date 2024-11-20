@@ -1,6 +1,7 @@
 
 import 'package:calender_app/provider/app_state_provider.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/provider/notes_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
@@ -43,6 +44,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CycleProvider()),
         ChangeNotifierProvider(create: (_) => PregnancyProvider()),
         ChangeNotifierProvider(create: (_) => AppStateProvider()),
+        ChangeNotifierProvider(create: (_) => IntercourseProvider()),
+
         ChangeNotifierProvider(create: (_) => NoteProvider()),
       ],
       child: CalenderApp(), // `child` is required here

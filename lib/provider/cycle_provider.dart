@@ -170,4 +170,24 @@ class CycleProvider with ChangeNotifier {
   }
 
 
+
+  Fertility and pregnancy chances logic
+  String getPregnancyChance(int day) {
+    if (fertileDays.contains(periodDays[day])) {
+      return 'High Chance of Pregnancy';
+    } else if (day < _cycleLength - 14 || day > _cycleLength - 6) {
+      return 'Low Chance of Pregnancy';
+    } else {
+      return 'Medium Chance of Pregnancy';
+    }
+  }
+
+
+  bool isInFertileWindow() {
+    DateTime currentDate = DateTime.now();
+    DateTime fertileStartDate = fertileDays.first;
+    DateTime fertileEndDate = fertileDays.last;
+
+    return currentDate.isAfter(fertileStartDate) && currentDate.isBefore(fertileEndDate);
+  }
 }

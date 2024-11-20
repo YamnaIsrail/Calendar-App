@@ -1,5 +1,7 @@
+import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class IntercourseDialogs {
   // Add primaryColor as a parameter to the static methods that require it
@@ -56,8 +58,9 @@ class IntercourseDialogs {
       ),
     );
   }
-
-  static void showHideOptionDialog(BuildContext context, bool isFeatureVisible, ValueChanged<bool> onChanged, Color primaryColor) {
+  static void showHideOptionDialog(
+      BuildContext context, Color primaryColor) {
+    final provider = Provider.of<IntercourseProvider>(context, listen: false);
     showCustomDialog(
       context: context,
       dialogContent: StatefulBuilder(
@@ -73,29 +76,23 @@ class IntercourseDialogs {
                 ),
               ),
               Divider(),
-              SwitchListTile(
-                value: isFeatureVisible,
-                onChanged: (value) {
-                  setState(() {
-                    onChanged(value); // Call the parent callback
-                  });
-                },
-                title: Text("Feature Visibility"),
-              ),
-              // List of options with switches
-              _buildOptionSwitch("Condom Option", isFeatureVisible, setState, onChanged),
-              _buildOptionSwitch("Female Orgasm", isFeatureVisible, setState, onChanged),
-              _buildOptionSwitch("Times", isFeatureVisible, setState, onChanged),
-              _buildOptionSwitch("Intercourse Chat", isFeatureVisible, setState, onChanged),
-              _buildOptionSwitch("Intercourse Activity", isFeatureVisible, setState, onChanged),
-              _buildOptionSwitch("Forum", isFeatureVisible, setState, onChanged),
-              _buildOptionSwitch("Frequency Statistics", isFeatureVisible, setState, onChanged),
+              ...provider.sections.keys.map((section) {
+                return SwitchListTile(
+                  value: provider.isSectionVisible(section),
+                  onChanged: (value) {
+                    setState(() {
+                      provider.toggleSection(section);
+                    });
+                  },
+                  title: Text(section),
+                );
+              }).toList(),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: CustomButton(
                   onPressed: () => Navigator.pop(context),
                   text: "OK",
-                  backgroundColor: primaryColor,  // Pass primaryColor here
+                  backgroundColor: primaryColor,
                 ),
               ),
             ],
@@ -105,18 +102,18 @@ class IntercourseDialogs {
     );
   }
 
-  // Helper function to build the SwitchListTile for each option
-  static Widget _buildOptionSwitch(String title, bool isFeatureVisible, StateSetter setState, ValueChanged<bool> onChanged) {
-    return SwitchListTile(
-      value: isFeatureVisible,
-      onChanged: (value) {
-        setState(() {
-          onChanged(value);
-        });
-      },
-      title: Text(title),
-    );
-  }
+  // // Helper function to build the SwitchListTile for each option
+  // static Widget _buildOptionSwitch(String title, bool isFeatureVisible, StateSetter setState, ValueChanged<bool> onChanged) {
+  //   return SwitchListTile(
+  //     value: isFeatureVisible,
+  //     onChanged: (value) {
+  //       setState(() {
+  //         onChanged(value);
+  //       });
+  //     },
+  //     title: Text(title),
+  //   );
+  // }
 
   static void showTargetDialog(BuildContext context, Color primaryColor) {
     showCustomDialog(
