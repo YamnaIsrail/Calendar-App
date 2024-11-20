@@ -3,7 +3,15 @@ import 'package:flutter/material.dart';
 import '../water.dart';
 
 
-class WaterIntakeSection extends StatelessWidget {
+class WaterIntakeSection extends StatefulWidget {
+  @override
+  _WaterIntakeSectionState createState() => _WaterIntakeSectionState();
+}
+
+class _WaterIntakeSectionState extends State<WaterIntakeSection> {
+  int selectedGlasses = 0; // Keeps track of the number of glasses selected
+  int totalGlasses = 8;    // Total number of glasses available for selection
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -15,13 +23,12 @@ class WaterIntakeSection extends StatelessWidget {
               "Water Intake",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-
             IconButton(
               icon: Icon(Icons.settings),
-              onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>SettingsScreen()));
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()));
               },
-            )
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -29,19 +36,24 @@ class WaterIntakeSection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(8, (index) {
+            children: List.generate(totalGlasses, (index) {
               return IconButton(
                 icon: Icon(
                   Icons.local_drink,
-                  color: index < 4 ? Colors.blue : Colors.grey[300],
+                  size: 20,
+                  color: index < selectedGlasses ? Colors.blue : Colors.grey[300],
                 ),
                 onPressed: () {
-                  // Update water intake state here if needed
+                  setState(() {
+                    selectedGlasses = index + 1;  // Update selected glasses based on the clicked glass
+                  });
                 },
               );
             }),
           ),
         ),
+        SizedBox(height: 8),
+        Text('Selected Glasses: $selectedGlasses', style: TextStyle(fontSize: 16)),
       ],
     );
   }
