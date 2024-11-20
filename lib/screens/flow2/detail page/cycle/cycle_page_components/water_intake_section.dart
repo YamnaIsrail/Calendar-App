@@ -40,7 +40,7 @@ class _WaterIntakeSectionState extends State<WaterIntakeSection> {
               return IconButton(
                 icon: Icon(
                   Icons.local_drink,
-                  size: 20,
+                  size: 50,
                   color: index < selectedGlasses ? Colors.blue : Colors.grey[300],
                 ),
                 onPressed: () {

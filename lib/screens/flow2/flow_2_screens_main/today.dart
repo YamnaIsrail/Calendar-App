@@ -37,7 +37,6 @@ class CycleStatusScreen extends StatelessWidget {
             final daysUntilNextPeriod = cycleProvider.getDaysUntilNextPeriod();
             final nextPeriodDate = cycleProvider.getNextPeriodDate();
             final currentCycleDay = cycleProvider.daysElapsed + 1;
-
             return Column(
               children: [
                 Container(
@@ -57,7 +56,7 @@ class CycleStatusScreen extends StatelessWidget {
                       children: [
                         Text(
                           daysUntilNextPeriod < 0
-                              ? "0 Days Left"
+                              ? "${daysUntilNextPeriod.abs()} Days Late"
                               : "$daysUntilNextPeriod Days Left",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 20, color: Colors.black),
