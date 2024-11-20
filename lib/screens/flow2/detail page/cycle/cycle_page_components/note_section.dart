@@ -27,14 +27,17 @@ class NoteSection extends StatelessWidget {
               ),
             ],
           ),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Enter your note here...',
-              border: InputBorder.none
-            ),
-            maxLines: 1,  // Adjust height of the TextField
-          )
-
+         TextButton(
+             onPressed: () {
+               Navigator.push(
+                   context,
+                   MaterialPageRoute(
+                   builder: (context)=>Notes()
+                   )
+               );
+             },
+             child:   Text("Enter your note here...")
+             )
         ],
       ),
     );
