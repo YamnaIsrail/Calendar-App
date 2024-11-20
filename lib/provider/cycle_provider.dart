@@ -171,7 +171,7 @@ class CycleProvider with ChangeNotifier {
 
 
 
-  Fertility and pregnancy chances logic
+  // Fertility and pregnancy chances logic
   String getPregnancyChance(int day) {
     if (fertileDays.contains(periodDays[day])) {
       return 'High Chance of Pregnancy';
