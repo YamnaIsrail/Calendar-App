@@ -208,24 +208,11 @@ class CycleTrackerScreen extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return Dialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                      child: Container(
-                                        height: 400,  // Adjust the height as per your requirement
-                                        width: 300,   // Adjust the width as per your requirement
-                                        child: ContraceptivePage(), // Your ContraceptivePage widget here
-                                      ),
-                                  );
-                                },
-                              );
+                            onPressed: (){
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) => ContraceptivePage()));
                             },
-                            // Action to be performed on button click
+
                             icon: Icon(Icons.arrow_forward_ios_rounded),
                           ),
                         ],

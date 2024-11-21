@@ -2,105 +2,185 @@ import 'package:calender_app/screens/flow2/detail%20page/cycle/medicine_reminder
 import 'package:calender_app/screens/flow2/flow_2_screens_main/my_cycle_main.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../../widgets/backgroundcontainer.dart';
+class MedicineReminderScreen extends StatefulWidget {
+  final List<String> selectedMedicines;
+  final String? editingMedicine; // Optional parameter for editing a specific medicine
 
-class MedicineReminderScreen extends StatelessWidget {
+  MedicineReminderScreen({
+    required this.selectedMedicines,
+    this.editingMedicine,
+  });
+
+  @override
+  _MedicineReminderScreenState createState() =>
+      _MedicineReminderScreenState();
+}
+
+class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
+  DateTime? startDate;
+  TimeOfDay? reminderTime;
+  String interval = "Everyday";
+  String duration = "Forever";
+
+  late TextEditingController medicineController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controller with editingMedicine if provided
+    medicineController = TextEditingController(
+      text: widget.editingMedicine ?? "",
+    );
+  }
+
+  @override
+  void dispose() {
+    medicineController.dispose();
+    super.dispose();
+  }
+
+  void _pickStartDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        startDate = pickedDate;
+      });
+    }
+  }
+
+  void _pickReminderTime() async {
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        reminderTime = pickedTime;
+      });
+    }
+  }
+
+  void _saveReminder() {
+    if (medicineController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter a medicine name")),
+      );
+      return;
+    }
+
+    setState(() {
+      if (widget.editingMedicine != null) {
+        // Editing existing medicine
+        final index = widget.selectedMedicines.indexOf(widget.editingMedicine!);
+        if (index != -1) {
+          widget.selectedMedicines[index] = medicineController.text;
+        }
+      } else {
+        // Adding new medicine
+        widget.selectedMedicines.add(medicineController.text);
+      }
+    });
+
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return bgContainer(
-        child: Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: Text('Medicine Reminder', style: TextStyle(color: Colors.black)),
-        leading: CircleAvatar(
-          backgroundColor: Color(0xffFFC4E8),
-          child: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
+        appBar: AppBar(
+
+          backgroundColor: Colors.transparent,
+          title: Text(widget.editingMedicine != null
+              ? "Edit Medicine Reminder"
+              : "Add Medicine Reminder"),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              SwitchListTile(
+                title: Text("Notifications"),
+                value: true,
+                onChanged: (value) {},
+              ),
+              TextField(
+                controller: medicineController,
+                decoration: InputDecoration(
+                  labelText: "Medicine Name",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 20),
+              ListTile(
+                title: Text("Start Date"),
+                subtitle: Text(
+                  startDate != null
+                      ? "${startDate!.toLocal()}".split(' ')[0]
+                      : "Select Start Date",
+                ),
+                trailing: Icon(Icons.calendar_today),
+                onTap: _pickStartDate,
+              ),
+              ListTile(
+                title: Text("Reminder Time"),
+                subtitle: Text(
+                  reminderTime != null
+                      ? reminderTime!.format(context)
+                      : "Select Time",
+                ),
+                trailing: Icon(Icons.access_time),
+                onTap: _pickReminderTime,
+              ),
+              DropdownButtonFormField<String>(
+                value: interval,
+                onChanged: (value) {
+                  setState(() {
+                    interval = value!;
+                  });
+                },
+                items: ["Everyday", "Weekly"]
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                decoration: InputDecoration(labelText: "Interval"),
+              ),
+              DropdownButtonFormField<String>(
+                value: duration,
+                onChanged: (value) {
+                  setState(() {
+                    duration = value!;
+                  });
+                },
+                items: ["Forever", "1 Day", "7 Days", "1 Month"]
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                decoration: InputDecoration(labelText: "Duration"),
+              ),
+              Spacer(),
+              CustomButton(
+                onPressed: _saveReminder,
+                text: widget.editingMedicine != null
+                    ? "Update Reminder"
+                    : "Save Reminder",
+                backgroundColor: primaryColor,
+              ),
+
+            ],
           ),
         ),
       ),
-      body: ListView(
-        children: [
-          TextField(
-            decoration: InputDecoration(
-              labelText: "Medicine Name",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          SwitchListTile(
-            title: Text("Notifications"),
-            value: true,
-            onChanged: (value) {},
-          ),
-          SettingsOption(
-            icon: Icons.calendar_today,
-            title: "Start Date",
-            trailing: Text("Oct 23, 2024"),
-            onTap: () {
-              // Show date picker logic
-            },
-          ),
-          SettingsOption(
-            icon: Icons.repeat,
-            title: "Interval",
-            trailing: Text("Every day"),
-          ),
-          SettingsOption(
-            icon: Icons.timer,
-            title: "Duration",
-            trailing: Text("7 Days"),
-          ),
-          SettingsOption(
-            icon: Icons.alarm,
-            title: "Time & Dose",
-            trailing: Text("09:00 AM | 1 Dose"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => SetTimeAndDoseScreen()),
-              );
-            },
-          ),
-          TextField(
-            decoration: InputDecoration(
-              labelText: "Message",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          SwitchListTile(
-            title: Text("Snooze"),
-            value: false,
-            onChanged: (value) {},
-          ),
-          SwitchListTile(
-            title: Text("Vibrate"),
-            value: true,
-            onChanged: (value) {},
-          ),
-          SettingsOption(
-            icon: Icons.music_note,
-            title: "Ringtone",
-            trailing: Text("Default"),
-          ),
-          SizedBox(height: 16),
-          CustomButton(
-              text: "Save",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => CycleTrackerScreen()),
-                );
-              },
-              backgroundColor: primaryColor),
-        ],
-      ),
-    ));
+    );
   }
 }
