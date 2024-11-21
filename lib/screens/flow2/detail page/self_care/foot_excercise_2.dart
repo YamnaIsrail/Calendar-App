@@ -7,7 +7,7 @@ class FootExcercise2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return footExcercise(
+    return FootExercise(
       title: 'Right Foot Massage',
       time: '03:00',
       imagePath: 'assets/self_care/right_foot.png',

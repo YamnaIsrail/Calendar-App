@@ -12,7 +12,7 @@ class pose1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return footExcercise(
+    return FootExercise(
       title: 'Supported pigeon pose',
       time: '03:00',
       imagePath: 'assets/self_care/pose2.png',

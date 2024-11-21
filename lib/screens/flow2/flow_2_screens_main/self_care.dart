@@ -146,161 +146,46 @@ class SelfCare extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 10,),
-              Text(
-                "Soundscapes",
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xff3E579A)),
-              ),
-              GestureDetector(
-                onTap: () {
-
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(builder: (context) => NextPage()), // Replace with your page
-                  // );
-                },
-                child: Container(
-                  // width: 370,
-                  // height: 180,
-                  child: Stack(
-                    children: [
-                      // Background Image
-                      Container(
-                        height: 75,
-                        width: 380,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(
-                                'assets/self_care/forest1.png'), // Replace with your image path
-                            fit: BoxFit.cover,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Image.asset(
-                            'assets/self_care/forest1.png'),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white
-                              .withOpacity(0.3), // Adjust opacity as needed
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Forest Rain',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Container(
-                              //  padding: EdgeInsets.all(2),
-                                margin: EdgeInsets.only(right: 5),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.white,
-
-                                ),
-
-                                child: IconButton(
-                                    onPressed: () {
-                                      Navigator.push(context,
-                                          MaterialPageRoute(
-                                              builder:
-                                              (context)=> sound()
-                                          )
-                                      );
-                                    },
-                                    icon: Icon(Icons.play_arrow)))
-                          ],
-                        ),
-                      ),
-                    ],
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Soundscapes",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff3E579A),
+                    ),
                   ),
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(builder: (context) => NextPage()), // Replace with your page
-                  // );
-                },
-                child: Container(
-                  // width: 370,
-                  // height: 180,
-                  child: Stack(
-                    children: [
-                      // Background Image
-                      Container(
-                        height: 75,
-                        width: 380,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(
-                                'assets/self_care/calm.png'), // Replace with your image path
-                            fit: BoxFit.cover,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Sound(
+                            audioPath:'assets/audios/calm.mp3',
+                            title: 'Forest Rain',
                           ),
-                          borderRadius: BorderRadius.circular(15),
                         ),
-                        child: Image.asset("assets/self_care/calm.png"),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white
-                              .withOpacity(0.3), // Adjust opacity as needed
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Calm',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Container(
-                              //  padding: EdgeInsets.all(2),
-                               margin: EdgeInsets.only(right: 5),
-                                decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.white,
-
-                              ),
-
-                                child: IconButton(
-                                    onPressed: () {
-                                      Navigator.push(context,
-                                        MaterialPageRoute(
-                                            builder:
-                                                (context)=> sound()
-                                        )
-                                    );
-                                      },
-                                    icon: Icon(Icons.play_arrow))
-                            )
-                          ],
-                        ),
-                      ),
-                    ],
+                      );
+                    },
+                    child: _buildSoundButton('Forest Rain', 'assets/self_care/forest1.png'),
                   ),
-                ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Sound(
+                            audioPath: 'assets/audios/birds.mp3',
+                            title: 'Calm',
+                          ),
+                        ),
+                      );
+                    },
+                    child: _buildSoundButton('Calm', 'assets/self_care/calm.png'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -308,4 +193,60 @@ class SelfCare extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildSoundButton(String title, String imagePath) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 10),
+      child: Stack(
+        children: [
+          Container(
+            height: 75,
+            width: 380,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(imagePath),
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+
+                    },
+                    icon: Icon(Icons.play_arrow),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
