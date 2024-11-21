@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
-import '../analysis/intercourse_analysis.dart';
+import 'intercourse_analysis.dart';
 import 'cycle_section_dialogs.dart';
 
 

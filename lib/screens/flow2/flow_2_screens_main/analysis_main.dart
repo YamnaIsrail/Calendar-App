@@ -4,10 +4,9 @@ import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-import '../detail page/analysis/intercourse_analysis.dart';
+import '../detail page/cycle/intercourse_analysis.dart';
 import '../detail page/analysis/temperature.dart';
 import '../detail page/analysis/weight_months_view.dart';
-
 
 class Analysis extends StatelessWidget {
   const Analysis({super.key});
