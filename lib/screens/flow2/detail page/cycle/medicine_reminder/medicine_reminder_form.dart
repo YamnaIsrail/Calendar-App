@@ -1,7 +1,5 @@
-import 'package:calender_app/screens/flow2/detail%20page/cycle/medicine_reminder/set_time_dose.dart';
-import 'package:calender_app/screens/flow2/flow_2_screens_main/my_cycle_main.dart';
+import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/screens/globals.dart';
-import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -25,13 +23,13 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
   TimeOfDay? reminderTime;
   String interval = "Everyday";
   String duration = "Forever";
+  bool isNotificationEnabled = false;
 
   late TextEditingController medicineController;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controller with editingMedicine if provided
     medicineController = TextEditingController(
       text: widget.editingMedicine ?? "",
     );
@@ -71,7 +69,7 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
     }
   }
 
-  void _saveReminder() {
+  void _saveReminder() async {
     if (medicineController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please enter a medicine name")),
@@ -79,15 +77,29 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       return;
     }
 
+    if (startDate != null && reminderTime != null) {
+      final scheduleDate = DateTime(
+        startDate!.year,
+        startDate!.month,
+        startDate!.day,
+        reminderTime!.hour,
+        reminderTime!.minute,
+      );
+
+      await NotificationService.showIScheduleNotification(
+        "Medicine Reminder",
+        "It's time to take your medicine: ${medicineController.text}",
+        scheduleDate,
+      );
+    }
+
     setState(() {
       if (widget.editingMedicine != null) {
-        // Editing existing medicine
         final index = widget.selectedMedicines.indexOf(widget.editingMedicine!);
         if (index != -1) {
           widget.selectedMedicines[index] = medicineController.text;
         }
       } else {
-        // Adding new medicine
         widget.selectedMedicines.add(medicineController.text);
       }
     });
@@ -100,21 +112,39 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
 
+        appBar: AppBar(
           backgroundColor: Colors.transparent,
           title: Text(widget.editingMedicine != null
               ? "Edit Medicine Reminder"
               : "Add Medicine Reminder"),
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+          padding: EdgeInsets.all(16),
+          child: ListView(
             children: [
               SwitchListTile(
                 title: Text("Notifications"),
-                value: true,
-                onChanged: (value) {},
+                value: isNotificationEnabled,
+                onChanged: (value) async {
+                  setState(() {
+                    isNotificationEnabled = value;
+                  });
+
+                  if (isNotificationEnabled) {
+                    // Enable notifications and show a notification
+                    await NotificationService.showInstantNotification(
+                      "Notifications Enabled",
+                      "You will now receive reminders.",
+                    );
+                  } else {
+                    // Disable notifications and cancel all existing notifications
+                    await NotificationService.flutterLocalNotification.cancelAll();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Notifications Disabled")),
+                    );
+                  }
+                },
               ),
               TextField(
                 controller: medicineController,
@@ -168,14 +198,13 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
                     .toList(),
                 decoration: InputDecoration(labelText: "Duration"),
               ),
-              Spacer(),
+              SizedBox(height: 20),
               CustomButton(
+                backgroundColor: primaryColor,
                 onPressed: _saveReminder,
                 text: widget.editingMedicine != null
                     ? "Update Reminder"
-                    : "Save Reminder",
-                backgroundColor: primaryColor,
-              ),
+                    : "Save Reminder")
 
             ],
           ),

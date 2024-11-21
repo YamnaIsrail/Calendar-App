@@ -1,4 +1,5 @@
 import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/buttons.dart';
 import 'medicine_reminder/medicine_reminder_form.dart';
@@ -19,6 +20,7 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
   ];
 
   final List<String> selectedMedicines = [];
+  Map<String, bool> notificationsStatus = {}; // Track notification status for each medicine
 
   void showContraceptiveDialog() {
     showModalBottomSheet(
@@ -66,51 +68,30 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                             selectedMedicines.add(contraceptive['name']);
                           }
                         });
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MedicineReminderScreen(
-                              selectedMedicines: selectedMedicines,
-                              // editingMedicine: selectedMedicines, // Pass the medicine to be edited
-                            ),
-                          ),
-                        );
-                        // Navigator.pop(context);
+                        Navigator.pop(context);
                       },
                     );
                   },
                 ),
               ),
-
-    ListTile(
-      leading: Icon(
-       Icons.add,
-        size: 40,
-        color: Color(0xff3049B2),
-      ),
-      title: Text(
-        "Add Custom Pill",
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-      onTap: () {
-        setState(() {
-    Navigator.pop(context);
-    _showCustomPillDialog();
-          }
-    );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MedicineReminderScreen(
-              selectedMedicines: selectedMedicines,
-              // editingMedicine: selectedMedicines, // Pass the medicine to be edited
-            ),
-          ),
-        );
-        // Navigator.pop(context);
-      },
-    ),
-                ],
+              ListTile(
+                leading: Icon(
+                  Icons.add,
+                  size: 40,
+                  color: Color(0xff3049B2),
+                ),
+                title: Text(
+                  "Add Custom Pill",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  setState(() {
+                    Navigator.pop(context);
+                    _showCustomPillDialog();
+                  });
+                },
+              ),
+            ],
           ),
         ),
       ),
@@ -151,68 +132,93 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
     );
   }
 
+  void toggleNotificationStatus(String medicine) {
+    setState(() {
+      // Toggle the notification status for the given medicine
+      notificationsStatus[medicine] = !(notificationsStatus[medicine] ?? false);
+    });
+  }
+
+  bool isNotificationEnabled(String medicine) {
+    // Return the current notification status for the medicine
+    return notificationsStatus[medicine] ?? false; // Default to false if not found
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Medicine Reminder")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: selectedMedicines.length,
-                itemBuilder: (context, index) {
-                  final medicine = selectedMedicines[index];
-                  return ListTile(
-                    title: Text(
-                      medicine,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            // Navigate to MedicineReminderScreen for editing
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => MedicineReminderScreen(
-                                  selectedMedicines: selectedMedicines,
-                                  editingMedicine: medicine, // Pass the medicine to be edited
-                                ),
+    return bgContainer(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          title: Text("Medicine Reminder"),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: selectedMedicines.length,
+                  itemBuilder: (context, index) {
+                    final medicine = selectedMedicines[index];
+                    return Container(
+                      color: Colors.white,
+                      margin: EdgeInsets.symmetric(vertical: 5),
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: ListTile(
+                        title: Text(
+                          medicine,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          "Click to edit",
+                          style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.grey),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.notifications,
+                              color: isNotificationEnabled(medicine) ? Colors.green : Colors.grey,
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  selectedMedicines.removeAt(index);
+                                  notificationsStatus.remove(medicine); // Remove the notification status for the deleted medicine
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MedicineReminderScreen(
+                                selectedMedicines: selectedMedicines,
+                                editingMedicine: medicine,  // Pass the medicine to be edited
                               ),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            setState(() {
-                              selectedMedicines.removeAt(index);
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-
-                },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            CustomButton(
-              backgroundColor: primaryColor,
-              onPressed: showContraceptiveDialog,
-              text: 'ADD/Choose Medicine',
-            ),
-
-
-          ],
-        )
+              CustomButton(
+                backgroundColor: primaryColor,
+                onPressed: showContraceptiveDialog,
+                text: 'ADD/Choose Medicine',
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
-
