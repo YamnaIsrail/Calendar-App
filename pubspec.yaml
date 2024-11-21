@@ -11,17 +11,16 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   menstrual_cycle_widget: ^1.1.0
-
   syncfusion_flutter_gauges: ^27.1.57
-
   intl: ^0.19.0
+  timezone: ^0.10.0
   table_calendar: ^3.1.2
   curved_navigation_bar: ^1.0.6
   flutter_svg: ^2.0.13
   fl_chart: ^0.69.0
   provider: ^6.1.2
+  flutter_local_notifications: ^18.0.1
   hive: ^2.2.3
-
   hive_generator: ^2.0.1
   build_runner: ^2.4.13
   hive_flutter: ^1.1.0
@@ -59,6 +58,7 @@ flutter:
     - assets/icons/
     - assets/self_care/
     - assets/phases/
+    - assets/mental/
     - assets/partner_mode/
     - assets/pregnancy/
     - assets/Chat.svg
