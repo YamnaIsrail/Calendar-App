@@ -233,16 +233,15 @@ class SelfCare extends StatelessWidget {
                   ),
                 ),
                 Container(
+                    height: 55,
+                  width: 55,
+                  padding: EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: Colors.white,
                   ),
-                  child: IconButton(
-                    onPressed: () {
+                  child:Icon(Icons.play_arrow),
 
-                    },
-                    icon: Icon(Icons.play_arrow),
-                  ),
                 ),
               ],
             ),

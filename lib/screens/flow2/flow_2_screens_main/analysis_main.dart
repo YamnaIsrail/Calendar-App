@@ -1,9 +1,11 @@
+import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/analysis/weight_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../detail page/cycle/intercourse_analysis.dart';
@@ -80,15 +82,20 @@ class Analysis extends StatelessWidget {
                       child: lastWeightData == null
                           ? const Center(child: Text('No weight data available'))
                           :Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Weight: ${lastWeightData!['weight']} kg',
-                            style: const TextStyle(fontSize: 16),
-                          ),
+                            '${lastWeightData!['weight']} kg',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)
+
+                               ),
                           const SizedBox(height: 10),
                           Text(
-                            'Date: ${lastWeightData['date']}',
-                            style: const TextStyle(fontSize: 16),
+                              DateFormat('MM/dd/yyyy').format(lastWeightData['date']),
+                              style: const TextStyle(fontSize: 16),
                           ),
                        ],
                       ),
@@ -101,7 +108,10 @@ class Analysis extends StatelessWidget {
 
                     child: CustomButton2(
                             onPressed: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=> WeightView()));
+                              Navigator.push(context,
+                                  MaterialPageRoute(
+                                      builder: (
+                                          context)=> MonthWeight()));
 
                             },
                             text: "Add Weight"
