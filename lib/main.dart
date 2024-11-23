@@ -1,4 +1,5 @@
 import 'package:calender_app/notifications/notification_service.dart';
+import 'package:calender_app/provider/analysis/temperature_provider.dart';
 import 'package:calender_app/provider/app_state_provider.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/intercourse_provider.dart';
@@ -12,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'provider/analysis/temperature_model.dart';
 import 'provider/analysis/weight_provider.dart';
 
 
@@ -34,6 +36,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
         ChangeNotifierProvider(create: (_) => NoteProvider()),
         ChangeNotifierProvider(create: (_) => WeightProvider()),
+        ChangeNotifierProvider(create: (_) => TemperatureProvider()),
 
 
       ],

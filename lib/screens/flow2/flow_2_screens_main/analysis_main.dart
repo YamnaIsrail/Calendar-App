@@ -1,4 +1,5 @@
 import 'package:calender_app/image_check.dart';
+import 'package:calender_app/provider/analysis/temperature_provider.dart';
 import 'package:calender_app/provider/analysis/weight_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/weight_screens.dart';
@@ -17,6 +18,11 @@ class Analysis extends StatelessWidget {
   Widget build(BuildContext context) {
     final weightProvider = Provider.of<WeightProvider>(context);
     final lastWeightData = Provider.of<WeightProvider>(context).getLastWeightData();
+
+    final temperatureProvider = Provider.of<TemperatureProvider>(context);
+    String latestTemperature = temperatureProvider.temperatureData.isNotEmpty
+        ? "${temperatureProvider.getLatestTemperature()} °F"
+        : "Not Entered Yet";
 
 
     return Scaffold(
@@ -140,12 +146,15 @@ class Analysis extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 30),
                       child: Column(
                         children: [
-                          Text("60.50kg",
+                          Text(latestTemperature,
                               style: TextStyle(
                                   color: Colors.black,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16)),
-                          Text("Oct 15"),
+                          Text( temperatureProvider.temperatureData.isNotEmpty
+                              ? DateFormat('yyyy-MM-dd').format(DateTime.parse(
+                              temperatureProvider.getLatestTemperatureDate()))
+                              : ""),
                         ],
                       ),
                     ),
