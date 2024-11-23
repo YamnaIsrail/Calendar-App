@@ -9,14 +9,18 @@ class NoteProvider with ChangeNotifier {
 
   // Initialize the provider
   Future<void> initialize() async {
-    _notesBox = Hive.box<Note>('notesBox');
+    _notesBox = await Hive.openBox<Note>('notesBox');
     notifyListeners();
   }
 
   // Add a new note
-  Future<void> addNote(String content) async {
-    if (content.isNotEmpty) {
-      final note = Note(content: content);
+  Future<void> addNote(String title, String content) async {
+    if (content.isNotEmpty && title.isNotEmpty) {
+      final note = Note(
+        title: title,
+        content: content,
+        date: DateTime.now(),
+      );
       await _notesBox.add(note);
       notifyListeners();
     }
@@ -27,8 +31,8 @@ class NoteProvider with ChangeNotifier {
     if (newContent.isNotEmpty) {
       final note = _notesBox.getAt(index);
       if (note != null) {
-        note.content = newContent;
-        await note.save();
+        note.updateContent(newContent);
+        await _notesBox.putAt(index, note); // Save the updated note
         notifyListeners();
       }
     }

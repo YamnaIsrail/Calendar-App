@@ -25,11 +25,17 @@ void main() async {
 
   await Hive.initFlutter();
   Hive.registerAdapter(NoteAdapter());
+  //Hive.registerAdapter(MedicineReminderAdapter());
+  Hive.registerAdapter(NoteAdapter());
+  // Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<Note>('notesBox');
 
   runApp(
     MultiProvider(
       providers: [
+
+        ChangeNotifierProvider(create: (_) => AppDataProvider()),
+
         ChangeNotifierProvider(create: (_) => CycleProvider()),
         ChangeNotifierProvider(create: (_) => PregnancyProvider()),
         ChangeNotifierProvider(create: (_) => AppStateProvider()),

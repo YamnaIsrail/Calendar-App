@@ -101,15 +101,30 @@ class Notes extends StatelessWidget {
                           ),
                         ),
                       ),
-                      CustomButton(
-                        backgroundColor: primaryColor,
-                        onPressed: () {
-                          noteProvider.addNote(_noteController.text);
-                          _noteController.clear();
-                        },
-                        text: "Add Note"
-                      ),
-                    ],
+                            CustomButton(
+                  backgroundColor: primaryColor,
+                  onPressed: () {
+                  String content = _noteController.text;
+
+                  if (content.isNotEmpty) {
+                  // Extract the first line as the title
+                  String title = content.split('\n').first;
+
+                  // Use the rest of the content after the first line as the content
+                  String remainingContent = content.substring(title.length).trim();
+
+                  noteProvider.addNote(title, remainingContent.isNotEmpty ? remainingContent : 'No content');
+
+                  _noteController.clear();
+                  } else {
+                  // Handle the case when content is empty
+                  print('Content cannot be empty');
+                  }
+                  },
+                  text: "Add Note",
+                  ),
+
+                  ],
                   );
                 },
               ),

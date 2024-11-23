@@ -190,4 +190,7 @@ class CycleProvider with ChangeNotifier {
 
     return currentDate.isAfter(fertileStartDate) && currentDate.isBefore(fertileEndDate);
   }
+
+
+
 }
