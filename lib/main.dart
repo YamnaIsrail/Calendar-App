@@ -26,7 +26,7 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(NoteAdapter());
   //Hive.registerAdapter(MedicineReminderAdapter());
-  Hive.registerAdapter(NoteAdapter());
+//  Hive.registerAdapter(NoteAdapter());
   // Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<Note>('notesBox');
 

@@ -13,14 +13,17 @@ class Note {
   @HiveField(2)
   DateTime date;
 
+  // Add a default value for title if it's empty
   Note({
     required this.title,
     required this.content,
     required this.date,
   });
 
-  // You can create a method to update content
-  void updateContent(String newContent) {
-    content = newContent;
+  // You can create a method to update content and optionally title or date
+  void updateContent({String? newContent, String? newTitle, DateTime? newDate}) {
+    if (newContent != null) content = newContent;
+    if (newTitle != null) title = newTitle;
+    if (newDate != null) date = newDate;
   }
 }

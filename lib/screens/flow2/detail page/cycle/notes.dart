@@ -68,7 +68,7 @@ class Notes extends StatelessWidget {
                                               onPressed: () {
                                                 noteProvider.updateNoteAt(
                                                   index,
-                                                  _noteController.text,
+                                                //  _noteController.text,
                                                 );
                                                 _noteController.clear();
                                                 Navigator.pop(context);

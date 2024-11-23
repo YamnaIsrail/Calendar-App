@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
     setState(() {
       showRipple = true;
     });
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(seconds: 1));
 
     // Show heart icon with animation
     setState(() {
