@@ -1,10 +1,32 @@
 import 'package:flutter/material.dart';
 
-
-class MultiColorProgressBar extends StatelessWidget {
+class MultiColorProgressBar extends StatefulWidget {
   final double progress; // Progress value between 0 and 10
 
   MultiColorProgressBar({required this.progress});
+
+  @override
+  _MultiColorProgressBarState createState() => _MultiColorProgressBarState();
+}
+
+class _MultiColorProgressBarState extends State<MultiColorProgressBar> {
+  late double progress;
+
+  @override
+  void initState() {
+    super.initState();
+    progress = widget.progress; // Initial progress value
+  }
+
+  @override
+  void didUpdateWidget(covariant MultiColorProgressBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.progress != widget.progress) {
+      setState(() {
+        progress = widget.progress; // Update the progress value dynamically
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +82,6 @@ class ProgressBarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
-    return false; // No need to repaint as progress value remains constant.
+    return true; // Repaint whenever the progress changes
   }
 }

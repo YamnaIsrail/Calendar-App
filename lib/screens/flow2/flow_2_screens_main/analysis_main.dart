@@ -1,16 +1,14 @@
 import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/analysis/weight_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline.dart';
+import 'package:calender_app/screens/flow2/detail%20page/analysis/weight_screens.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-import '../detail page/cycle/intercourse_analysis.dart';
 import '../detail page/analysis/temperature.dart';
-import '../detail page/analysis/weight_months_view.dart';
 
 class Analysis extends StatelessWidget {
    Analysis({super.key});
@@ -111,7 +109,7 @@ class Analysis extends StatelessWidget {
                               Navigator.push(context,
                                   MaterialPageRoute(
                                       builder: (
-                                          context)=> MonthWeight()));
+                                          context)=> Weight()));
 
                             },
                             text: "Add Weight"
