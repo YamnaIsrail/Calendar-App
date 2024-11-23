@@ -55,12 +55,14 @@ class SelfCare extends StatelessWidget {
                         decoration: BoxDecoration(
                           image: DecorationImage(
                             image: AssetImage(
-                                'assets/self_care/cramps_relief.png'), // Replace with your image path
+                                'assets/self_care/pain.PNG'),
+
                             fit: BoxFit.cover,
                           ),
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
+
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white
@@ -91,6 +93,7 @@ class SelfCare extends StatelessWidget {
                   ),
                 ),
               ),
+              SizedBox(height: 15,),
               GestureDetector(
                 onTap: () {
                   // Navigate to the next page

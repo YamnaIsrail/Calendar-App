@@ -1,3 +1,4 @@
+import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
@@ -60,7 +61,7 @@ class CycleTrackerScreen extends StatelessWidget {
                 DateNavigation(),
                 const SizedBox(height: 20),
                 PeriodButtons(),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
                 FlowSection(),
                 const SizedBox(height: 20),
 

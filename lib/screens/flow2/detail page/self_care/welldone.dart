@@ -1,3 +1,4 @@
+import 'package:calender_app/screens/flow2/detail%20page/self_care/foot.dart';
 import 'package:calender_app/screens/flow2/flow_2_screens_main/self_care.dart';
 import 'package:calender_app/screens/flow2/home_flow2.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -66,7 +67,11 @@ class Welldone extends StatelessWidget {
                   SizedBox(
                     height: 10,
                   ),
-                  Text("Do it again"),
+                  TextButton(
+                      child: Text("Do it again"),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> foot()))
+                  ),
+
                 ],
               ),
             ),

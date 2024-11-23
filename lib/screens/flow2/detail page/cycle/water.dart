@@ -1,3 +1,4 @@
+import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -42,121 +43,125 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ),
-        body: Padding(
+        body: ListView(
+
+          scrollDirection: Axis.vertical,
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Notifications Toggle
-              CardContain(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Notifications', style: TextStyle(fontSize: 20)),
-                    Switch(
+
+          children: [
+            // Notifications Toggle
+            CardContain(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Notifications', style: TextStyle(fontSize: 20)),
+                  Switch(
                       value: _notificationsEnabled,
-                      onChanged: (bool value) {
+                      // Inside the onChanged method for the 'Notifications' toggle
+                      onChanged: (value) async {
                         setState(() {
                           _notificationsEnabled = value;
                         });
-                      },
-                    ),
-                  ],
-                ),
-              ),
 
-              // Cup Capacity Unit
-              CardContain(
-                child: ListTile(
-                  title: Text('Cup capacity unit', style: TextStyle(fontSize: 20)),
-                  trailing: Text(_cupCapacityUnit, style: TextStyle(color: blueColor)),
-                  onTap: () {
-                    IntercourseDialogs.showCupCapacityDialog(
-                      context,
-                      primaryColor,
-                          (String value) {
-                        setState(() {
-                          _cupCapacityUnit = value;
-                        });
-                      },
-                      _cupCapacityUnit,
-                    );
-                  },
-                ),
-              ),
-
-              // Target Water Intake
-              CardContain(
-                child: ListTile(
-                  title: Text('Target', style: TextStyle(fontSize: 20)),
-                  trailing: Text("$_targetWaterIntake $_cupCapacityUnit",
-                      style: TextStyle(color: blueColor)),
-                  onTap: () {
-                    IntercourseDialogs.showTargetDialog(
-                      context,
-                      primaryColor,
-                          (int value) {
-                        setState(() {
-                          _targetWaterIntake = value;
-                        });
-                      },
-                      _cupCapacityUnit,
-                      _targetWaterIntake,
-                    );
-                  },
-                ),
-              ),
-
-              // Cup Capacity
-              CardContain(
-                child: ListTile(
-                  title: Text('Cup capacity', style: TextStyle(fontSize: 20)),
-                  trailing: Text("$_cupCapacity $_cupCapacityUnit",
-                      style: TextStyle(color: blueColor)),
-                  onTap: () {
-                    IntercourseDialogs.showCupCapacityDialog(
-                      context,
-                      primaryColor,
-                          (String value) {
-                        setState(() {
-                          _cupCapacityUnit = value; // Update _cupCapacityUnit instead of _cupCapacity
-                        });
-                      },
-                      _cupCapacityUnit,
-                    );
-                  },
-
-                ),
-              ),
-
-              // Cup Size Selection
-              SizedBox(height: 16),
-              Text('Cup Size', style: TextStyle(fontSize: 20)),
-              SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  buildCupOption(1, 'assets/drink/glass-of-water.png'),
-                  buildCupOption(2, 'assets/drink/plastic-cup.png'),
-                  buildCupOption(3, 'assets/drink/water-bottle1.png'),
+                        if (_notificationsEnabled) {
+                          await NotificationService.showInstantNotification(
+                              "Notifications Enabled",
+                              "You will now receive reminders.");
+                        } else {
+                          await NotificationService.flutterLocalNotification
+                              .cancelAll();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Notifications Disabled")),
+                          );
+                        }
+                      }),
                 ],
               ),
+            ),
 
-              Spacer(),
-              CustomButton(
-                onPressed: () {
-                  final selectedSize = _cupSizes[_selectedCupSize] ?? _cupCapacity;
-                  debugPrint(
-                      "Settings saved: Notifications: $_notificationsEnabled, "
-                          "Cup Capacity: $_cupCapacity $_cupCapacityUnit, "
-                          "Target Intake: $_targetWaterIntake $_cupCapacityUnit, "
-                          "Selected Cup Size: $_selectedCupSize ($selectedSize $_cupCapacityUnit)");
+            // Cup Capacity Unit
+            CardContain(
+              child: ListTile(
+                title:
+                Text('Cup capacity unit', style: TextStyle(fontSize: 20)),
+                trailing: Text(_cupCapacityUnit,
+                    style: TextStyle(color: blueColor)),
+                onTap: () {
+                  IntercourseDialogs.showCupCapacityDialogUnit(
+                    context,
+                    primaryColor,
+                        (String value) {
+                      setState(() {
+                        _cupCapacityUnit = value;
+                      });
+                    },
+                    _cupCapacityUnit,
+                  );
                 },
-                backgroundColor: primaryColor,
-                text: 'Save',
               ),
-            ],
-          ),
+            ),
+
+            // Target Water Intake
+            CardContain(
+              child: ListTile(
+                title: Text('Target', style: TextStyle(fontSize: 20)),
+                trailing: Text("$_targetWaterIntake $_cupCapacityUnit",
+                    style: TextStyle(color: blueColor)),
+                onTap: () {
+                  IntercourseDialogs.showTargetDialog(
+                    context,
+                    primaryColor,
+                        (int value) {
+                      setState(() {
+                        _targetWaterIntake = value;
+                      });
+                    },
+                    _cupCapacityUnit,
+                    _targetWaterIntake,
+                  );
+                },
+              ),
+            ),
+
+            // Cup Capacity
+            CardContain(
+              child: ListTile(
+                title: Text('Cup capacity', style: TextStyle(fontSize: 20)),
+                trailing: Text("$_cupCapacity $_cupCapacityUnit",
+                    style: TextStyle(color: blueColor)),
+                subtitle: Text('Select Cup Size', style: TextStyle(fontSize: 10)),
+
+              ),
+            ),
+
+            // Cup Size Selection
+            SizedBox(height: 16),
+            Text('Cup Size', style: TextStyle(fontSize: 20)),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                buildCupOption(1, 'assets/drink/glass-of-water.png'),
+                buildCupOption(2, 'assets/drink/plastic-cup.png'),
+                buildCupOption(3, 'assets/drink/water-bottle1.png'),
+              ],
+            ),
+
+            Spacer(),
+            CustomButton(
+              onPressed: () {
+                final selectedSize =
+                    _cupSizes[_selectedCupSize] ?? _cupCapacity;
+                debugPrint(
+                    "Settings saved: Notifications: $_notificationsEnabled, "
+                        "Cup Capacity: $_cupCapacity $_cupCapacityUnit, "
+                        "Target Intake: $_targetWaterIntake $_cupCapacityUnit, "
+                        "Selected Cup Size: $_selectedCupSize ($selectedSize $_cupCapacityUnit)");
+              },
+              backgroundColor: primaryColor,
+              text: 'Save',
+            ),
+          ],
         ),
       ),
     );

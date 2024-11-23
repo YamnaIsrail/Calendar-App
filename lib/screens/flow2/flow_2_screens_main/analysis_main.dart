@@ -1,18 +1,24 @@
+import 'package:calender_app/provider/analysis/weight_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
 
 import '../detail page/cycle/intercourse_analysis.dart';
 import '../detail page/analysis/temperature.dart';
 import '../detail page/analysis/weight_months_view.dart';
 
 class Analysis extends StatelessWidget {
-  const Analysis({super.key});
+   Analysis({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final weightProvider = Provider.of<WeightProvider>(context);
+    final lastWeightData = Provider.of<WeightProvider>(context).getLastWeightData();
+
+
     return Scaffold(
       backgroundColor: Color(0xFFE8EAF6),
       appBar: AppBar(
@@ -71,15 +77,20 @@ class Analysis extends StatelessWidget {
                     SizedBox(height: 5,),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 30),
-                      child: Column(
+                      child: lastWeightData == null
+                          ? const Center(child: Text('No weight data available'))
+                          :Column(
                         children: [
-                          Text("60.50kg",
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16)),
-                          Text("Oct 15"),
-                        ],
+                          Text(
+                            'Weight: ${lastWeightData!['weight']} kg',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Date: ${lastWeightData['date']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                       ],
                       ),
                     ),
                     SizedBox(height: 20,),
@@ -90,7 +101,7 @@ class Analysis extends StatelessWidget {
 
                     child: CustomButton2(
                             onPressed: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=> MonthWeight()));
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=> WeightView()));
 
                             },
                             text: "Add Weight"

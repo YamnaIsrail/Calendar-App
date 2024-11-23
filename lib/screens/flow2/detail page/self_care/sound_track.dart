@@ -1,96 +1,163 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:just_audio/just_audio.dart';
 
-class sound extends StatelessWidget {
+class Sound extends StatefulWidget {
+  final String audioPath;
+  final String title;
+
+  Sound({required this.audioPath, required this.title});
+
+  @override
+  _SoundState createState() => _SoundState();
+}
+
+class _SoundState extends State<Sound> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
+  bool _isLooping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAudio();
+  }
+
+  Future<void> _setupAudio() async {
+    await _audioPlayer.setAsset(widget.audioPath);
+  }
+
+  void _togglePlayPause() async {
+    if (_isPlaying) {
+      await _audioPlayer.pause();
+    } else {
+      await _audioPlayer.play();
+    }
+    setState(() {
+      _isPlaying = !_isPlaying;
+    });
+  }
+
+  // Show dialog to select timer duration
+  void _showTimerDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Set Timer'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text('5 minutes'),
+                onTap: () => _startTimer(5),
+              ),
+              ListTile(
+                title: Text('10 minutes'),
+                onTap: () => _startTimer(10),
+              ),
+              ListTile(
+                title: Text('15 minutes'),
+                onTap: () => _startTimer(15),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Start looping the audio for the selected duration
+  void _startTimer(int minutes) {
+    Navigator.of(context).pop(); // Close the dialog
+    setState(() {
+      _isLooping = true;
+    });
+
+    // Start playing the audio in a loop
+    _audioPlayer.setLoopMode(LoopMode.one); // Set audio to loop
+    _audioPlayer.play();
+
+    // Stop the audio after the specified time
+    Future.delayed(Duration(minutes: minutes), () async {
+      await _audioPlayer.pause(); // Stop the audio after the timer ends
+      setState(() {
+        _isPlaying = false;
+        _isLooping = false;
+      });
+
+      // Show a snackbar to indicate the timer has ended
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Audio stopped after $minutes minutes')),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[50], // light pink background
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+      backgroundColor: Colors.pink[50],
+      appBar: AppBar(
+        title: Text(widget.title),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/self_care/sound.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Back button
+            Spacer(),
+            Slider(
+              value: _audioPlayer.position.inSeconds.toDouble(),
+              max: _audioPlayer.duration?.inSeconds.toDouble() ?? 0,
+              onChanged: (value) async {
+                await _audioPlayer.seek(Duration(seconds: value.toInt()));
+              },
+            ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  color: Colors.black,
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  icon: Icon(
+                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: Colors.pinkAccent,
+                  ),
+                  iconSize: 64,
+                  onPressed: _togglePlayPause,
+                ),
+                // Timer button to show the timer options
+                IconButton(
+                  icon: Icon(
+                    Icons.timer,
+                    color: Colors.pinkAccent,
+                  ),
+                  iconSize: 64,
+                  onPressed: _showTimerDialog,
                 ),
               ],
             ),
-            // Visualizer (SVG Image)
-            Expanded(
-              child: Center(
-                child: Image.asset(
-                  'assets/self_care/sound.png', // Path to your SVG file
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            // Playback controls
-            Column(
-              children: [
-                // Progress bar
-                Slider(
-                  value: 0.4, // Example value
-                  onChanged: (value) {},
-                  activeColor: Colors.orange,
-                  inactiveColor: Colors.orange[200],
-                ),
-                // Time display
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "4:30",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
+            if (_isLooping)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Audio is looping for your timer...',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.pinkAccent,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 20),
-                // Play/Pause and Forward buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.skip_previous),
-                      color: Colors.pinkAccent,
-                      iconSize: 36,
-                      onPressed: () {},
-                    ),
-                    SizedBox(width: 20),
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.pinkAccent,
-                      child: IconButton(
-                        icon: Icon(Icons.pause, color: Colors.white),
-                        iconSize: 36,
-                        onPressed: () {},
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    IconButton(
-                      icon: Icon(Icons.skip_next),
-                      color: Colors.pinkAccent,
-                      iconSize: 36,
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
           ],
         ),
       ),

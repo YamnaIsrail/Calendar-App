@@ -121,7 +121,7 @@ class painRelief extends StatelessWidget {
 
               Navigator.push(
                   context, MaterialPageRoute(
-                  builder: (context)=> footExcercise(
+                  builder: (context)=> FootExercise(
                     title: 'Left Foot Massage',
                     time: '03:00',
                     imagePath: 'assets/self_care/left_foot.png',

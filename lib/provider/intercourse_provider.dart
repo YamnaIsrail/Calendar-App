@@ -2,17 +2,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'cycle_provider.dart';
-
 class IntercourseProvider with ChangeNotifier {
   // Sections visibility for toggling visibility of different parts of the UI
   final Map<String, bool> _sectionsVisibility = {
-    'Condom Option': false,
-    'Female Orgasm': false,
-    'Times': false,
-    'Intercourse Chart': false,
-    'Intercourse Activity': false,
-    'Forum': false,
-    'Frequency Statistics': false,
+    'Condom Option': true, // Set to true by default
+    'Female Orgasm': true, // Set to true by default
+    'Times': true,         // Set to true by default
+    'Intercourse Chart': true, // Set to true by default
+    'Intercourse Activity': true, // Set to true by default
+    'Forum': true,         // Set to true by default
+    'Frequency Statistics': true, // Set to true by default
   };
 
   // Getter for visibility
@@ -21,7 +20,7 @@ class IntercourseProvider with ChangeNotifier {
   // Toggle visibility for a section
   void toggleSection(String section) {
     if (_sectionsVisibility.containsKey(section)) {
-      _sectionsVisibility[section] = !_sectionsVisibility[section]!;
+      _sectionsVisibility[section] = !_sectionsVisibility[section]!; // Toggle the section visibility
       notifyListeners();
     }
   }

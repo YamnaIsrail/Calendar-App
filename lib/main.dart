@@ -1,4 +1,3 @@
-
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/app_state_provider.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
@@ -12,8 +11,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'hive/notes_model.dart';
-
 import 'package:timezone/data/latest.dart' as tz;
+import 'provider/analysis/weight_provider.dart';
+
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AppStateProvider()),
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
         ChangeNotifierProvider(create: (_) => NoteProvider()),
+        ChangeNotifierProvider(create: (_) => WeightProvider()),
+
+
       ],
       child: CalenderApp(),
     ),
