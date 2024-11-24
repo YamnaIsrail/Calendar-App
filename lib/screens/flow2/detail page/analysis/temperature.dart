@@ -1,3 +1,4 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
@@ -13,16 +14,18 @@ class TempChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context);
     final intercourseProvider = Provider.of<IntercourseProvider>(context);
+    final cycleProvider = Provider.of<CycleProvider>(context);
 
     // Check if temperature data is available, else display a message
     String latestTemperature = temperatureProvider.temperatureData.isNotEmpty
         ? "${temperatureProvider.getLatestTemperature()} °F"
         : "Not Entered Yet";
 
-    // Cycle Day and Intercourse data
-    String cycleDay = intercourseProvider.intercourseActivityData.isNotEmpty
-        ? "Cycle Day ${intercourseProvider.intercourseActivityData.last['times']}"
-        : "Cycle Day  _";
+
+    String cycleDay = cycleProvider.daysElapsed >= 0
+        ? "Cycle Day ${cycleProvider.daysElapsed + 1}"
+        : "Cycle Day _";
+
 
     String intercourseInfo = intercourseProvider
             .intercourseActivityData.isNotEmpty

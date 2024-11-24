@@ -19,8 +19,8 @@ class CycleDataAdapter extends TypeAdapter<CycleData> {
     return CycleData(
       cycleStartDate: fields[0] as String,
       cycleEndDate: fields[1] as String,
-      periodLength: fields[2] as int,
-      cycleLength: fields[3] as int,
+      periodLength: fields[2] as int?,
+      cycleLength: fields[3] as int?,
     );
   }
 

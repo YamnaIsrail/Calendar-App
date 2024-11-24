@@ -41,9 +41,9 @@ class Notes extends StatelessWidget {
                     children: [
                       Expanded(
                         child: ListView.builder(
-                          itemCount: noteProvider.notes.length,
+                          itemCount: noteProvider.notesWithDates.length,
                           itemBuilder: (context, index) {
-                            final note = noteProvider.notes[index];
+                            final note = noteProvider.notesWithDates[index];
                             return ListTile(
                               title: Text(note.content),
                               trailing: Row(

@@ -11,10 +11,10 @@ class CycleData {
   final String cycleEndDate;    // Last period end date (calculated based on cycle length)
 
   @HiveField(2)
-  final int periodLength;       // Period length (number of days)
+  final int? periodLength;       // Period length (number of days)
 
   @HiveField(3)
-  final int cycleLength;        // Cycle length (days in the menstrual cycle)
+  final int? cycleLength;        // Cycle length (days in the menstrual cycle)
 
   CycleData({
     required this.cycleStartDate,

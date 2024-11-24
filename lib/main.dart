@@ -3,6 +3,7 @@ import 'package:calender_app/provider/analysis/temperature_provider.dart';
 import 'package:calender_app/provider/app_state_provider.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/intercourse_provider.dart';
+import 'package:calender_app/provider/moods_symptoms_provider.dart';
 import 'package:calender_app/provider/notes_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
@@ -33,6 +34,7 @@ void main() async {
   // Open the box where you will store the cycle data
   await Hive.openBox<CycleData>('cycleData');
 
+
   runApp(
     MultiProvider(
       providers: [
@@ -43,6 +45,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => NoteProvider()),
         ChangeNotifierProvider(create: (_) => WeightProvider()),
         ChangeNotifierProvider(create: (_) => TemperatureProvider()),
+        ChangeNotifierProvider(create: (_) => MoodsProvider()),
+        ChangeNotifierProvider(create: (_) => SymptomsProvider()),
 
 
       ],

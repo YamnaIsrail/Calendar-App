@@ -36,7 +36,6 @@ class _WeightState extends State<Weight> {
           weightBox.get('weights', defaultValue: []));
     });
   }
-  // Get last weight and date for the current week
   Map<String, dynamic>? getLastWeekData() {
     List<Map<String, dynamic>> weeklyData = weightData
         .where((entry) =>
@@ -52,6 +51,7 @@ class _WeightState extends State<Weight> {
     }
     return null;
   }
+
   void updateWeight(double weight) {
     setState(() {
       final date = DateTime.now();
@@ -59,7 +59,6 @@ class _WeightState extends State<Weight> {
       weightBox.put('weights', weightData);
     });
   }
-
   void showWeightInputDialog() {
     TextEditingController weightController = TextEditingController();
 
@@ -88,6 +87,8 @@ class _WeightState extends State<Weight> {
                       if (weightController.text.isNotEmpty) {
                         double weight = double.parse(weightController.text);
                         updateWeight(weight);
+                        Provider.of<WeightProvider>(context, listen: false)
+                            .addWeightData(weight);
                         Navigator.pop(context);
                       }
                     },

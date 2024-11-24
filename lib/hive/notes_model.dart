@@ -11,3 +11,4 @@ class Note extends HiveObject {
     required this.content,
   });
 }
+

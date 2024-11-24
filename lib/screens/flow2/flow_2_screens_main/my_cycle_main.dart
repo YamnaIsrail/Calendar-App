@@ -96,7 +96,7 @@ class CycleTrackerScreen extends StatelessWidget {
                 CategorySection(
                   title: "Moods",
                   folderName: "emoji",
-                  targetPage: moods(),
+                  targetPage: Moods(),
                 ),
                 CardContain(
                   child: Column(

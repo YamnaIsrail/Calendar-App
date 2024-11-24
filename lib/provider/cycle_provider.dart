@@ -261,8 +261,8 @@ class CycleProvider with ChangeNotifier {
     if (cycleData != null) {
       // Initialize the provider with data from Hive
       _lastPeriodStart = DateTime.parse(cycleData.cycleStartDate);
-      _cycleLength = cycleData.cycleLength;
-      _periodLength = cycleData.periodLength;
+      _cycleLength = cycleData.cycleLength!;
+      _periodLength = cycleData.periodLength!;
 
       // Recalculate the cycle data
       _initializeCycleData();

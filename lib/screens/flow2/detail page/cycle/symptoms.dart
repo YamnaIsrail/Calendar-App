@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import '../../../../provider/moods_symptoms_provider.dart';
 import 'cycle_page_components/category_grid.dart';
 
 class Symptoms extends StatelessWidget {
@@ -7,63 +8,73 @@ class Symptoms extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollController _scrollController = ScrollController();
+    final recentSymptoms = context.watch<SymptomsProvider>().recentSymptoms;
 
     return Scaffold(
       appBar: AppBar(title: Text('Symptoms')),
-      body: Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: true, // Keeps the scrollbar thumb visible
-        thickness: 8.0, // Adjust the thickness of the scrollbar
-        radius: Radius.circular(8), // Make the scrollbar rounded
-        child: SingleChildScrollView(
-          controller: _scrollController, // Link the ScrollController
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Head",
-                style: TextStyle(fontWeight: FontWeight.bold),
+      body: Column(
+        children: [
+          // Recent symptoms section
+          if (recentSymptoms.isNotEmpty)
+            Container(
+              height: 80,
+              padding: EdgeInsets.all(8),
+              color: Colors.grey[200],
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: recentSymptoms.length,
+                itemBuilder: (context, index) {
+                  final item = recentSymptoms[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(item['iconPath']!, height: 30, width: 30),
+                        Text(item['label']!, style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  );
+                },
               ),
-              // Directly using GridView inside Column
-              CategoryGrid(folderName: 'head'),
-
-              Text(
-                "Body",
-                style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildCategory(context, "Head", "head"),
+                  _buildCategory(context, "Body", "body"),
+                  _buildCategory(context, "Cervix", "cervix"),
+                  _buildCategory(context, "Fluid", "fluid"),
+                  _buildCategory(context, "Abdomen", "abdomen"),
+                  _buildCategory(context, "Mental", "mental"),
+                ],
               ),
-              CategoryGrid(folderName: 'body'),
-
-              Text(
-                "Cervix",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              CategoryGrid(folderName: 'cervix'),
-
-              Text(
-                "Fluid",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              CategoryGrid(folderName: 'fluid'),
-
-              Text(
-                "Abdomen",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              CategoryGrid(folderName: 'abdomen'),
-
-              Text(
-                "Mental",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              CategoryGrid(folderName: 'mental'),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
+
+  Widget _buildCategory(BuildContext context, String title, String folderName) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        CategoryGrid(
+          folderName: folderName,
+          onItemSelected: (iconPath, label) {
+            context.read<SymptomsProvider>().addSymptom(iconPath, label);
+          },
+          isSelected: (label) => context.watch<SymptomsProvider>().isSelected(label),
+        ),
+      ],
+    );
+  }
 }
-
-
