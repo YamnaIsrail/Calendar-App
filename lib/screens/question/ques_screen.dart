@@ -43,10 +43,7 @@ class QuestionScreen extends StatelessWidget {
               onPressed: onNextPressed,
               backgroundColor: Color(0xFFEB1D98), // Example of a different color
             ),
-            TextButton(
-            onPressed: onNextPressed,
-            child: Text("I am not sure"),
-            ),
+
           ],
         ),
       ),

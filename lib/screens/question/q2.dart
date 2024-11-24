@@ -77,11 +77,18 @@ class _QuestionScreen2State extends State<QuestionScreen2> {
               ],
             ),
             onNextPressed: () {
+              // Update the cycle length
               Provider.of<CycleProvider>(context, listen: false).updateCycleLength(globals.selectedCycleDays);
               print("Selected Cycle Days: ${globals.selectedCycleDays}");
+
+              // Navigate to the next screen
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => QuestionScreen3()),
+                MaterialPageRoute(builder: (context) =>
+                    QuestionScreen3(
+                  selectedDays: widget.selectedDays,
+                  selectedCycleDays: globals.selectedCycleDays,
+                ),),
               );
             },
           ),

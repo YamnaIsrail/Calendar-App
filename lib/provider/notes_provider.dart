@@ -9,36 +9,28 @@ class NoteProvider with ChangeNotifier {
 
   // Initialize the provider
   Future<void> initialize() async {
-    _notesBox = await Hive.openBox<Note>('notesBox');
+    _notesBox = Hive.box<Note>('notesBox');
     notifyListeners();
   }
 
   // Add a new note
-  Future<void> addNote(String title, String content) async {
-    if (content.isNotEmpty && title.isNotEmpty) {
-      final note = Note(
-        title: title,
-        content: content,
-        date: DateTime.now(),
-      );
+  Future<void> addNote(String content) async {
+    if (content.isNotEmpty) {
+      final note = Note(content: content);
       await _notesBox.add(note);
       notifyListeners();
-    } else {
-      // You could also show an error message to the user here
-      print('Title or content cannot be empty.');
     }
   }
 
   // Update a note
-  Future<void> updateNoteAt(int index, {String? newContent, String? newTitle, DateTime? newDate}) async {
-    final note = _notesBox.getAt(index);
-    if (note != null) {
-      note.updateContent(newContent: newContent, newTitle: newTitle, newDate: newDate);
-      await _notesBox.putAt(index, note); // Save the updated note
-      notifyListeners();
-    } else {
-      // Handle case where the note does not exist
-      print('Note not found.');
+  Future<void> updateNoteAt(int index, String newContent) async {
+    if (newContent.isNotEmpty) {
+      final note = _notesBox.getAt(index);
+      if (note != null) {
+        note.content = newContent;
+        await note.save();
+        notifyListeners();
+      }
     }
   }
 

@@ -1,32 +1,38 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'notes_model.dart';
+part of 'medicine_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class NoteAdapter extends TypeAdapter<Note> {
+class MedicineReminderAdapter extends TypeAdapter<MedicineReminder> {
   @override
-  final int typeId = 0;
+  final int typeId = 2;
 
   @override
-  Note read(BinaryReader reader) {
+  MedicineReminder read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Note(
-      content: fields[0] as String,
+    return MedicineReminder(
+      title: fields[0] as String,
+      time: fields[1] as String,
+      date: fields[2] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Note obj) {
+  void write(BinaryWriter writer, MedicineReminder obj) {
     writer
-      ..writeByte(1)
+      ..writeByte(3)
       ..writeByte(0)
-      ..write(obj.content);
+      ..write(obj.title)
+      ..writeByte(1)
+      ..write(obj.time)
+      ..writeByte(2)
+      ..write(obj.date);
   }
 
   @override
@@ -35,7 +41,7 @@ class NoteAdapter extends TypeAdapter<Note> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is NoteAdapter &&
+      other is MedicineReminderAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

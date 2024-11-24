@@ -70,6 +70,7 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
   }
 
   void _saveReminder() async {
+    // Validate input
     if (medicineController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please enter a medicine name")),
@@ -77,22 +78,45 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       return;
     }
 
-    if (startDate != null && reminderTime != null) {
-      final scheduleDate = DateTime(
-        startDate!.year,
-        startDate!.month,
-        startDate!.day,
-        reminderTime!.hour,
-        reminderTime!.minute,
+    if (startDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please select a start date")),
       );
-
-      await NotificationService.showIScheduleNotification(
-        "Medicine Reminder",
-        "It's time to take your medicine: ${medicineController.text}",
-        scheduleDate,
-      );
+      return;
     }
 
+    if (reminderTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please select a reminder time")),
+      );
+      return;
+    }
+
+    // Combine start date and reminder time
+    final scheduleDate = DateTime(
+      startDate!.year,
+      startDate!.month,
+      startDate!.day,
+      reminderTime!.hour,
+      reminderTime!.minute,
+    );
+
+    // Check if the schedule date/time is in the past
+    if (scheduleDate.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Scheduled time cannot be in the past")),
+      );
+      return;
+    }
+
+    // Schedule notification
+    await NotificationService.showIScheduleNotification(
+      "Medicine Reminder",
+      "It's time to take your medicine: ${medicineController.text}",
+      scheduleDate,
+    );
+
+    // Update the list or add new medicine
     setState(() {
       if (widget.editingMedicine != null) {
         final index = widget.selectedMedicines.indexOf(widget.editingMedicine!);
@@ -103,6 +127,11 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
         widget.selectedMedicines.add(medicineController.text);
       }
     });
+
+    // Provide feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Reminder saved successfully")),
+    );
 
     Navigator.pop(context);
   }
@@ -132,13 +161,11 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
                   });
 
                   if (isNotificationEnabled) {
-                    // Enable notifications and show a notification
                     await NotificationService.showInstantNotification(
                       "Notifications Enabled",
                       "You will now receive reminders.",
                     );
                   } else {
-                    // Disable notifications and cancel all existing notifications
                     await NotificationService.flutterLocalNotification.cancelAll();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Notifications Disabled")),
@@ -146,6 +173,7 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
                   }
                 },
               ),
+
               TextField(
                 controller: medicineController,
                 decoration: InputDecoration(
@@ -200,11 +228,11 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
               ),
               SizedBox(height: 20),
               CustomButton(
-                backgroundColor: primaryColor,
-                onPressed: _saveReminder,
-                text: widget.editingMedicine != null
-                    ? "Update Reminder"
-                    : "Save Reminder")
+                  backgroundColor: primaryColor,
+                  onPressed: _saveReminder,
+                  text: widget.editingMedicine != null
+                      ? "Update Reminder"
+                      : "Save Reminder")
 
             ],
           ),

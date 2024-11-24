@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
+
+import '../hive/cycle_model.dart';
 
 class CycleProvider with ChangeNotifier {
   // Private fields with default values
@@ -75,6 +78,24 @@ class CycleProvider with ChangeNotifier {
   }
 
   // Method to update cycle info with validation
+  // void updateCycleInfo(DateTime lastPeriod, int cycleLength, int periodLength) {
+  //   if (cycleLength <= 0 || periodLength <= 0) {
+  //     throw Exception("Cycle length and period duration must be positive integers.");
+  //   }
+  //   _lastPeriodStart = lastPeriod;
+  //   _cycleLength = cycleLength;
+  //   _periodLength = periodLength;
+  //   _totalCyclesLogged++; // Increment the count
+  //   print("Cycle info updated. Total cycles logged: $_totalCyclesLogged");
+  //
+  //
+  //   // Recalculate all related cycle data when core data is updated
+  //   _initializeCycleData();
+  //   notifyListeners();
+  // }
+
+  // Method to update only the cycle length
+
   void updateCycleInfo(DateTime lastPeriod, int cycleLength, int periodLength) {
     if (cycleLength <= 0 || periodLength <= 0) {
       throw Exception("Cycle length and period duration must be positive integers.");
@@ -85,13 +106,42 @@ class CycleProvider with ChangeNotifier {
     _totalCyclesLogged++; // Increment the count
     print("Cycle info updated. Total cycles logged: $_totalCyclesLogged");
 
-
     // Recalculate all related cycle data when core data is updated
     _initializeCycleData();
     notifyListeners();
+
+    // Sync updated data with Hive
+    _saveToHive();
   }
 
-  // Method to update only the cycle length
+// Method to save data to Hive
+  Future<void> _saveToHive() async {
+    // Create the CycleData object
+    CycleData cycleData = CycleData(
+      cycleStartDate: _lastPeriodStart.toString(),
+      cycleEndDate: _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
+      periodLength: _periodLength,
+      cycleLength: _cycleLength,
+    );
+
+    // Open the Hive box
+    var box = await Hive.openBox<CycleData>('cycleData');
+    await box.put('cycle', cycleData);  // Save with the key 'cycle'
+
+    print("Cycle data saved to Hive.");
+  }
+
+  // void updateCycleLength(int cycleLength) {
+  //   if (cycleLength <= 0) {
+  //     throw Exception("Cycle length must be a positive integer.");
+  //   }
+  //   _cycleLength = cycleLength;
+  //
+  //   // Recalculate all related cycle data when cycle length is updated
+  //   _initializeCycleData();
+  //   notifyListeners();
+  // }
+  //
   void updateCycleLength(int cycleLength) {
     if (cycleLength <= 0) {
       throw Exception("Cycle length must be a positive integer.");
@@ -101,6 +151,9 @@ class CycleProvider with ChangeNotifier {
     // Recalculate all related cycle data when cycle length is updated
     _initializeCycleData();
     notifyListeners();
+
+    // Sync updated data with Hive
+    _saveToHive();
   }
 
   // Method to update only the period length
@@ -114,15 +167,25 @@ class CycleProvider with ChangeNotifier {
     _initializeCycleData();
     notifyListeners();
   }
-
-  // Method to update only the last period start date
   void updateLastPeriodStart(DateTime lastPeriodStart) {
     _lastPeriodStart = lastPeriodStart;
 
     // Recalculate all related cycle data when last period start is updated
     _initializeCycleData();
     notifyListeners();
+
+    // Sync updated data with Hive
+    _saveToHive();
   }
+
+  // // Method to update only the last period start date
+  // void updateLastPeriodStart(DateTime lastPeriodStart) {
+  //   _lastPeriodStart = lastPeriodStart;
+  //
+  //   // Recalculate all related cycle data when last period start is updated
+  //   _initializeCycleData();
+  //   notifyListeners();
+  // }
 
   // Method to add a symptom
   void addSymptom(String symptom) {
@@ -191,6 +254,24 @@ class CycleProvider with ChangeNotifier {
     return currentDate.isAfter(fertileStartDate) && currentDate.isBefore(fertileEndDate);
   }
 
+  Future<void> loadCycleDataFromHive() async {
+    var box = await Hive.openBox<CycleData>('cycleData');
+    CycleData? cycleData = box.get('cycle');
 
+    if (cycleData != null) {
+      // Initialize the provider with data from Hive
+      _lastPeriodStart = DateTime.parse(cycleData.cycleStartDate);
+      _cycleLength = cycleData.cycleLength;
+      _periodLength = cycleData.periodLength;
 
+      // Recalculate the cycle data
+      _initializeCycleData();
+      notifyListeners();
+    } else {
+      print("No cycle data found in Hive.");
+    }
+  }
+  CycleProvider() {
+    loadCycleDataFromHive();  // Load data from Hive when the provider is created
+  }
 }

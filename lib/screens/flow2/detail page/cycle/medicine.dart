@@ -1,6 +1,7 @@
+import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/screens/globals.dart';
-import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import '../../../../widgets/buttons.dart';
 import 'medicine_reminder/medicine_reminder_form.dart';
 
@@ -132,10 +133,24 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
     );
   }
 
-  void toggleNotificationStatus(String medicine) {
+  void toggleNotificationStatus(String medicine) async {
+    final currentStatus = notificationsStatus[medicine] ?? false;
+
+    if (!currentStatus) {
+      // Schedule a notification
+      await NotificationService.showIScheduleNotification(
+        'Reminder for $medicine',
+        'Time to take your $medicine',
+        DateTime.now().add(Duration(minutes: 1)), // Example time
+      );
+    } else {
+      // Cancel the notification (implement cancel logic in NotificationService if needed)
+      print("Cancel notification for $medicine");
+    }
+
+    // Update the status in state
     setState(() {
-      // Toggle the notification status for the given medicine
-      notificationsStatus[medicine] = !(notificationsStatus[medicine] ?? false);
+      notificationsStatus[medicine] = !currentStatus;
     });
   }
 
@@ -174,21 +189,30 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                         ),
                         subtitle: Text(
                           "Click to edit",
-                          style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey,
+                          ),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.notifications,
-                              color: isNotificationEnabled(medicine) ? Colors.green : Colors.grey,
+                            IconButton(
+                              icon: Icon(
+                                Icons.notifications,
+                                color: isNotificationEnabled(medicine)
+                                    ? Colors.green
+                                    : Colors.grey,
+                              ),
+                              onPressed: () => toggleNotificationStatus(medicine),
                             ),
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
                                 setState(() {
                                   selectedMedicines.removeAt(index);
-                                  notificationsStatus.remove(medicine); // Remove the notification status for the deleted medicine
+                                  notificationsStatus.remove(medicine); // Remove notification status
                                 });
                               },
                             ),
@@ -200,11 +224,22 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                             MaterialPageRoute(
                               builder: (_) => MedicineReminderScreen(
                                 selectedMedicines: selectedMedicines,
-                                editingMedicine: medicine,  // Pass the medicine to be edited
+                                editingMedicine: medicine, // Pass the medicine to be edited
                               ),
                             ),
-                          );
+                          ).then((updatedMedicine) {
+                            if (updatedMedicine != null && updatedMedicine is String) {
+                              // Update the medicine if edited and returned
+                              setState(() {
+                                final index = selectedMedicines.indexOf(medicine);
+                                if (index != -1) {
+                                  selectedMedicines[index] = updatedMedicine;
+                                }
+                              });
+                            }
+                          });
                         },
+
                       ),
                     );
                   },

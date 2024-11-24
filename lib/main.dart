@@ -11,6 +11,7 @@ import 'package:calender_app/screens/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'provider/analysis/temperature_model.dart';
@@ -25,17 +26,16 @@ void main() async {
 
   await Hive.initFlutter();
   Hive.registerAdapter(NoteAdapter());
-  //Hive.registerAdapter(MedicineReminderAdapter());
-//  Hive.registerAdapter(NoteAdapter());
-  // Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<Note>('notesBox');
+
+
+  Hive.registerAdapter(CycleDataAdapter());
+  // Open the box where you will store the cycle data
+  await Hive.openBox<CycleData>('cycleData');
 
   runApp(
     MultiProvider(
       providers: [
-
-        ChangeNotifierProvider(create: (_) => AppDataProvider()),
-
         ChangeNotifierProvider(create: (_) => CycleProvider()),
         ChangeNotifierProvider(create: (_) => PregnancyProvider()),
         ChangeNotifierProvider(create: (_) => AppStateProvider()),
