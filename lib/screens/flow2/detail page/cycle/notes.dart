@@ -59,17 +59,12 @@ class Notes extends StatelessWidget {
                                           title: Text('Edit Note'),
                                           content: TextField(
                                             controller: _noteController,
-                                            decoration: InputDecoration(
-                                              hintText: 'Enter updated note',
-                                            ),
+                                            decoration: InputDecoration(hintText: 'Enter updated note'),
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed: () {
-                                                noteProvider.updateNoteAt(
-                                                  index,
-                                                  _noteController.text,
-                                                );
+                                                noteProvider.updateNoteAt(index, _noteController.text);
                                                 _noteController.clear();
                                                 Navigator.pop(context);
                                               },
@@ -80,6 +75,7 @@ class Notes extends StatelessWidget {
                                       );
                                     },
                                   ),
+
                                   IconButton(
                                     icon: Icon(Icons.delete, color: Colors.red),
                                     onPressed: () =>
