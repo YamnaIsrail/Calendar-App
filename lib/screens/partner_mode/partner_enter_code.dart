@@ -7,15 +7,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hive/hive.dart';
 
 class PartnerEnterCode extends StatelessWidget {
-  const PartnerEnterCode({super.key});
-
   Future<bool> validateCode(String enteredCode) async {
-    final box = await Hive.openBox('partner_codes');
+    final box = Hive.box('partner_codes');
     final storedCodeData = box.get(enteredCode);
 
     if (storedCodeData == null) return false;
 
-    final DateTime expirationTime = storedCodeData['expiresAt'];
+    final DateTime expirationTime = DateTime.parse(storedCodeData['expiresAt']);
     if (DateTime.now().isAfter(expirationTime)) {
       return false;
     }
@@ -33,6 +31,7 @@ class PartnerEnterCode extends StatelessWidget {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +109,7 @@ class PartnerEnterCode extends StatelessWidget {
                   text: "Next",
                   onPressed: () => _handleNext(context, codeController.text),
                   backgroundColor: greyBlueColor,
+                  textColor: Colors.black,
                 ),
               ),
             ],

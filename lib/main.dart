@@ -5,7 +5,8 @@ import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/provider/moods_symptoms_provider.dart';
 import 'package:calender_app/provider/notes_provider.dart';
-import 'package:calender_app/provider/preg_provider.dart';
+import 'package:calender_app/provider/partner_mode_provider.dart';
+// import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/homeScreen.dart';
 import 'package:calender_app/screens/splash.dart';
@@ -29,6 +30,9 @@ void main() async {
   Hive.registerAdapter(NoteAdapter());
   await Hive.openBox<Note>('notesBox');
 
+  // Open the box for partner codes
+  await Hive.openBox('partner_codes');
+
 
   Hive.registerAdapter(CycleDataAdapter());
   // Open the box where you will store the cycle data
@@ -47,6 +51,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TemperatureProvider()),
         ChangeNotifierProvider(create: (_) => MoodsProvider()),
         ChangeNotifierProvider(create: (_) => SymptomsProvider()),
+        ChangeNotifierProvider(create: (_) => PartnerModeProvider()),
 
 
       ],

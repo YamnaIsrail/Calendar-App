@@ -15,9 +15,8 @@ class _HomePartnerFlowState extends State<HomePartnerFlow> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    PartnerModeToday(),
+    PregnancyStatusScreen(),
     PartnerModeCalendar(),
-
   ];
 
   @override

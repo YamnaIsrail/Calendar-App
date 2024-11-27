@@ -4,12 +4,22 @@ import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ShareCodeScreen extends StatelessWidget {
-  final String code = Uuid().v4().substring(0, 6); // Generate a random 6-character code
+  final String code = Uuid().v4().substring(0, 6);
 
+  Future<void> _storeCode() async {
+    final box = Hive.box('partner_codes');
+    box.put(
+      code,
+      {
+        'expiresAt': DateTime.now().add(Duration(hours: 24)).toIso8601String(),
+      },
+    );
+  }
   void _copyToClipboard(BuildContext context) {
     Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
@@ -23,6 +33,7 @@ class ShareCodeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _storeCode(); // Store code when screen is built
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -38,7 +49,7 @@ class ShareCodeScreen extends StatelessWidget {
           padding: const EdgeInsets.all(35),
           child: Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SvgPicture.asset("assets/partner_mode/Isolation_Mode.svg"),
                 SizedBox(height: 30),
@@ -67,21 +78,26 @@ class ShareCodeScreen extends StatelessWidget {
                 Text(
                   'The code expires at ${DateTime.now().add(Duration(hours: 24)).toLocal().toString().split(' ')[1]}',
                   style: TextStyle(fontSize: 12),
-                  textAlign: TextAlign.center,
+             //     textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 30),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CustomButton(
-                      backgroundColor: primaryColor,
-                      onPressed: () => _copyToClipboard(context),
-                      text: "Copy Code",
+                    Expanded(
+                      child: CustomButton(
+                        backgroundColor: primaryColor,
+                        onPressed: () => _copyToClipboard(context),
+                        text: "Copy Code",
+                      ),
                     ),
-                    CustomButton(
-                      backgroundColor: primaryColor,
-                      onPressed: () => _shareCode(context),
-                      text: "Share Code",
+                    SizedBox(width: 5,),
+                    Expanded(
+                      child: CustomButton(
+                        backgroundColor: primaryColor,
+                        onPressed: () => _shareCode(context),
+                        text: "Share Code",
+                      ),
                     ),
                   ],
                 ),
