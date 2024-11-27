@@ -1,4 +1,5 @@
 import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -10,13 +11,7 @@ class PartnerPairing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
-        ),
-      ),
+    return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
 

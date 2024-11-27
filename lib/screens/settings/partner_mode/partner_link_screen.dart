@@ -76,7 +76,8 @@ class PartnerLinkScreen extends StatelessWidget {
                 child: CustomButton(
                   backgroundColor: primaryColor,
                   onPressed: () {
-                   Navigator.push(context, MaterialPageRoute(builder: (context)=>ShareCodeScreen())); },
+                   Navigator.push(context, MaterialPageRoute(
+                       builder: (context)=>ShareCodeScreen())); },
                   text: "Continue",
 
                 ),
