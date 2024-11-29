@@ -1,130 +1,94 @@
+import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import 'partner_link_screen.dart';
-
-// class PartnerModeSignInScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return bgContainer(
-//         child: Scaffold(
-//           backgroundColor: Colors.transparent,
-//           appBar: AppBar(
-//             title: Text(
-//               "Partner Mode",
-//               style: TextStyle(
-//                    fontWeight: FontWeight.bold, fontSize: 27),
-//             ),
-//             centerTitle: true,
-//             backgroundColor: Colors.transparent,
-//           ),
-//           body:  Padding(
-//             padding: const EdgeInsets.all(35),
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               crossAxisAlignment: CrossAxisAlignment.center,
-//               children: [
-//                 SvgPicture.asset("assets/partner_mode/Isolation_Mode.svg"),
-//                 SizedBox(height: 30),
-//
-//                 Text(
-//                   'A tap to cloud sync,\n'
-//                       ' a step closer to partner',
-//                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//                   textAlign: TextAlign.center,
-//                 ),
-//                 SizedBox(height: 10),
-//
-//                 Text(
-//                   'Real-time cloud sync ensures a more '
-//                       'private and convenient experience for both of you.'
-//                       ' To access it, please sign in first.',
-//                   style: TextStyle(fontSize: 14,),
-//                   textAlign: TextAlign.center,
-//                 ),
-//                 SizedBox(height: 30),
-//                 CustomButton(
-//                   onPressed: () {
-//                     Navigator.push(
-//                       context,
-//                       MaterialPageRoute(builder: (context) => PartnerLinkScreen()),
-//                     );
-//
-//                   },
-//                   text: "Sign in with Google",
-//                   backgroundColor: Colors.blueAccent,
-//
-//                 ),
-//
-//               ],
-//             ),
-//           ),
-//         ));
-//   }
-// }
-
-import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:calender_app/widgets/backgroundcontainer.dart';
-import 'package:calender_app/widgets/buttons.dart';
-import 'partner_link_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PartnerModeSignInScreen extends StatefulWidget {
   @override
   _PartnerModeSignInScreenState createState() =>
       _PartnerModeSignInScreenState();
 }
-
 class _PartnerModeSignInScreenState extends State<PartnerModeSignInScreen> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // clientId: '668758311941-m3e177tuejr2qm6nh0gv4obqfmcnbt1s.apps.googleusercontent.com',
-clientId: '668758311941-loh0s926cku1nj54pualonhuh5ufbm5p.apps.googleusercontent.com'
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  bool _isLoading = false;
 
-  bool _isLoading = false; // Track loading state
+  @override
+  void initState() {
+    super.initState();
+    _checkUserSession(); // Check for existing user session on initialization
+  }
 
-  Future<void> _handleGoogleSignIn(BuildContext context) async {
+  Future<void> _checkUserSession() async {
     setState(() {
-      _isLoading = true; // Show the loader
+      _isLoading = true;
     });
 
     try {
-      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+      // Check if the user is already logged in
+      bool isLoggedIn = await SessionManager.checkUserLoginStatus();
+      if (isLoggedIn) {
+        // Navigate directly to PartnerLinkScreen if logged in
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => PartnerLinkScreen()),
+        );
+      }
+    } catch (error) {
+      print('Error checking user session: $error');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
-      if (account != null) {
-        // Successfully signed in
-        print('User Name: ${account.displayName}');
-        print('User Email: ${account.email}');
+  Future<void> _handleGoogleSignIn(BuildContext context) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Trigger the Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser != null) {
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+        // Store user session
+        await SessionManager.storeUserSession(userCredential.user?.uid ?? '');
 
         // Navigate to PartnerLinkScreen after successful sign-in
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => PartnerLinkScreen()),
         );
       } else {
         // User canceled the sign-in process
-        print('Sign-in canceled by user');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign-in required to access Partner Mode.')),
+          SnackBar(content: Text('Sign-in canceled by user')),
         );
       }
     } catch (error) {
-      // Print the error in full detail
+      // Handle any errors
       print('Google Sign-In Error: $error');
-
-      // Handle general errors
-      print('Error details: ${error.toString()}');
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Google Sign-In failed. Please try again.')),
       );
     } finally {
       setState(() {
-        _isLoading = false; // Hide the loader after the process finishes
+        _isLoading = false; // Hide loading indicator
       });
     }
   }
@@ -168,14 +132,8 @@ clientId: '668758311941-loh0s926cku1nj54pualonhuh5ufbm5p.apps.googleusercontent.
               _isLoading
                   ? CircularProgressIndicator() // Show loading indicator when processing
                   : CustomButton(
-                onPressed: () {
-                  _handleGoogleSignIn(context);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => PartnerLinkScreen()),
-                    );
-                },
-                  text: "Sign in with Google",
+                onPressed: () => _handleGoogleSignIn(context),
+                text: "Sign in with Google",
                 backgroundColor: Colors.blueAccent,
               ),
             ],

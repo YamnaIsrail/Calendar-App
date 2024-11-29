@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'cycle_provider.dart';
 class IntercourseProvider with ChangeNotifier {
-  // Sections visibility for toggling visibility of different parts of the UI
   final Map<String, bool> _sectionsVisibility = {
     'Condom Option': true, // Set to true by default
     'Female Orgasm': true, // Set to true by default

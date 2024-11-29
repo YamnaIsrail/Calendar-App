@@ -1,37 +1,28 @@
+import 'package:calender_app/firebase/partner_code_utils.dart.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/partner_mode/partner_pairing_successful.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hive/hive.dart';
 
 class PartnerEnterCode extends StatelessWidget {
-  Future<bool> validateCode(String enteredCode) async {
-    final box = Hive.box('partner_codes');
-    final storedCodeData = box.get(enteredCode);
-
-    if (storedCodeData == null) return false;
-
-    final DateTime expirationTime = DateTime.parse(storedCodeData['expiresAt']);
-    if (DateTime.now().isAfter(expirationTime)) {
-      return false;
-    }
-
-    return true;
-  }
 
   void _handleNext(BuildContext context, String enteredCode) async {
-    bool isValid = await validateCode(enteredCode);
+
+    bool isValid = await validatePartnerCode(enteredCode);
+
     if (isValid) {
+      // Code is valid, proceed to the PartnerPairing screen
       Navigator.push(context, MaterialPageRoute(builder: (context) => PartnerPairing()));
     } else {
+      // Show an error if the code is invalid or expired
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invalid or expired code. Please try again.')),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {

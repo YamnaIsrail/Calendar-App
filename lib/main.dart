@@ -6,13 +6,14 @@ import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/provider/moods_symptoms_provider.dart';
 import 'package:calender_app/provider/notes_provider.dart';
 import 'package:calender_app/provider/partner_mode_provider.dart';
-// import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/homeScreen.dart';
 import 'package:calender_app/screens/splash.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'firebase_option.dart';
 import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -23,6 +24,11 @@ import 'provider/analysis/weight_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   await NotificationService.init();
   tz.initializeTimeZones();
 
@@ -43,7 +49,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CycleProvider()),
-        ChangeNotifierProvider(create: (_) => PregnancyProvider()),
+        ChangeNotifierProvider(create: (_) => PartnerProvider()),
         ChangeNotifierProvider(create: (_) => AppStateProvider()),
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
         ChangeNotifierProvider(create: (_) => NoteProvider()),

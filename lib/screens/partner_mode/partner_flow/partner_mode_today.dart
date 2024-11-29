@@ -1,138 +1,8 @@
-import 'package:calender_app/provider/preg_provider.dart';
+//be2e48
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
-
 import 'partner_mode_setting.dart';
-
-// class PartnerModeToday extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         leading: IconButton(onPressed: (){
-//           Navigator.push(
-//             context,
-//             MaterialPageRoute(builder: (context) => PartnerModeSetting()),
-//           );
-//         },
-//             icon: Icon(Icons.menu)),
-//
-//         title: Text('Partner Mode'),
-//       ),
-//       body: Container(
-//         decoration: BoxDecoration(
-//           image: DecorationImage(
-//             image: AssetImage('assets/bg.jpg'), // Use AssetImage for local images
-//             fit: BoxFit.cover, // Adjust the fit as needed (cover, contain, fill, etc.)
-//           ),
-//         ),
-//
-//         child: Column(
-//           children: [
-//             Expanded(
-//               child: Stack(
-//                 children: [
-//                   Image.asset("assets/cal.png"),
-//                   Positioned(
-//                     top: 130, // Adjust this value to position vertically
-//                     left: 0,
-//                     right: 0,
-//                     child: Column(
-//                       children: [
-//                         Text(
-//                           "13 Days Left",
-//                           textAlign: TextAlign.center,
-//                           style: TextStyle(fontSize: 20, color: Colors.black), // Style as needed
-//                         ),
-//                         SizedBox(height: 5), // Add space between texts
-//                         Text(
-//                           "Next periods will start on",
-//                           textAlign: TextAlign.center,
-//                           style: TextStyle(fontSize: 16, color: Colors.black), // Style as needed
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             Expanded(
-//               child: SingleChildScrollView(
-//                 child: Padding(
-//                   padding: const EdgeInsets.all(16.0),
-//                   child: Column(
-//                     children: [
-//
-//                       // Today - Cycle Day 11 Section
-//                       Container(
-//                         padding: const EdgeInsets.all(16.0),
-//                         decoration: BoxDecoration(
-//                           color: Colors.white,
-//                           borderRadius: BorderRadius.circular(16),
-//                           boxShadow: [
-//                             BoxShadow(
-//                               color: Colors.grey.withOpacity(0.3),
-//                               spreadRadius: 2,
-//                               blurRadius: 5,
-//                               offset: Offset(0, 3),
-//                             ),
-//                           ],
-//                         ),
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             Text(
-//                               'Today - Cycle Day 11',
-//                               style: TextStyle(
-//                                 fontSize: 18,
-//                                 fontWeight: FontWeight.bold,
-//                               ),
-//                             ),
-//                             SizedBox(height: 8),
-//                             Text(
-//                               'HIGH - Chance of getting periods',
-//                               style: TextStyle(
-//                                 fontSize: 16,
-//                                 color: Colors.red,
-//                               ),
-//                             ),
-//                             SizedBox(height: 16),
-//
-//                             // Progress Bar
-//                             Row(
-//                               children: [
-//                                 Text("Oct 3"),
-//                                 Expanded(
-//                                   child: LinearProgressIndicator(
-//                                     value: 0.55, // Adjust this value as needed
-//                                     color: Colors.pink,
-//                                     backgroundColor: Colors.grey[300],
-//                                   ),
-//                                 ),
-//                                 Text("Today"),
-//                               ],
-//                             ),
-//                           ],
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-// }
-//
-// extension on DateTime {
-//   String toShortDateString() {
-//     return "${this.day}/${this.month}/${this.year}";
-//   }}
-
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -143,12 +13,17 @@ class PregnancyStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pregnancyProvider = Provider.of<PregnancyProvider>(context);
+    final cycleProvider = Provider.of<CycleProvider>(context);
 
-    final lastMenstrualPeriod = pregnancyProvider.lastMenstrualPeriod;
-    final dueDate = pregnancyProvider.dueDate;
-    final currentWeek = pregnancyProvider.getCurrentWeek();
-    final daysUntilDueDate = pregnancyProvider.getDaysUntilDueDate();
+    final partnerProvider = Provider.of<PartnerProvider>(context);
+
+    final lastMenstrualPeriod = partnerProvider.lastMenstrualPeriod;
+
+    final cyclePhase= cycleProvider.currentPhase;
+
+    final dueDate = partnerProvider.dueDate;
+    final currentWeek = partnerProvider.getCurrentWeek();
+    final daysUntilDueDate = partnerProvider.getDaysUntilDueDate();
 
     bool isInfoAvailable = lastMenstrualPeriod != DateTime.now() && dueDate != DateTime.now().add(Duration(days: 280));
 
@@ -191,20 +66,18 @@ class PregnancyStatusScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+
                     Text(
-                      daysUntilDueDate < 0
-                          ? "Baby is ${daysUntilDueDate.abs()} days overdue!"
-                          : "$daysUntilDueDate Days Left",
+                      cyclePhase,
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
-                    SizedBox(height: 5),
                     Text(
-                      daysUntilDueDate < 0
-                          ? "Due date was\n${formatDate(dueDate)}"
-                          : "Due date is\n${formatDate(dueDate)}",
+
+                      "Cycle day is ${cycleProvider.daysElapsed} ",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14, color: Colors.black),
                     ),
+
                   ],
                 ),
               ),
@@ -213,67 +86,6 @@ class PregnancyStatusScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Pregnancy Details",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text("Last Menstrual Period: ${formatDate(lastMenstrualPeriod)}"),
-                                SizedBox(height: 8),
-                                Text("Current Week: $currentWeek"),
-                                SizedBox(height: 8),
-                                Text("Due Date: ${formatDate(dueDate)}"),
-                              ],
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.edit),
-                              onPressed: () async {
-                                // Show Date Picker to edit Last Menstrual Period and Due Date
-                                DateTime? newLMP = await showDatePicker(
-                                  context: context,
-                                  initialDate: lastMenstrualPeriod,
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2101),
-                                );
-                                if (newLMP != null) {
-                                  DateTime? newDueDate = await showDatePicker(
-                                    context: context,
-                                    initialDate: dueDate,
-                                    firstDate: newLMP.add(Duration(days: 1)),
-                                    lastDate: DateTime(2101),
-                                  );
-                                  if (newDueDate != null) {
-                                    pregnancyProvider.updatePregnancyInfo(newLMP, newDueDate);
-                                  }
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 20),
                       buildCycleInfoCard(
                         icon: Icons.baby_changing_station,
                         title: 'Week $currentWeek Progress',
@@ -295,14 +107,13 @@ class PregnancyStatusScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Pregnancy information is missing.",
+                  "Information is missing.",
                   style: TextStyle(fontSize: 18, color: Colors.black),
                 ),
                 SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
-                    // Navigate to a page to add/update pregnancy information
-                  },
+                     },
                   child: Text("Add Pregnancy Info"),
                 ),
               ],

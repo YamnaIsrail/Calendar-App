@@ -15,10 +15,9 @@ class PartnerModeCalendar extends StatefulWidget {
 class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
   @override
   Widget build(BuildContext context) {
-    final cycleProvider = Provider.of<CycleProvider>(context);
-    final pregProvider = Provider.of<PregnancyProvider>(context);
-    final currentWeek = pregProvider.getCurrentWeek();
-    final daysUntilDueDate = pregProvider.getDaysUntilDueDate();
+    final partnerProvider = Provider.of<PartnerProvider>(context);
+    final currentWeek = partnerProvider.getCurrentWeek();
+    final daysUntilDueDate = partnerProvider.getDaysUntilDueDate();
 
 
     final now = DateTime.now();
@@ -83,12 +82,12 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
                     defaultBuilder: (context, date, _) {
                       final normalizedDate = DateTime(date.year, date.month, date.day);
 
-                      if (cycleProvider.periodDays.contains(normalizedDate)) {
+                      if (partnerProvider.periodDays.contains(normalizedDate)) {
                         return _buildCalendarCell(date: date, color: Colors.red);
                       }
 
                       // Predicted periods
-                      if (cycleProvider.predictedDays.contains(normalizedDate)) {
+                      if (partnerProvider.predictedDays.contains(normalizedDate)) {
                         return _buildCalendarCell(
                           date: date,
                           border: Border.all(color: Colors.blue, width: 2),
@@ -96,16 +95,16 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
                       }
 
                       // Fertile window (common for periods and pregnancy tracking)
-                      if (cycleProvider.fertileDays.contains(normalizedDate)) {
+                      if (partnerProvider.fertileDays.contains(normalizedDate)) {
                         return _buildCalendarCell(date: date, color: Colors.purple[100]);
                       }
 
                       // Pregnancy-specific highlights
-                      if (cycleProvider.fertileDays.contains(normalizedDate)) {
+                      if (partnerProvider.fertileDays.contains(normalizedDate)) {
                         return _buildCalendarCell(date: date, color: Colors.orange);
                       }
 
-                      if (normalizedDate == pregProvider.dueDate) {
+                      if (normalizedDate == partnerProvider.dueDate) {
                         return _buildCalendarCell(
                           date: date,
                           color: Colors.green,
@@ -131,20 +130,28 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
               // Legend
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Expanded(
-                    child: Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceAround,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLegendItem("Period", Colors.red),
                         _buildLegendItem("Predicted Period", Colors.blue, isBorder: true),
-                        _buildLegendItem("Fertile Window", Colors.purple[100]!),
-                        _buildLegendItem("Ovulation", Colors.orange),
-                        _buildLegendItem("Due Date", Colors.green),
+
                       ],
                     ),
-                  ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                      _buildLegendItem("Fertile Window", Colors.purple[100]!),
+                      _buildLegendItem("Ovulation", Colors.orange),
+                      _buildLegendItem("Due Date", Colors.green),
+
+                    ],),
+                     ],
                 ),
               ),
 
@@ -155,17 +162,19 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     buildCycleInfoCard(
-                      title: 'Started: ${formatDate(cycleProvider.lastPeriodStart)}',
-                      subtitle: '${cycleProvider.daysElapsed} days ago',
+                      title: 'Started: ${partnerProvider.lastMenstrualPeriod != null ? formatDate(partnerProvider.lastMenstrualPeriod!) : "No Data"}',
+                      subtitle: '${partnerProvider.daysElapsed} days ago',
                       progressLabelStart: 'Last Period',
                       progressLabelEnd: 'Today',
-                      progressValue: cycleProvider.daysElapsed / cycleProvider.cycleLength,
+                      progressValue: partnerProvider.cycleLength != null && partnerProvider.cycleLength! > 0
+                          ? partnerProvider.daysElapsed / partnerProvider.cycleLength!
+                          : 0.0,
                       icon: Icons.timer_outlined,
                     ),
                        SizedBox(height: 10,),
                        buildCycleInfoCard(
-                        title: 'Due Date: ${formatDate(pregProvider.dueDate!)}',
-                        subtitle: 'Approximate',
+                         title: 'Due Date: ${partnerProvider.dueDate != null ? formatDate(partnerProvider.dueDate!) : "No Due Date"}',
+                         subtitle: 'Approximate',
                         progressLabelStart: 'Start of Pregnancy',
                         progressLabelEnd: 'Due Date',
                         progressValue: currentWeek.toDouble(),
