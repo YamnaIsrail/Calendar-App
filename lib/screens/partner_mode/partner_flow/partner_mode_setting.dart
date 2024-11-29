@@ -1,3 +1,4 @@
+import 'package:calender_app/provider/paired_days_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/partner_mode/partner_flow/stop_pairing_dialog.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
@@ -31,7 +32,6 @@ class PartnerModeSetting extends StatelessWidget {
               CardContain(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
                     Text(
                       'Paired for',
@@ -43,7 +43,7 @@ class PartnerModeSetting extends StatelessWidget {
 
                       children: [
                         Text(
-                          '1 Day',
+                          '${PairedDaysProvider().daysPaired}',
                           style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold, color: Colors.blue),
                         ),
                         SizedBox(width: 16),

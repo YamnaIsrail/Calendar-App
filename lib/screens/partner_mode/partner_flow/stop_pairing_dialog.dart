@@ -1,7 +1,9 @@
 import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/screens/homeScreen.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:calender_app/provider/paired_days_provider.dart';
 
 class StopPairingDialogHelper {
   static void unpairPopUp(BuildContext context) {
@@ -14,7 +16,8 @@ class StopPairingDialogHelper {
           actions: [
             CustomButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                PairedDaysProvider().resetPairedDays();
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
                 },
               backgroundColor: primaryColor,
               text: 'Unpair',
