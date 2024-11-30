@@ -63,7 +63,8 @@ class PeriodPhaseScreen extends StatelessWidget {
                       Expanded(
                           child: Column(
                         children: [
-                          Image.asset("assets/self_care/massage1.png"),
+                              Image.asset(
+                              'assets/self_care/massage.png'),
                           Text("Period pain relief"),
                           Text("4 min"),
                         ],
@@ -74,7 +75,8 @@ class PeriodPhaseScreen extends StatelessWidget {
                       Expanded(
                           child: Column(
                         children: [
-                          Image.asset("assets/self_care/cramps_relief.png"),
+
+                          Image.asset('assets/self_care/pain.PNG'),
                           Text("Foot Massage to relieve cramps"),
                           Text("4 min"),
                         ],

@@ -10,6 +10,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class CycleStatusScreen extends StatelessWidget {
+  final String? userImageUrl;
+
+  CycleStatusScreen({this.userImageUrl});
 
   String formatDate(DateTime date) {
     return DateFormat('dd-MM-yyyy').format(date);
@@ -25,6 +28,7 @@ class CycleStatusScreen extends StatelessWidget {
         appBar: CustomAppBar(
           pageTitle: "",
           onCancel: () {},
+          userImageUrl: userImageUrl,
           onBack: () {
             Navigator.push(
               context,

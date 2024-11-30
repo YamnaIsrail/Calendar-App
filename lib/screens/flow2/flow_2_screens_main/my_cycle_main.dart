@@ -2,6 +2,7 @@ import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
+import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/date_format.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
@@ -23,29 +24,20 @@ import '../detail page/cycle/ovulation_screen.dart';
 import '../detail page/cycle/symptoms.dart';
 
 class CycleTrackerScreen extends StatelessWidget {
+  final String? userImageUrl;
+
+  CycleTrackerScreen({this.userImageUrl});
+
   @override
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover,
-        ),
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFFE8EAF6),
-            Color(0xFFF3E5F5)
-          ], // Light gradient background
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
+    return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: CustomAppBar(
           pageTitle: "Today",
+          userImageUrl: userImageUrl,
           onCancel: () {},
           onBack: () {
             Navigator.push(context,

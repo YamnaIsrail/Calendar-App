@@ -41,17 +41,13 @@ class luteal extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Possible Symptoms",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis, // Prevent text overflow
-                ),
-                SizedBox(height: 4),
-                Text(
-                    "Due to the release of an egg , you may feel discomfort or "
-                    "pain on one side of your lower abdomen, "
-                    "occasionally accompanied by light spotting."
-                    " This generally lasts for 1 to 2 days."),
+                Text("This phase lasts from day 15 to 28."
+                    " The egg moves from the ovary to the uterus,"
+                    " and progesterone levels rise to prepare the"
+                    " uterus for pregnancy."
+                    " If the egg is fertilized, you become pregnant."
+                    " If not, hormone levels drop, and the uterus lining sheds during "
+                    "your period."),
               ],
             ),
           ),
@@ -72,7 +68,9 @@ class luteal extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                    "On the day of ovulation, you may observe that the cervical mucus becomes notably wet and viscous."),
+                    "Cervical mucus may become less,"
+                        " milky white and cloudy again."
+                       ),
               ],
             ),
           ),
@@ -104,8 +102,8 @@ class luteal extends StatelessWidget {
                 ),
                 Image.asset("assets/graph.png"),
                 SizedBox(height: 4),
-                Text("This is the best day for Conception! "
-                    "If you're trying to conceive, it's important to have intercourse as soon as you can, since an egg only survives for roughly 24 hours after ovulation."),
+                Text("You still have the opportunity to conceive during the luteal phase,"
+                    " as the egg can remain viable for some time after its release."),
               ],
             ),
           ),

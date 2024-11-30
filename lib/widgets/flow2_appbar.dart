@@ -4,11 +4,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String pageTitle;
   final VoidCallback onBack;
   final VoidCallback onCancel;
+  final String? userImageUrl;
 
   CustomAppBar({
     required this.pageTitle,
     required this.onBack,
     required this.onCancel,
+    this.userImageUrl,
   });
 
   @override
@@ -28,7 +30,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
+          // Check if userImageUrl is not null, then show the image; else show default icon
+          userImageUrl != null
+              ? Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              radius: 20,  // Adjust radius for size
+              backgroundImage: NetworkImage(userImageUrl!),
+            ),
+          )
+              : IconButton(
             icon: Icon(Icons.person),
             onPressed: onCancel,
           ),

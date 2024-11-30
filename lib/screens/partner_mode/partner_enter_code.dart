@@ -1,26 +1,79 @@
+import 'dart:io';
+
 import 'package:calender_app/firebase/partner_code_utils.dart.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/partner_mode/partner_pairing_successful.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class PartnerEnterCode extends StatelessWidget {
 
-  void _handleNext(BuildContext context, String enteredCode) async {
-
-    bool isValid = await validatePartnerCode(enteredCode);
-
-    if (isValid) {
-      // Code is valid, proceed to the PartnerPairing screen
-      Navigator.push(context, MaterialPageRoute(builder: (context) => PartnerPairing()));
-    } else {
-      // Show an error if the code is invalid or expired
+  Future<void> _handleNext(BuildContext context, String enteredCode) async {
+    if (enteredCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid or expired code. Please try again.')),
+        SnackBar(content: Text('Please enter the code.')),
       );
+      return;
+    }
+
+    // Check for internet connectivity
+    bool hasInternet = await _checkInternetConnection();
+    if (!hasInternet) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No internet connection. Please check your network.')),
+      );
+      return;
+    }
+
+    try {
+      bool isValid = await validatePartnerCode(enteredCode);
+
+      if (isValid) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => PartnerPairing()),
+        );
+      } else {
+        // Invalid or expired code
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid or expired code. Please try again.')),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      // Handle Firebase-specific errors
+      String errorMessage;
+      switch (e.code) {
+        case 'network-request-failed':
+          errorMessage = 'Network error. Please try again.';
+          break;
+        case 'too-many-requests':
+          errorMessage = 'Too many attempts. Please try again later.';
+          break;
+        default:
+          errorMessage = 'An error occurred. Please try again.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      // Handle other errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred. Please try again.')),
+      );
+    }
+  }
+
+// Method to check for internet connectivity
+  Future<bool> _checkInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
     }
   }
 
