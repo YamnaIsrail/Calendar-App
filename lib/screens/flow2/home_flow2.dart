@@ -8,6 +8,7 @@ import 'flow_2_screens_main/calendar.dart';
 import 'flow_2_screens_main/my_cycle_main.dart';
 import 'flow_2_screens_main/today.dart';
 
+
 class Flow2Page extends StatefulWidget {
   @override
   _Flow2PageState createState() => _Flow2PageState();
@@ -15,10 +16,15 @@ class Flow2Page extends StatefulWidget {
 
 class _Flow2PageState extends State<Flow2Page> {
   int _selectedIndex = 0;
-  String? userImageUrl; // To store the user's image URL
   bool isLoggedIn = false;
 
-  final List<Widget> _pages = [];
+  final List<Widget> _pages = [
+    CycleStatusScreen(),
+    CustomCalendar(),
+    CycleTrackerScreen(),
+    SelfCare(),
+    Analysis(),
+  ];
 
   @override
   void initState() {
@@ -26,7 +32,7 @@ class _Flow2PageState extends State<Flow2Page> {
     _checkLoginStatus(); // Check if the user is logged in
   }
 
-  // Check if user is logged in and get user data
+  // Check if user is logged in and sync data with Firebase in the background
   Future<void> _checkLoginStatus() async {
     bool loggedIn = await SessionManager.checkUserLoginStatus();
     setState(() {
@@ -34,28 +40,7 @@ class _Flow2PageState extends State<Flow2Page> {
     });
 
     if (isLoggedIn) {
-      // Retrieve the user ID and image URL
-      String? userId = await SessionManager.getUserId();
-      // Fetch image URL from Google Sign-In (replace with actual logic)
-      // For example:
-      userImageUrl = "https://your-image-url.com/user_profile.jpg"; // Replace with the actual URL
-
-      // Call saveToFirestore method to sync cycle data
       await SessionManager.saveToFirestore();
-
-      // Rebuild the _pages list after login to pass the image URL
-      setState(() {
-        _pages.clear();
-        _pages.add(CycleStatusScreen(userImageUrl: userImageUrl));
-        _pages.add(CustomCalendar());
-        _pages.add(CycleTrackerScreen(userImageUrl: userImageUrl));
-        _pages.add(SelfCare());
-        _pages.add(Analysis());
-      });
-    } else {
-      // Handle when user is not logged in
-      // Show login page or navigate as necessary
-      print("User is not logged in");
     }
   }
 

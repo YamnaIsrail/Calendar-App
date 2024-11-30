@@ -37,7 +37,7 @@ class CycleTrackerScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         appBar: CustomAppBar(
           pageTitle: "Today",
-          userImageUrl: userImageUrl,
+         // userImageUrl: userImageUrl,
           onCancel: () {},
           onBack: () {
             Navigator.push(context,

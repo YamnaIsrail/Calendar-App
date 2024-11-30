@@ -28,7 +28,7 @@ class CycleStatusScreen extends StatelessWidget {
         appBar: CustomAppBar(
           pageTitle: "",
           onCancel: () {},
-          userImageUrl: userImageUrl,
+        //  userImageUrl: userImageUrl,
           onBack: () {
             Navigator.push(
               context,
