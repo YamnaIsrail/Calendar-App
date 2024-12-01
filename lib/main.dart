@@ -24,6 +24,7 @@ import 'provider/analysis/weight_provider.dart';
 
 
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(

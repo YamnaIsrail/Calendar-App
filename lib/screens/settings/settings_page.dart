@@ -67,7 +67,7 @@ class SettingsPage extends StatelessWidget {
 
                     trailing: Icon(Icons.notifications),
                   ),
-                ),
+                ), //Reminders Section
                 SettingsOptionSection(),
                 LanguageOptionSection(),
                 FAQOptionSection(),

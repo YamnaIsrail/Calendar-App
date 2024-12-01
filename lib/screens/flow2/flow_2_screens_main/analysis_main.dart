@@ -196,7 +196,7 @@ class Analysis extends StatelessWidget {
                     ),
 
                     IconButton(onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=> TimelinePage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=> TimeLineCheck()));
                     },
                         icon: Icon(Icons.arrow_forward_ios_rounded))
                   ],

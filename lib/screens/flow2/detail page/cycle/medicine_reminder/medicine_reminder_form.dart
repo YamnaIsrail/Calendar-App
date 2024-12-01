@@ -152,26 +152,28 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
           padding: EdgeInsets.all(16),
           child: ListView(
             children: [
-              SwitchListTile(
-                title: Text("Notifications"),
-                value: isNotificationEnabled,
-                onChanged: (value) async {
-                  setState(() {
-                    isNotificationEnabled = value;
-                  });
+              Container(
+                child: SwitchListTile(
+                  title: Text("Notifications"),
+                  value: isNotificationEnabled,
+                  onChanged: (value) async {
+                    setState(() {
+                      isNotificationEnabled = value;
+                    });
 
-                  if (isNotificationEnabled) {
-                    await NotificationService.showInstantNotification(
-                      "Notifications Enabled",
-                      "You will now receive reminders.",
-                    );
-                  } else {
-                    await NotificationService.flutterLocalNotification.cancelAll();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Notifications Disabled")),
-                    );
-                  }
-                },
+                    if (isNotificationEnabled) {
+                      await NotificationService.showInstantNotification(
+                        "Notifications Enabled",
+                        "You will now receive reminders.",
+                      );
+                    } else {
+                      await NotificationService.flutterLocalNotification.cancelAll();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Notifications Disabled")),
+                      );
+                    }
+                  },
+                ),
               ),
 
               TextField(

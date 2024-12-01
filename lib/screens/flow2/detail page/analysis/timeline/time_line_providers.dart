@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../../../provider/notes_provider.dart';
 import 'time_line_entry.dart';
 
+
 class TimelineProvider extends ChangeNotifier {
   List<TimelineEntry> timelineEntries = [];
 
