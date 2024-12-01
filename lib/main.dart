@@ -6,6 +6,7 @@ import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/provider/moods_symptoms_provider.dart';
 import 'package:calender_app/provider/notes_provider.dart';
 import 'package:calender_app/provider/partner_mode_provider.dart';
+import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_providers.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/homeScreen.dart';
 import 'package:calender_app/screens/splash.dart';
@@ -17,6 +18,7 @@ import 'firebase_option.dart';
 import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'notifications/notification_storage.dart';
 import 'provider/analysis/temperature_model.dart';
 import 'provider/analysis/weight_provider.dart';
 
@@ -24,7 +26,6 @@ import 'provider/analysis/weight_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -39,6 +40,7 @@ void main() async {
   // Open the box for partner codes
   await Hive.openBox('partner_codes');
 
+  await NotificationStorage.init();
 
   Hive.registerAdapter(CycleDataAdapter());
   // Open the box where you will store the cycle data
@@ -58,6 +60,13 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MoodsProvider()),
         ChangeNotifierProvider(create: (_) => SymptomsProvider()),
         ChangeNotifierProvider(create: (_) => PartnerModeProvider()),
+        ChangeNotifierProvider(create: (_) => TimelineProvider(
+            noteProvider: NoteProvider(),
+            symptomsProvider: SymptomsProvider(),
+            moodsProvider: MoodsProvider()
+        )
+        ),
+
 
 
       ],

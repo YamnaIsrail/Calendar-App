@@ -78,7 +78,7 @@ class CategoryGrid extends StatelessWidget {
             return GestureDetector(
               onTap: () => onItemSelected?.call(item.iconPath, item.label),
               child: Container(
-                decoration: BoxDecoration(
+                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: isSelectedItem
                       ? Border.all(color: Colors.blue, width: 2)

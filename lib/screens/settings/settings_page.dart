@@ -65,7 +65,7 @@ class SettingsPage extends StatelessWidget {
                       );
                     },
 
-                    trailing: Text("6 Days"),
+                    trailing: Icon(Icons.notifications),
                   ),
                 ),
                 SettingsOptionSection(),

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../hive/notes_model.dart';
-import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import '../hive/notes_model.dart';
 
 class NoteWithDate {
   final String content;
@@ -14,26 +11,30 @@ class NoteWithDate {
 
 class NoteProvider extends ChangeNotifier {
   List<NoteWithDate> notesWithDates = [];
-
-  late Box<Note> _notesBox = Hive.box<Note>('notesBox');
+  late Box<Note> _notesBox;
+  bool _isInitialized = false; // Flag to ensure initialization happens only once
 
   Future<void> initialize() async {
-    _notesBox = Hive.box<Note>('notesBox');
-    notesWithDates = _notesBox.values
-        .map((note) => NoteWithDate(content: note.content, date: DateTime.now()))
-        .toList();
+    if (_isInitialized) return; // Skip if already initialized
+    _isInitialized = true; // Set the flag to true after initialization starts
 
-    // Use addPostFrameCallback to avoid notifying listeners during the build phase
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifyListeners();
-    });
+    try {
+      _notesBox = await Hive.openBox<Note>('notesBox'); // Open Hive box
+      notesWithDates = _notesBox.values
+          .map((note) => NoteWithDate(content: note.content, date: DateTime.now()))
+          .toList();
+    } catch (e) {
+      print("Error initializing Hive: $e"); // Log the error
+    }
+
+    notifyListeners(); // Notify listeners that initialization is complete
   }
-
-
 
   void addNote(String content) {
     final newNote = NoteWithDate(content: content, date: DateTime.now());
-    _notesBox.add(Note(content: content));
+    final note = Note(content: content);
+
+    _notesBox.add(note);
     notesWithDates.add(newNote);
     notifyListeners();
   }
@@ -51,7 +52,13 @@ class NoteProvider extends ChangeNotifier {
     notesWithDates.removeAt(index);
     notifyListeners();
   }
+
+  List<NoteWithDate> getNotes() {
+    return List.from(notesWithDates); // Return a copy of the list to prevent external modification
+  }
+
 }
+
 //
 // // Model to pair notes with dates
 // class NoteWithDate {

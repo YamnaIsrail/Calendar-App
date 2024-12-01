@@ -138,10 +138,10 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
 
     if (!currentStatus) {
       // Schedule a notification
-      await NotificationService.showIScheduleNotification(
+      await NotificationService.showScheduleNotification(
         'Reminder for $medicine',
         'Time to take your $medicine',
-        DateTime.now().add(Duration(minutes: 1)), // Example time
+        DateTime.now().add(Duration(minutes: 1)), id: 3,
       );
     } else {
       // Cancel the notification (implement cancel logic in NotificationService if needed)

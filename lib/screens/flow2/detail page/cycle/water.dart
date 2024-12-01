@@ -1,4 +1,5 @@
 import 'package:calender_app/notifications/notification_service.dart';
+import 'package:calender_app/screens/flow2/detail%20page/cycle/water_reminders.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -13,7 +14,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true; // Default notification setting
+  bool _notificationsEnabled = false; // Default notification setting
   String _cupCapacityUnit = "ml"; // Default cup capacity unit
   int _cupCapacity = 450; // Default cup capacity
   int _targetWaterIntake = 3000; // Default target water intake
@@ -56,25 +57,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text('Notifications', style: TextStyle(fontSize: 20)),
                   Switch(
-                      value: _notificationsEnabled,
-                      // Inside the onChanged method for the 'Notifications' toggle
-                      onChanged: (value) async {
-                        setState(() {
-                          _notificationsEnabled = value;
-                        });
+                    value: _notificationsEnabled,
+                    onChanged: (value) async {
+                      if (value) {
+                        // Navigate to WaterReminderScreen to set up reminders
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => WaterReminderScreen()),
+                        );
 
-                        if (_notificationsEnabled) {
+                        // If the user sets up reminders, update the notification state
+                        if (result == true) {
+                          setState(() {
+                            _notificationsEnabled = true;
+                          });
                           await NotificationService.showInstantNotification(
-                              "Notifications Enabled",
-                              "You will now receive reminders.");
-                        } else {
-                          await NotificationService.flutterLocalNotification
-                              .cancelAll();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Notifications Disabled")),
+                            "Notifications Enabled",
+                            "You will now receive reminders.",
                           );
                         }
-                      }),
+                      } else {
+                        setState(() {
+                          _notificationsEnabled = false;
+                        });
+                        await NotificationService.flutterLocalNotification.cancelAll();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Notifications Disabled")),
+                        );
+                      }
+                    },
+                  ),
                 ],
               ),
             ),

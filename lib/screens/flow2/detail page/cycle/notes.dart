@@ -10,10 +10,19 @@ class Notes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final noteProvider = Provider.of<NoteProvider>(context);
+    final noteProvider = Provider.of<NoteProvider>(context, listen: false);
 
-    return bgContainer(
-        child: Scaffold(
+    // Trigger initialization once using FutureBuilder
+    return FutureBuilder(
+      future: noteProvider.initialize(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        // Main UI after initialization
+        return bgContainer(
+          child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
@@ -30,20 +39,42 @@ class Notes extends StatelessWidget {
             ),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: FutureBuilder(
-                future: noteProvider.initialize(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+              child: Consumer<NoteProvider>(
+                builder: (context, provider, child) {
+                  if (provider.notesWithDates.isEmpty) {
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            controller: _noteController,
+                            decoration: InputDecoration(
+                              hintText: 'Enter your note here...',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        CustomButton(
+                          backgroundColor: primaryColor,
+                          onPressed: () {
+                            if (_noteController.text.isNotEmpty) {
+                              provider.addNote(_noteController.text);
+                              _noteController.clear();
+                            }
+                          },
+                          text: "Add Note",
+                        ),
+                      ],
+                    );
                   }
 
                   return Column(
                     children: [
                       Expanded(
                         child: ListView.builder(
-                          itemCount: noteProvider.notesWithDates.length,
+                          itemCount: provider.notesWithDates.length,
                           itemBuilder: (context, index) {
-                            final note = noteProvider.notesWithDates[index];
+                            final note = provider.notesWithDates[index];
                             return ListTile(
                               title: Text(note.content),
                               trailing: Row(
@@ -59,12 +90,14 @@ class Notes extends StatelessWidget {
                                           title: Text('Edit Note'),
                                           content: TextField(
                                             controller: _noteController,
-                                            decoration: InputDecoration(hintText: 'Enter updated note'),
+                                            decoration:
+                                            InputDecoration(hintText: 'Enter updated note'),
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed: () {
-                                                noteProvider.updateNoteAt(index, _noteController.text);
+                                                provider.updateNoteAt(
+                                                    index, _noteController.text);
                                                 _noteController.clear();
                                                 Navigator.pop(context);
                                               },
@@ -75,11 +108,9 @@ class Notes extends StatelessWidget {
                                       );
                                     },
                                   ),
-
                                   IconButton(
                                     icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () =>
-                                        noteProvider.deleteNoteAt(index),
+                                    onPressed: () => provider.deleteNoteAt(index),
                                   ),
                                 ],
                               ),
@@ -98,17 +129,23 @@ class Notes extends StatelessWidget {
                         ),
                       ),
                       CustomButton(
-                          backgroundColor: primaryColor,
-                          onPressed: () {
-                            noteProvider.addNote(_noteController.text);
+                        backgroundColor: primaryColor,
+                        onPressed: () {
+                          if (_noteController.text.isNotEmpty) {
+                            provider.addNote(_noteController.text);
                             _noteController.clear();
-                          },
-                          text: "Add Note"
+                          }
+                        },
+                        text: "Add Note",
                       ),
                     ],
                   );
                 },
               ),
-            )));
+            ),
+          ),
+        );
+      },
+    );
   }
 }
