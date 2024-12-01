@@ -1,6 +1,9 @@
 
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 // Helper function to generate a unique code
@@ -29,7 +32,8 @@ Future<void> generatePartnerCode() async {
   }
 }
 
-Future<bool> validatePartnerCode(String enteredCode) async {
+Future<bool> validatePartnerCode(BuildContext context, String enteredCode) async {
+
   try {
     final snapshot = await FirebaseFirestore.instance
         .collection('users')
@@ -39,12 +43,31 @@ Future<bool> validatePartnerCode(String enteredCode) async {
 
     if (snapshot.docs.isNotEmpty) {
       final partnerData = snapshot.docs.first.data();
-      final Timestamp expirationTimestamp = partnerData['expiresAt'];
-      final DateTime expirationTime = expirationTimestamp.toDate();
+      var expirationField = partnerData['expiresAt'];
+
+      DateTime expirationTime;
+
+      if (expirationField is Timestamp) {
+        expirationTime = expirationField.toDate();
+      } else if (expirationField is String) {
+        expirationTime = DateTime.parse(expirationField);
+      } else {
+        // Handle the case where expirationField is neither Timestamp nor String
+        print("Unexpected type for expiresAt field");
+        return false;
+      }
 
       if (DateTime.now().isAfter(expirationTime)) {
         return false; // Expired code
       }
+
+      // Save user1 ID (the partner code generator) to user2's document
+      String user1Id = snapshot.docs.first.id;
+
+      // Now pass the user1Id to PartnerProvider to fetch cycle data
+      final partnerProvider = Provider.of<PartnerProvider>(context, listen: false);
+      await partnerProvider.fetchUser1CycleData(user1Id);  // Pass the user1Id here
+
       return true; // Valid code
     } else {
       return false; // Invalid code

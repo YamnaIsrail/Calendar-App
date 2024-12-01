@@ -1,12 +1,13 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/settings/dialog.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class PeriodLength extends StatelessWidget {
-  const PeriodLength({super.key});
-
   @override
   Widget build(BuildContext context) {
+    final cycleProvider = Provider.of<CycleProvider>(context);
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -40,44 +41,17 @@ class PeriodLength extends StatelessWidget {
               color: Colors.white,
               child: ListTile(
                 title: Text("Period Length"),
-                trailing: Text("6 days"),
+                trailing: Text("${cycleProvider.periodLength} days"),
                 onTap: () {
-                  CalendarDialogHelper.showPeriodLengthDialog(context, (selectedLength) {
-                    print("Selected period length: $selectedLength days");
-                  });
+                  CalendarDialogHelper.showPeriodLengthDialog(
+                    context
+                  );
                 },
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text("Bleeding usually lasts between 4-7 days."),
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              color: Colors.white,
-              child: ListTile(
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Use Average", style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text("Smart Calculate"),
-                  ],
-                ),
-                trailing: Switch(
-                  value: false,
-                  onChanged: (bool newValue) {
-                    CalendarDialogHelper.showLastMonthsDialog(context, (selection) {
-                      print("Selected option: $selection");
-                    });
-                  },
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                "Turn on the option to use the average value from your previous records to predict your next period.",
-              ),
             ),
           ],
         ),

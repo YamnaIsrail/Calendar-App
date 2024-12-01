@@ -1,4 +1,5 @@
 import 'package:calender_app/firebase/user_session.dart';
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'detail page/self_care/foot.dart';
@@ -29,20 +30,19 @@ class _Flow2PageState extends State<Flow2Page> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus(); // Check if the user is logged in
+   // _checkLoginStatus(); // Check if the user is logged in
   }
 
-  // Check if user is logged in and sync data with Firebase in the background
-  Future<void> _checkLoginStatus() async {
-    bool loggedIn = await SessionManager.checkUserLoginStatus();
-    setState(() {
-      isLoggedIn = loggedIn;
-    });
-
-    if (isLoggedIn) {
-      await SessionManager.saveToFirestore();
-    }
-  }
+  //  Future<void> _checkLoginStatus() async {
+  //   bool loggedIn = await SessionManager.checkUserLoginStatus();
+  //   setState(() {
+  //     isLoggedIn = loggedIn;
+  //   });
+  //
+  //   if (isLoggedIn) {
+  //     await CycleProvider().saveCycleDataToFirestore();
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

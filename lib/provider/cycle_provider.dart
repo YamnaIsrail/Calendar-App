@@ -6,27 +6,50 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 
 import '../firebase/user_session.dart';
 import '../hive/cycle_model.dart';
+import 'package:flutter/foundation.dart';
 
 class CycleProvider with ChangeNotifier {
   // Private fields with default values
   DateTime _lastPeriodStart = DateTime.now();
   int _cycleLength = 28;
   int _periodLength = 5;
-  List<String> _symptoms = [];
+  int _lutealPhaseLength = 14;
 
   // Dynamic cycle data
   List<DateTime> periodDays = [];
   List<DateTime> predictedDays = [];
   List<DateTime> fertileDays = [];
+  List<DateTime> lutealPhaseDays = [];
+  List<String> _symptoms = [];
 
-  // Singleton instance for MenstrualCycleWidget
-  MenstrualCycleWidget? _widget;
 
-  // Getters to expose private fields
+  // Getters
   DateTime get lastPeriodStart => _lastPeriodStart;
   int get cycleLength => _cycleLength;
   int get periodLength => _periodLength;
+  int get lutealPhaseLength => _lutealPhaseLength;
   List<String> get symptoms => _symptoms;
+
+
+  List<DateTime> getPeriodDays() => periodDays;
+  List<DateTime> getPredictedDays() => predictedDays;
+  List<DateTime> getFertileDays() => fertileDays;
+  List<DateTime> getLutealPhaseDays() => lutealPhaseDays;
+
+  // Method to calculate luteal phase days
+  void _calculateLutealPhaseDays() {
+    lutealPhaseDays = List.generate(
+      _lutealPhaseLength - 6,
+          (index) => _lastPeriodStart.add(
+        Duration(days: _cycleLength - _lutealPhaseLength + index),
+      ),
+    );
+  }
+
+
+
+  // Singleton instance for MenstrualCycleWidget
+  MenstrualCycleWidget? _widget;
 
   MenstrualCycleWidget get cycleWidget {
     _widget ??= MenstrualCycleWidget.init(
@@ -61,40 +84,86 @@ class CycleProvider with ChangeNotifier {
     // Predict period days (from last period start date)
     predictedDays = List.generate(
       _periodLength,
-      (index) => _lastPeriodStart.add(Duration(days: _cycleLength + index)),
+          (index) => _lastPeriodStart.add(Duration(days: _cycleLength + index)),
     );
 
     // Fertile window (typically between cycleLength - 14 and cycleLength - 6)
     fertileDays = List.generate(
       _cycleLength - 14 + 1,
-      (index) =>
+          (index) =>
           _lastPeriodStart.add(Duration(days: _cycleLength - 14 + index)),
     );
 
     // Period days (starting from the last period start)
     periodDays = List.generate(
       _periodLength,
-      (index) => _lastPeriodStart.add(Duration(days: index)),
+          (index) => _lastPeriodStart.add(Duration(days: index)),
     );
 
     notifyListeners(); // Notify listeners to update the UI
   }
 
-  String get currentPhase {
-    int cycleDay = this.cycleDay;
-    if (cycleDay <= _periodLength) {
-      return 'Menstrual Phase';
-    } else if (cycleDay <= _cycleLength - 14) {
-      return 'Follicular Phase';
-    } else if (cycleDay <= _cycleLength - 6) {
-      return 'Ovulation Phase';
-    } else {
-      return 'Luteal Phase';
-    }
+
+  void updateLutealPhaseLength(int length) {
+    if (length <= 0) throw Exception("Luteal phase length must be positive.");
+    _lutealPhaseLength = length;
+
+    // Recalculate the ovulation date
+    DateTime ovulationDate = _lastPeriodStart.add(Duration(days: _cycleLength - _lutealPhaseLength));
+
+    // Update fertile days
+    fertileDays = List.generate(
+      6,
+          (index) => ovulationDate.subtract(Duration(days: 6 - index)),
+    );
+
+    // Update predicted period days
+    predictedDays = List.generate(
+      _periodLength,
+          (index) => _lastPeriodStart.add(Duration(days: _cycleLength + index)),
+    );
+
+    // Notify listeners and save updated data
+    notifyListeners();
+    _saveToHive();
   }
 
+
   int get cycleDay {
-    return DateTime.now().difference(_lastPeriodStart).inDays + 1;
+    if (_lastPeriodStart == null) {
+      return 0; // Default to 0 if no last period date is available yet
+    }
+
+    // Check if today is the first day of the period
+    DateTime today = DateTime.now();
+    if (_lastPeriodStart!.year == today.year &&
+        _lastPeriodStart!.month == today.month &&
+        _lastPeriodStart!.day == today.day) {
+      return 1; // Today is the first day of the period, so cycle day is 1
+    }
+
+    // If today is not the first day, calculate the cycle day normally
+    return today.difference(_lastPeriodStart!).inDays + 1;
+  }
+
+// Get current cycle phase
+  String get currentPhase {
+    if (_cycleLength == null || _periodLength == null) {
+      return 'Unknown Phase'; // Return a fallback if data is incomplete
+    }
+
+    int cycleDay = this.cycleDay;
+
+    // Check phase based on cycle day
+    if (cycleDay <= _periodLength!) {
+      return 'Menstrual Phase'; // During menstruation
+    } else if (cycleDay <= _cycleLength! - 14) {
+      return 'Follicular Phase'; // After menstruation but before ovulation
+    } else if (cycleDay <= _cycleLength! - 6) {
+      return 'Ovulation Phase'; // Ovulation phase
+    } else {
+      return 'Luteal Phase'; // After ovulation
+    }
   }
 
   void updateCycleInfo(DateTime lastPeriod, int cycleLength, int periodLength) {
@@ -120,7 +189,7 @@ class CycleProvider with ChangeNotifier {
     CycleData cycleData = CycleData(
       cycleStartDate: _lastPeriodStart.toString(),
       cycleEndDate:
-          _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
+      _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
       periodLength: _periodLength,
       cycleLength: _cycleLength,
     );
@@ -130,22 +199,17 @@ class CycleProvider with ChangeNotifier {
     await box.put('cycle', cycleData);
     print("Cycle data saved to Hive.");
 
-    saveToFirestore();
+    saveCycleDataToFirestore();
   }
-
-  Future<void> saveToFirestore() async {
+  Future<void> saveCycleDataToFirestore() async {
     if (await SessionManager.checkUserLoginStatus()) {
-      // Check if the user is logged in
       try {
-        String? userId = await SessionManager
-            .getUserId(); // Get the user ID from the session
+        String? userId = await SessionManager.getUserId();
         if (userId != null) {
-          CollectionReference cycles =
-              FirebaseFirestore.instance.collection('cycles');
+          CollectionReference cycles = FirebaseFirestore.instance.collection('cycles');
           await cycles.doc(userId).set({
             'cycleStartDate': _lastPeriodStart.toString(),
-            'cycleEndDate':
-                _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
+            'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
             'periodLength': _periodLength,
             'cycleLength': _cycleLength,
           }, SetOptions(merge: true)); // Merge to avoid overwriting data
@@ -158,6 +222,7 @@ class CycleProvider with ChangeNotifier {
       print("User is not logged in. Cycle data will not be saved to Firebase.");
     }
   }
+
 
   void updateCycleLength(int cycleLength) {
     if (cycleLength <= 0) {
@@ -299,20 +364,13 @@ class PartnerProvider with ChangeNotifier {
   List<DateTime> predictedDays = [];
   List<DateTime> fertileDays = [];
 
-  // Fetch User's cycle data from Firestore
-  Future<void> fetchUser1CycleData() async {
+// Modify the method to accept a userId as a parameter
+  Future<void> fetchUser1CycleData(String user1Id) async {
     try {
-      // Get the current user's UID (User 2's UID, who is logged in)
-      String? userId = FirebaseAuth.instance.currentUser?.uid;
-
-      if (userId == null) {
-        print("No user is logged in.");
-        return;
-      }
-
+      // Fetch the cycle data for User 1 using their UID
       DocumentSnapshot user1Doc = await FirebaseFirestore.instance
           .collection('cycles')
-          .doc(userId)
+          .doc(user1Id) // Use the user1Id here
           .get();
 
       if (user1Doc.exists) {
@@ -320,7 +378,7 @@ class PartnerProvider with ChangeNotifier {
 
         // Parse and update the pregnancy data
         DateTime cycleStartDate =
-            DateTime.parse(pregnancyData['cycleStartDate']);
+        DateTime.parse(pregnancyData['cycleStartDate']);
         int cycleLength = pregnancyData['cycleLength'];
         int periodLength = pregnancyData['periodLength'];
 
@@ -385,21 +443,41 @@ class PartnerProvider with ChangeNotifier {
     return _dueDate!.difference(DateTime.now()).inDays;
   }
 
-  // Get current cycle phase
+// Get the current day of the cycle
+  int get cycleDay {
+    if (_lastMenstrualPeriod == null) {
+      return 0; // Default to 0 if no last period date is available yet
+    }
+
+    // Check if today is the first day of the period
+    DateTime today = DateTime.now();
+    if (_lastMenstrualPeriod!.year == today.year &&
+        _lastMenstrualPeriod!.month == today.month &&
+        _lastMenstrualPeriod!.day == today.day) {
+      return 1; // Today is the first day of the period, so cycle day is 1
+    }
+
+    // If today is not the first day, calculate the cycle day normally
+    return today.difference(_lastMenstrualPeriod!).inDays + 1;
+  }
+
+// Get current cycle phase
   String get currentPhase {
     if (_cycleLength == null || _periodLength == null) {
       return 'Unknown Phase'; // Return a fallback if data is incomplete
     }
 
     int cycleDay = this.cycleDay;
+
+    // Check phase based on cycle day
     if (cycleDay <= _periodLength!) {
-      return 'Menstrual Phase';
+      return 'Menstrual Phase'; // During menstruation
     } else if (cycleDay <= _cycleLength! - 14) {
-      return 'Follicular Phase';
+      return 'Follicular Phase'; // After menstruation but before ovulation
     } else if (cycleDay <= _cycleLength! - 6) {
-      return 'Ovulation Phase';
+      return 'Ovulation Phase'; // Ovulation phase
     } else {
-      return 'Luteal Phase';
+      return 'Luteal Phase'; // After ovulation
     }
   }
 
@@ -409,13 +487,5 @@ class PartnerProvider with ChangeNotifier {
       return 0; // Default to 0 if no last period date is available yet
     }
     return DateTime.now().difference(_lastMenstrualPeriod!).inDays;
-  }
-
-  // Get the current day of the cycle
-  int get cycleDay {
-    if (_lastMenstrualPeriod == null) {
-      return 0; // Default to 0 if no last period date is available yet
-    }
-    return DateTime.now().difference(_lastMenstrualPeriod!).inDays + 1;
   }
 }

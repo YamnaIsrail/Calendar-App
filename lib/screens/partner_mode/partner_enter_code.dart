@@ -30,7 +30,7 @@ class PartnerEnterCode extends StatelessWidget {
     }
 
     try {
-      bool isValid = await validatePartnerCode(enteredCode);
+      bool isValid = await validatePartnerCode( context,enteredCode);
 
       if (isValid) {
         Navigator.push(

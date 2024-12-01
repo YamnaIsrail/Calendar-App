@@ -13,13 +13,13 @@ class PregnancyStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cycleProvider = Provider.of<CycleProvider>(context);
+   // final cycleProvider = Provider.of<CycleProvider>(context);
 
     final partnerProvider = Provider.of<PartnerProvider>(context);
 
     final lastMenstrualPeriod = partnerProvider.lastMenstrualPeriod;
 
-    final cyclePhase= cycleProvider.currentPhase;
+    final cyclePhase= partnerProvider.currentPhase;
 
     final dueDate = partnerProvider.dueDate;
     final currentWeek = partnerProvider.getCurrentWeek();
@@ -73,7 +73,7 @@ class PregnancyStatusScreen extends StatelessWidget {
                     ),
                     Text(
 
-                      "Cycle day is ${cycleProvider.daysElapsed} ",
+                      "Cycle day is ${partnerProvider.daysElapsed} ",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14, color: Colors.black),
                     ),

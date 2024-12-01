@@ -1,10 +1,13 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 // import 'package:calender_app/screens/settings/calendar_setting/calendar_setting.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
+import 'package:calender_app/screens/settings/pregnancy_mode/congratualtions_screen.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'FAQ.dart';
 import 'auth/password/create_password.dart';
@@ -157,6 +160,7 @@ class UserProfileSection1 extends StatelessWidget {
 class GoalSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cycleProvider = Provider.of<CycleProvider>(context);
     return Container(
       padding: EdgeInsets.all(16.0),
       margin: EdgeInsets.symmetric(vertical: 16.0),
@@ -181,8 +185,10 @@ class GoalSection extends StatelessWidget {
                 child: CustomButton(
                   text: "Track my period",
                   onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => PeriodLength()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PeriodLength()),
+                    );
                   },
                   backgroundColor: primaryColor,
                 ),
@@ -192,8 +198,10 @@ class GoalSection extends StatelessWidget {
                 child: CustomButton(
                   text: "Track my pregnancy",
                   onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => congrats()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => congrats()),
+                    );
                   },
                   backgroundColor: secondaryColor,
                   textColor: Colors.black,
@@ -204,40 +212,39 @@ class GoalSection extends StatelessWidget {
           Column(
             children: [
               SettingsOption(
-                  icon: Icons.water_drop,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => PeriodLength()),
-                    );
-                  },
-                  title: "Period Length",
-                  trailing: Text("6 Days")),
+                icon: Icons.water_drop,
+                title: "Period Length",
+                trailing: Text("${cycleProvider.periodLength} Days"),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => PeriodLength()),
+                  );
+                },
+              ),
               SettingsOption(
-                  icon: Icons.calendar_today,
-                  title: "Cycle Length",
-                  trailing: Text("25 Days"),
+                icon: Icons.calendar_today,
+                title: "Cycle Length",
+                trailing: Text("${cycleProvider.cycleLength} Days"),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => CycleLength()),
                   );
                 },
-
               ),
               SettingsOption(
                 icon: Icons.calendar_today,
                 title: "Ovulation and fertile",
-                 onTap: () {
+                trailing: Text("Details"),
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => Ovulation()),
                   );
                 },
-
               ),
-
-               ],
+            ],
           ),
         ],
       ),

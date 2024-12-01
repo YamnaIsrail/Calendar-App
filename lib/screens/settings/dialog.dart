@@ -1,8 +1,10 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/wheel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class DialogHelper {
   // New Dialog: showRatingPopup
@@ -441,9 +443,8 @@ class DialogHelper {
                         ),
                       ],
                     ),
-
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                      child: Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -457,9 +458,9 @@ class DialogHelper {
                   ),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                     decoration: BoxDecoration(
-                       color: Color(0xff939AFF),
-                       borderRadius: BorderRadius.circular(16),
+                    decoration: BoxDecoration(
+                      color: Color(0xff939AFF),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.3),
@@ -469,7 +470,6 @@ class DialogHelper {
                         ),
                       ],
                     ),
-
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -553,6 +553,7 @@ class DialogHelper {
       },
     );
   }
+
 //other backups
   static void showOtherBackupMethods(BuildContext context) {
     showDialog(
@@ -565,7 +566,6 @@ class DialogHelper {
             children: [
               Text("Email Attachment"),
               Text("Cloud Storage"),
-
             ],
           ),
         );
@@ -609,8 +609,7 @@ class CalendarDialogHelper {
   }
 
   // 2. Period Length Dialog
-  static void showPeriodLengthDialog(
-      BuildContext context, ValueChanged<int> onPeriodLengthSelected) {
+  static void showPeriodLengthDialog(BuildContext context) {
     List<String> days = List.generate(31, (index) => (index + 1).toString());
     int selectedIndex = 0;
 
@@ -640,6 +639,10 @@ class CalendarDialogHelper {
               SizedBox(height: 20),
               CustomButton(
                 onPressed: () {
+                  // Update Provider with the selected value
+                  context
+                      .read<CycleProvider>()
+                      .updatePeriodLength(int.parse(days[selectedIndex]));
                   Navigator.of(context).pop();
                 },
                 backgroundColor: primaryColor,
@@ -686,6 +689,81 @@ class CalendarDialogHelper {
               );
             }),
           ),
+        );
+      },
+    );
+  }
+
+  // 4. Cycle Length Dialog
+  static void showCycleLengthDialog(BuildContext context) {
+    List<String> days = List.generate(50, (index) => (index + 15).toString());
+    int selectedIndex = 0;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Cycle Length",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Wheel(
+                    items: days,
+                    selectedColor: Colors.black,
+                    unselectedColor: Colors.grey,
+                    onSelectedItemChanged: (index) {
+                      selectedIndex = index;
+                    },
+                  ),
+                  Text("Days", style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              SizedBox(height: 20),
+              CustomButton(
+                onPressed: () {
+                  // Update Provider with the selected value
+                  context
+                      .read<CycleProvider>()
+                      .updateCycleLength(int.parse(days[selectedIndex]));
+                  Navigator.of(context).pop();
+                },
+                backgroundColor: primaryColor,
+                text: 'Save',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 5. LUTEAL Phase Length Dialog
+  static void showLutealLengthDialog(
+      BuildContext context, Function(int) onUpdate) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        int selectedLength = 14; // Default value
+        return AlertDialog(
+          title: Text("Update Luteal Phase Length"),
+          content: TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(labelText: "Enter luteal phase length"),
+            onChanged: (value) => selectedLength = int.parse(value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                onUpdate(selectedLength); // Pass new length to update
+                Navigator.pop(context);
+              },
+              child: Text("Update"),
+            ),
+          ],
         );
       },
     );

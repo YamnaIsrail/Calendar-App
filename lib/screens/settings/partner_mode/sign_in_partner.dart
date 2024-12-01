@@ -1,5 +1,6 @@
 import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -29,14 +30,14 @@ class _PartnerModeSignInScreenState extends State<PartnerModeSignInScreen> {
     });
 
     try {
-      // Check if the user is already logged in
+
       bool isLoggedIn = await SessionManager.checkUserLoginStatus();
       if (isLoggedIn) {
-        // Navigate directly to PartnerLinkScreen if logged in
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => PartnerLinkScreen()),
         );
+        await CycleProvider().saveCycleDataToFirestore();
       }
     } catch (error) {
       print('Error checking user session: $error');
