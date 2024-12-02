@@ -53,7 +53,6 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => CycleProvider()),
         ChangeNotifierProvider(create: (_) => PartnerProvider()),
-        ChangeNotifierProvider(create: (_) => AppStateProvider()),
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
         ChangeNotifierProvider(create: (_) => NoteProvider()),
         ChangeNotifierProvider(create: (_) => WeightProvider()),

@@ -1,6 +1,5 @@
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/globals.dart';
-// import 'package:calender_app/screens/settings/calendar_setting/calendar_setting.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:calender_app/screens/settings/pregnancy_mode/congratualtions_screen.dart';
@@ -8,14 +7,13 @@ import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'FAQ.dart';
 import 'auth/password/create_password.dart';
 import 'backup_restore/backup_and_restore_screen.dart';
 import 'bug_report.dart';
 import 'calendar_setting/calendar_setting.dart';
-// import 'dialog.dart';
 import 'dialog.dart';
+import 'export_document/share_document.dart';
 import 'ovulation.dart';
 import 'partner_mode/partner_info.dart';
 import 'period_length.dart';
@@ -138,13 +136,21 @@ class UserProfileSection1 extends StatelessWidget {
                       color: Color(0xff142d7f),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      "Sync Data",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
+                    child: TextButton(
+                     child: Text(
+                       "Sync Data",
+                       style: TextStyle(
+                         fontSize: 16,
+                         fontWeight: FontWeight.w500,
+                         color: Colors.white,
+                       ),
+                     ),
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => BackupAndRestoreScreen()),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -293,7 +299,14 @@ class SettingsOptionSection extends StatelessWidget {
               },
               title: "Partner Mode"),
           SettingsOption(
-              icon: Icons.document_scanner, title: "Export document to Doctor"),
+              icon: Icons.document_scanner,
+              title: "Export document to Doctor",
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ExportCyclePage())
+                );
+              }),
           SettingsOption(icon: Icons.person_add,
               onTap: () {
                 Navigator.push(

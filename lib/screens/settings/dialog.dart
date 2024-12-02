@@ -260,10 +260,11 @@ class DialogHelper {
     );
   }
 
-  // New Dialog: Rename
-  static void showRenamePopup(
-      BuildContext context, ValueChanged<String> onRename) {
+  static void showRenamePopup(BuildContext context) {
     TextEditingController _nameController = TextEditingController();
+
+    // Use the provider from the context
+    final provider = Provider.of<CycleProvider>(context, listen: false);
 
     showDialog(
       context: context,
@@ -275,7 +276,7 @@ class DialogHelper {
             children: [
               CircleAvatar(
                 radius: 30,
-                child: Text("M"),
+                child: Text(provider.userName[0]), // Show initial
               ),
               SizedBox(height: 10),
               TextField(
@@ -303,17 +304,21 @@ class DialogHelper {
             ),
             CustomButton(
               onPressed: () {
+                if (_nameController.text.isNotEmpty) {
+                  provider.updateUserName(_nameController.text.trim());
+                }
                 Navigator.of(context).pop();
-                onRename(_nameController.text);
               },
               backgroundColor: primaryColor,
-              text: 'OK',
+              text: 'Save',
+              textColor: Colors.white,
             ),
           ],
         );
       },
     );
   }
+
 
   //Calendar Setting Day
   static void showFirstDayOfWeekDialog(

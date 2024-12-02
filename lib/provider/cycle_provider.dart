@@ -8,12 +8,16 @@ import '../firebase/user_session.dart';
 import '../hive/cycle_model.dart';
 import 'package:flutter/foundation.dart';
 
+
+
 class CycleProvider with ChangeNotifier {
   // Private fields with default values
+
   DateTime _lastPeriodStart = DateTime.now();
   int _cycleLength = 28;
   int _periodLength = 5;
   int _lutealPhaseLength = 14;
+  bool isNewUser = true; // Flag to check if it's a new user or not
 
   // Dynamic cycle data
   List<DateTime> periodDays = [];
@@ -35,6 +39,34 @@ class CycleProvider with ChangeNotifier {
   List<DateTime> getPredictedDays() => predictedDays;
   List<DateTime> getFertileDays() => fertileDays;
   List<DateTime> getLutealPhaseDays() => lutealPhaseDays;
+
+  //USER NAME
+  String _userName = ""; // Default name
+
+  // Getter for the user name
+  String get userName => _userName;
+
+  // Setter for the user name
+  void updateUserName(String name) {
+    _userName = name;
+    notifyListeners();
+    _saveUserNameToHive();
+  }
+
+  // Save the name to Hive for persistence
+  Future<void> _saveUserNameToHive() async {
+    var box = await Hive.openBox<String>('userData');
+    await box.put('userName', _userName);
+    print("User name saved to Hive.");
+  }
+
+  // Load the name from Hive
+  Future<void> _loadUserNameFromHive() async {
+    var box = await Hive.openBox<String>('userData');
+    _userName = box.get('userName', defaultValue: "User")!;
+    notifyListeners();
+  }
+
 
   // Method to calculate luteal phase days
   void _calculateLutealPhaseDays() {
@@ -343,10 +375,6 @@ class CycleProvider with ChangeNotifier {
     } else {
       print("No cycle data found in Hive.");
     }
-  }
-
-  CycleProvider() {
-    loadCycleDataFromHive(); // Load data from Hive when the provider is created
   }
 }
 

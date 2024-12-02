@@ -1,16 +1,9 @@
 import 'package:calender_app/hive/notes_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-
 import '../hive/cycle_model.dart';
 import '../hive/medicine_model.dart';
 import 'cycle_provider.dart';
-
-class AppStateProvider with ChangeNotifier {
-  final CycleProvider cycleProvider = CycleProvider();
-
-// Handle other app-wide states if needed (e.g., dark mode, settings)
-}
 
 class AppDataProvider with ChangeNotifier {
   Box<MedicineReminder> _medicineReminderBox;

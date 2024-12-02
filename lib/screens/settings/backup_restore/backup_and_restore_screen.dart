@@ -39,10 +39,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   icon: Icons.edit,
                   title: "Rename",
                   onTap: () {
-                    DialogHelper.showRenamePopup(context, (newName) {
-                      print("New name: $newName");
-                      // Update name logic here
-                    });
+                    DialogHelper.showRenamePopup(context);
                   },
                 ),
 
