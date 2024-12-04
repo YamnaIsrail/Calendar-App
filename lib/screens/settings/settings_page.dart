@@ -8,7 +8,7 @@ import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'FAQ.dart';
-import 'auth/password/create_password.dart';
+import 'auth/password/password.dart';
 import 'backup_restore/backup_and_restore_screen.dart';
 import 'bug_report.dart';
 import 'calendar_setting/calendar_setting.dart';
@@ -131,7 +131,7 @@ class UserProfileSection1 extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerLeft, // Align button to the left
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Color(0xff142d7f),
                       borderRadius: BorderRadius.circular(16),
@@ -285,7 +285,7 @@ class SettingsOptionSection extends StatelessWidget {
               onTap: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CreatePasswordScreen()),
+                  MaterialPageRoute(builder: (context) => PasswordScreen()),
                 );
               }
 

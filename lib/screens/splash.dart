@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'package:calender_app/auth/auth_provider.dart';
+import 'package:calender_app/screens/settings/auth/password/login.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'homeScreen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -19,28 +22,32 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _startAnimationSequence() async {
-    // Show ripple effect with animation
     setState(() {
       showRipple = true;
     });
     await Future.delayed(Duration(seconds: 1));
 
-    // Show heart icon with animation
     setState(() {
       showRipple = false;
       showHeart = true;
     });
     await Future.delayed(Duration(seconds: 1));
 
-    // Show text with animation
     setState(() {
       showHeart = false;
       showText = true;
     });
     await Future.delayed(Duration(seconds: 3));
 
-    // Navigate to home screen
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
+    // After animation, check for authentication and navigate accordingly
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.password != null || authProvider.pin != null) {
+      // If password or PIN is set, go to the login screen
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => Login()));
+    } else {
+      // If not set, go to the setup screen
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
+    }
   }
 
   @override
@@ -49,8 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.8, // Set to a percentage of screen width
-
+          width: MediaQuery.of(context).size.width * 0.8,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -59,16 +65,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 duration: Duration(seconds: 1),
                 child: AnimatedContainer(
                   duration: Duration(seconds: 1),
-                  width: showRipple ? 208 : 0,  // Animate width
-                  height: showRipple ? 58 : 0,   // Animate height
+                  width: showRipple ? 208 : 0,
+                  height: showRipple ? 58 : 0,
                   decoration: BoxDecoration(
                     color: Color.fromRGBO(215, 210, 210, 1.0),
                     borderRadius: BorderRadius.all(Radius.elliptical(208, 58)),
                   ),
                 ),
               ),
-
-              // Heart Icon with fade-in animation
               AnimatedOpacity(
                 opacity: showHeart ? 1.0 : 0.0,
                 duration: Duration(seconds: 1),
@@ -79,8 +83,6 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
               ),
-
-              // "My Calendar" Text with fade-in and position animation
               AnimatedPositioned(
                 duration: Duration(seconds: 1),
                 top: showText ? 150.0 : 300.0,
