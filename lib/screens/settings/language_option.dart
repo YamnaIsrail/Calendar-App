@@ -15,13 +15,25 @@ class LanguageSelectionScreen extends StatefulWidget {
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   String _selectedLanguage = "English"; // Default language
 
-  // Language list with corresponding language codes
   List<Map<String, String>> languages = [
     {"name": "English", "code": "en"},
     {"name": "Spanish", "code": "es"},
     {"name": "French", "code": "fr"},
-    // Add more languages here
+    {"name": "German", "code": "de"},
+    {"name": "Italian", "code": "it"},
+    {"name": "Portuguese", "code": "pt"},
+    {"name": "Russian", "code": "ru"},
+    {"name": "Chinese (Simplified)", "code": "zh-CN"},
+    {"name": "Chinese (Traditional)", "code": "zh-TW"},
+    {"name": "Japanese", "code": "ja"},
+    {"name": "Korean", "code": "ko"},
+    {"name": "Hindi", "code": "hi"},
+    {"name": "Arabic", "code": "ar"},
+    {"name": "Turkish", "code": "tr"},
+    {"name": "Dutch", "code": "nl"},
+    {"name": "Urdu", "code": "ur"},
   ];
+
 
   void _onLanguageSelected(Map<String, String> language) {
     setState(() {
