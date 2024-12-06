@@ -3,9 +3,11 @@ import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:calender_app/screens/settings/pregnancy_mode/congratualtions_screen.dart';
+import 'package:calender_app/screens/settings/translation.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'FAQ.dart';
 import 'auth/password/password.dart';
@@ -321,7 +323,6 @@ class SettingsOptionSection extends StatelessWidget {
     );
   }
 }
-
 class LanguageOptionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -334,36 +335,51 @@ class LanguageOptionSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          SettingsOption(icon: Icons.language, title: "Language Options",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (
-                      context) => LanguageOptionScreen()),
-                );
-              }),
-          SettingsOption(icon: Icons.visibility,
-              title: "Show or Hide Options",
-              onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ShowHideOption()),
-            );
-          }),
-          SettingsOption(icon: Icons.calendar_today, title: "Calendar",
+          SettingsOption(
+            icon: Icons.language,
+            title: "Language Options",
             onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CalendarSetting()),
-            );
-          }
-
+              // Navigate and pass the 'onLanguageChanged' parameter
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LanguageSelectionScreen(
+                    onLanguageChanged: (String language) {
+                      // Here, you can define what happens when language is changed.
+                      // For example, updating the selected language or saving to shared preferences
+                      print("Selected Language: $language");
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+          SettingsOption(
+            icon: Icons.visibility,
+            title: "Show or Hide Options",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ShowHideOption()),
+              );
+            },
+          ),
+          SettingsOption(
+            icon: Icons.calendar_today,
+            title: "Calendar",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CalendarSetting()),
+              );
+            },
           ),
         ],
       ),
     );
   }
 }
+
 
 class FAQOptionSection extends StatelessWidget {
   @override

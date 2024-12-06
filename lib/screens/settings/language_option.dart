@@ -1,73 +1,58 @@
-import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
+import 'translation.dart';  // Make sure to import the translation file
+import 'package:flutter/material.dart';
+import 'package:translator/translator.dart';
 
-class LanguageOptionScreen extends StatefulWidget {
+class LanguageSelectionScreen extends StatefulWidget {
+
+  final Function(String) onLanguageChanged; // Change this to accept a String
+  LanguageSelectionScreen({required this.onLanguageChanged});
+
   @override
-  _LanguageOptionScreenState createState() => _LanguageOptionScreenState();
+  _LanguageSelectionScreenState createState() => _LanguageSelectionScreenState();
 }
 
-class _LanguageOptionScreenState extends State<LanguageOptionScreen> {
-  String? _selectedLanguage;
+class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
+  String _selectedLanguage = "English"; // Default language
 
-  final List<String> languages = [
-    "English",
-    "Spanish",
-    "French",
-    "German",
-    "Italian",
-    "Portuguese",
-    "Russian",
-    "Chinese (Simplified)",
-    "Chinese (Traditional)",
-    "Japanese",
-    "Korean",
-    "Hindi",
-    "Arabic",
-    "Turkish",
-    "Dutch",
-    "Urdu",
+  // Language list with corresponding language codes
+  List<Map<String, String>> languages = [
+    {"name": "English", "code": "en"},
+    {"name": "Spanish", "code": "es"},
+    {"name": "French", "code": "fr"},
+    // Add more languages here
   ];
+
+  void _onLanguageSelected(Map<String, String> language) {
+    setState(() {
+      _selectedLanguage = language['name']!;
+    });
+
+    widget.onLanguageChanged(language['name']!);
+    // After language selection, reload the app's texts with the new language
+  }
 
   @override
   Widget build(BuildContext context) {
-    return bgContainer(
-        child: Scaffold(
-      backgroundColor: Colors.transparent,
+    return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "Language Options",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 27),
-        ),
-
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
+        title: Text('Select Language'),
       ),
       body: ListView.builder(
         itemCount: languages.length,
         itemBuilder: (context, index) {
-          return Container(
-            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            color: Colors.white,
-            child: ListTile(
-              title: Text(languages[index], style: TextStyle(fontWeight: FontWeight.bold),),
-              trailing: Radio<String>(
-                value: languages[index],
-                groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value;
-                  });
-                },
-              ),
-              onTap: () {
-                setState(() {
-                  _selectedLanguage = languages[index];
-                });
-              },
-            ),
+          return RadioListTile<String>(
+            value: languages[index]['name']!,
+            groupValue: _selectedLanguage,
+            title: Text(languages[index]['name']!),
+            onChanged: (value) {
+              if (value != null) {
+                _onLanguageSelected(languages[index]);
+              }
+            },
           );
         },
       ),
-    ));
+    );
   }
 }

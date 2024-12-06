@@ -18,11 +18,10 @@ class FeedbackScreen extends StatelessWidget {
         child: Column(
           children: [
             SvgPicture.asset(
-              "assets/Chat.svg",
+              "assets/chat.svg",
               width: 100,
               height: 100,
-              placeholderBuilder: (BuildContext context) =>
-                  Icon(Icons.chat),
+              placeholderBuilder: (BuildContext context) => Icon(Icons.chat),
             ),
             Container(
               padding: const EdgeInsets.all(8.0),
