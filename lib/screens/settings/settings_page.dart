@@ -8,7 +8,8 @@ import 'package:calender_app/screens/settings/translation.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'FAQ.dart';
 import 'auth/password/password.dart';
@@ -394,45 +395,88 @@ class FAQOptionSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          SettingsOption(icon: Icons.question_answer,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FAQScreen()),
-                );
-              },
-
-              title: "FAQ"),
           SettingsOption(
-              icon: Icons.bug_report,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FeedbackScreen()),
-                );
-              },
-
-              title: "Bug report & Feedback"),
-          SettingsOption(
-              icon: Icons.featured_play_list, title: "Request a new feature"),
-          SettingsOption(icon: Icons.star, title: "Rate us on Google Play",
+            icon: Icons.question_answer,
             onTap: () {
-              // Call showFirstDayOfWeekDialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FAQScreen()),
+              );
+            },
+            title: "FAQ",
+          ),
+          SettingsOption(
+            icon: Icons.bug_report,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FeedbackScreen()),
+              );
+            },
+            title: "Bug report & Feedback",
+          ),
+          SettingsOption(
+            icon: Icons.featured_play_list,
+            title: "Request a new feature",
+            onTap: () {
+              launchEmail();
+            },
+          ),
+          SettingsOption(
+            icon: Icons.star,
+            title: "Rate us on Google Play",
+            onTap: () {
               DialogHelper.showRatingPopup(context, (rating) {
                 print('Selected Rating: $rating');
               });
             },
           ),
-          SettingsOption(icon: Icons.share, title: "Share with friends"),
-          SettingsOption(icon: Icons.privacy_tip, title: "Privacy", onTap: (){
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
-            );
-          },),
+          // Share with Friends Section
+          SettingsOption(
+            icon: Icons.share,
+            onTap: () {
+              _shareApp();
+            },
+            title: "Share with friends",
+          ),
+
+          SettingsOption(
+            icon: Icons.privacy_tip,
+            title: "Privacy",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
+              );
+            },
+          ),
         ],
       ),
     );
+  }
+}
+
+// Functionality to share the app link
+void _shareApp() {
+  const appLink = 'https://play.google.com/store/apps/details?id=com.popularapp.periodcalendar';
+  Share.share('Check out this awesome app for tracking your period, symptoms, and ovulation! $appLink');
+}
+
+// Method to launch email
+Future<void> launchEmail() async {
+  final Uri emailLaunchUri = Uri(
+    scheme: 'mailto',
+    path: 'developer@example.com', // Replace with the developer's email
+    queryParameters: {
+      'subject': 'Request a New Feature',
+      'body': 'I request a new feature.\n\nPlease describe your request here.',
+    },
+  );
+
+  if (await canLaunchUrl(emailLaunchUri)) {
+    await launchUrl(emailLaunchUri);
+  } else {
+    throw 'Could not launch $emailLaunchUri';
   }
 }
 

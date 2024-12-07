@@ -5,12 +5,17 @@ import 'package:calender_app/widgets/wheel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class DialogHelper {
   // New Dialog: showRatingPopup
+
   static void showRatingPopup(
-      BuildContext context, ValueChanged<int> onRatingSelected) {
-    int _rating = 0; // Initial rating set to 0
+      BuildContext context,
+      ValueChanged<int> onRatingSelected,
+      ) {
+    int _rating = 0; // Default rating is 0
 
     showDialog(
       context: context,
@@ -21,7 +26,7 @@ class DialogHelper {
             children: [
               Text(
                 "We are working hard for a better user experience. "
-                "We would greatly appreciate it if you can rate us.",
+                    "We would greatly appreciate it if you can rate us.",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16),
               ),
@@ -40,7 +45,7 @@ class DialogHelper {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
                           5,
-                          (index) => GestureDetector(
+                              (index) => GestureDetector(
                             onTap: () {
                               setState(() {
                                 _rating = index + 1;
@@ -58,8 +63,7 @@ class DialogHelper {
                       SizedBox(height: 10),
                       Text(
                         'Current Rating: $_rating',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ],
                   );
@@ -68,12 +72,22 @@ class DialogHelper {
             ],
           ),
           actions: [
-            CustomButton(
-              onPressed: () {
-                Navigator.of(context).pop();
+            TextButton(
+              onPressed: () async {
+                // Launch the Google Play Store URL
+                const googlePlayLink = 'https://play.google.com/store/apps/details?id=com.popularapp.periodcalendar';
+                if (await canLaunch(googlePlayLink)) {
+                  await launch(googlePlayLink);
+                } else {
+                  throw 'Could not launch $googlePlayLink';
+                }
+
+                Navigator.of(context).pop(); // Close the popup
               },
-              backgroundColor: primaryColor,
-              text: 'Submit',
+              child: Text(
+                "Submit",
+                style: TextStyle(color: Colors.blue),
+              ),
             ),
           ],
         );
