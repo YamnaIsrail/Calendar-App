@@ -76,7 +76,7 @@ flutter:
     - assets/mental/
     - assets/partner_mode/
     - assets/pregnancy/
-    - assets/chat.svg
+    - assets/chat.png
     - lib/l10n/
 
 

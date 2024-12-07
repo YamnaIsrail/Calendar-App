@@ -21,13 +21,14 @@ class CycleDataAdapter extends TypeAdapter<CycleData> {
       cycleEndDate: fields[1] as String,
       periodLength: fields[2] as int?,
       cycleLength: fields[3] as int?,
+      pastPeriods: (fields[4] as List?)?.cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, CycleData obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.cycleStartDate)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class CycleDataAdapter extends TypeAdapter<CycleData> {
       ..writeByte(2)
       ..write(obj.periodLength)
       ..writeByte(3)
-      ..write(obj.cycleLength);
+      ..write(obj.cycleLength)
+      ..writeByte(4)
+      ..write(obj.pastPeriods);
   }
 
   @override

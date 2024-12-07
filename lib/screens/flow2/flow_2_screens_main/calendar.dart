@@ -123,7 +123,7 @@ class CustomCalendar extends StatelessWidget {
                       subtitle: '${cycleProvider.daysElapsed} days ago',
                       progressLabelStart: 'Last Period',
                       progressLabelEnd: 'Today',
-                      progressValue: cycleProvider.daysElapsed / cycleProvider.cycleLength,
+                      progressValue: cycleProvider.daysElapsed/ cycleProvider.cycleLength,
                       icon: Icons.timer_outlined,
                     ),
                     SizedBox(height: 16),
@@ -137,7 +137,7 @@ class CustomCalendar extends StatelessWidget {
                           Duration(days: cycleProvider.periodLength),
                         ),
                       ),
-                      progressValue: cycleProvider.daysElapsed / cycleProvider.periodLength,
+                      progressValue: cycleProvider.daysElapsed/ cycleProvider.periodLength,
                     ),
                     SizedBox(height: 16),
                     buildCycleInfoCard(

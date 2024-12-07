@@ -67,7 +67,7 @@ class CycleStatusScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          daysUntilNextPeriod < 0
+                          daysUntilNextPeriod< 0
                               ? "Next period was expected\non ${formatDate(nextPeriodDate)}."
 
                               : "Next period will start\non ${formatDate(nextPeriodDate)}",

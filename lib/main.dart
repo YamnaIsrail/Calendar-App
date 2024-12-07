@@ -129,40 +129,7 @@ class _CalenderAppState extends State<CalenderApp> {
         fontFamily: 'Roboto',
       ),
       locale: Locale(_getLanguageCode(_selectedLanguage)),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Tracking App'),
-        ),
-        body: FutureBuilder<String>(
-          future: _dynamicTranslation.translateText('Hello, User', _getLanguageCode(_selectedLanguage)),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Error'));
-            }
-            // Translate and display dynamic content
-            return Column(
-              children: [
-                Text(snapshot.data ?? 'Hello, User'),
-                ElevatedButton(
-                  onPressed: () {
-                    // Translate the logout button dynamically
-                    _dynamicTranslation.translateText('Logout', _getLanguageCode(_selectedLanguage)).then((translatedText) {
-                      // Now update the button text dynamically
-                      setState(() {
-                        // Update text dynamically when clicked
-                      });
-                    });
-                  },
-                  child: Text('Logout'),  // This text will be translated dynamically
-                ),
-              ],
-            );
-          },
-        ),
-      ),
+      home: SplashScreen()
 
     );
   }

@@ -26,6 +26,8 @@ class CycleProvider with ChangeNotifier {
   List<DateTime> lutealPhaseDays = [];
   List<String> _symptoms = [];
 
+  // List<DateTime> pastPeriods = [];
+
 
   // Getters
   DateTime get lastPeriodStart => _lastPeriodStart;
@@ -34,6 +36,7 @@ class CycleProvider with ChangeNotifier {
   int get lutealPhaseLength => _lutealPhaseLength;
   List<String> get symptoms => _symptoms;
 
+  List<DateTime> get pastPeriods => pastPeriods;
 
   List<DateTime> getPeriodDays() => periodDays;
   List<DateTime> getPredictedDays() => predictedDays;
@@ -45,7 +48,10 @@ class CycleProvider with ChangeNotifier {
 
   // Getter for the user name
   String get userName => _userName;
-
+  void addPeriod(DateTime period) {
+    pastPeriods.add(period);  // Add the new period to the list
+    notifyListeners();  // Notify listeners that the list has been updated
+  }
   // Setter for the user name
   void updateUserName(String name) {
     _userName = name;
@@ -216,14 +222,19 @@ class CycleProvider with ChangeNotifier {
     // Sync updated data with Hive
     _saveToHive();
   }
+  // Add new period to past periods
 
   Future<void> _saveToHive() async {
+    List<String> pastPeriodsList = List.generate(5, (index) => DateTime.now().subtract(Duration(days: index * _cycleLength)).toIso8601String()
+    );
+
     CycleData cycleData = CycleData(
       cycleStartDate: _lastPeriodStart.toString(),
       cycleEndDate:
       _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
       periodLength: _periodLength,
       cycleLength: _cycleLength,
+        pastPeriods: pastPeriodsList
     );
 
     // Open the Hive box
@@ -239,12 +250,17 @@ class CycleProvider with ChangeNotifier {
         String? userId = await SessionManager.getUserId();
         if (userId != null) {
           CollectionReference cycles = FirebaseFirestore.instance.collection('cycles');
+
+          List<String> pastPeriodsList = List.generate(5, (index) => DateTime.now().subtract(Duration(days: index * _cycleLength)).toIso8601String());
+
           await cycles.doc(userId).set({
             'cycleStartDate': _lastPeriodStart.toString(),
             'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
             'periodLength': _periodLength,
             'cycleLength': _cycleLength,
+            'pastPeriods': pastPeriodsList,
           }, SetOptions(merge: true)); // Merge to avoid overwriting data
+
           print("Cycle data saved to Firebase.");
         }
       } catch (e) {
@@ -254,7 +270,6 @@ class CycleProvider with ChangeNotifier {
       print("User is not logged in. Cycle data will not be saved to Firebase.");
     }
   }
-
 
   void updateCycleLength(int cycleLength) {
     if (cycleLength <= 0) {
@@ -377,6 +392,8 @@ class CycleProvider with ChangeNotifier {
     }
   }
 }
+
+
 
 class PartnerProvider with ChangeNotifier {
   DateTime? _lastMenstrualPeriod; // No default value

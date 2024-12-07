@@ -13,16 +13,16 @@ class FeedbackScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            SvgPicture.asset(
-              "assets/chat.svg",
-              width: 100,
+        scrollDirection: Axis.vertical,
+        children: [
+            Image.asset(
+              "assets/chat.png",
               height: 100,
-              placeholderBuilder: (BuildContext context) => Icon(Icons.chat),
-            ),
+              width: 100,
+          ),
+            SizedBox(height: 10,),
             Container(
               padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
@@ -108,7 +108,7 @@ class FeedbackScreen extends StatelessWidget {
             )
           ],
         ),
-      ),
+
     ));
   }
 }

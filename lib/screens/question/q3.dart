@@ -106,28 +106,33 @@ class _QuestionScreen3State extends State<QuestionScreen3> {
 
               // Create the cycle data object
               CycleData cycleData = CycleData(
-                cycleStartDate: lastPeriodStart.toString(),
-                cycleEndDate: lastPeriodStart.add(Duration(days: globals.selectedCycleDays)).toString(),
+                cycleStartDate: lastPeriodStart.toIso8601String(),  // Use ISO 8601 string format for DateTime
+                cycleEndDate: lastPeriodStart.add(Duration(days: globals.selectedCycleDays)).toIso8601String(),
                 periodLength: widget.selectedDays,
                 cycleLength: widget.selectedCycleDays,
+                pastPeriods: [
+                  ...Provider.of<CycleProvider>(context, listen: false).pastPeriods.map((date) => date.toIso8601String()),  // Convert DateTime to String
+                  lastPeriodStart.toIso8601String(),  // Add the new period start date as String
+                ],
               );
 
               // Store the cycle data in Hive
               var box = await Hive.openBox<CycleData>('cycleData');
               await box.put('cycle', cycleData); // Save data with key 'cycle'
 
-              // Update the CycleProvider with this data
-              Provider.of<CycleProvider>(context, listen: false).updateLastPeriodStart(lastPeriodStart);
+              // Update the CycleProvider with the new period
+              Provider.of<CycleProvider>(context, listen: false).addPeriod(lastPeriodStart);  // Add the new period to the provider
 
               print("Selected Date: $lastPeriodStart");
 
               // Navigate to the next screen
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Flow2Page()), // Go to main screen
+                MaterialPageRoute(builder: (context) => Flow2Page()), // Go to next screen
               );
             },
-               ),
+
+          ),
         ),
       ),
     );

@@ -15,7 +15,8 @@ class _SoundState extends State<Sound> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
   bool _isLooping = false;
-
+  double _sliderValue = 0.0;
+  double _maxSliderValue = 1.0;
   @override
   void initState() {
     super.initState();
@@ -24,13 +25,29 @@ class _SoundState extends State<Sound> {
 
   Future<void> _setupAudio() async {
     await _audioPlayer.setAsset(widget.audioPath);
+
+    // Update max slider value once the audio duration is loaded
+    _audioPlayer.durationStream.listen((duration) {
+      if (duration != null) {
+        setState(() {
+          _maxSliderValue = duration.inSeconds.toDouble();
+        });
+      }
+    });
+
+    // Listen to position stream to update the slider in real-time
+    _audioPlayer.positionStream.listen((position) {
+      setState(() {
+        _sliderValue = position.inSeconds.toDouble();
+      });
+    });
   }
 
   void _togglePlayPause() async {
     if (_isPlaying) {
-      await _audioPlayer.pause();
+     _audioPlayer.pause();
     } else {
-      await _audioPlayer.play();
+       _audioPlayer.play();
     }
     setState(() {
       _isPlaying = !_isPlaying;
@@ -118,10 +135,13 @@ class _SoundState extends State<Sound> {
           children: [
             Spacer(),
             Slider(
-              value: _audioPlayer.position.inSeconds.toDouble(),
-              max: _audioPlayer.duration?.inSeconds.toDouble() ?? 0,
+              value: _sliderValue,
+              max: _maxSliderValue,
               onChanged: (value) async {
                 await _audioPlayer.seek(Duration(seconds: value.toInt()));
+                setState(() {
+                  _sliderValue = value;
+                });
               },
             ),
             Row(

@@ -3,6 +3,7 @@ import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:calender_app/screens/settings/pregnancy_mode/congratualtions_screen.dart';
+import 'package:calender_app/screens/settings/privacy_policy.dart';
 import 'package:calender_app/screens/settings/translation.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -423,7 +424,12 @@ class FAQOptionSection extends StatelessWidget {
             },
           ),
           SettingsOption(icon: Icons.share, title: "Share with friends"),
-          SettingsOption(icon: Icons.privacy_tip, title: "Privacy"),
+          SettingsOption(icon: Icons.privacy_tip, title: "Privacy", onTap: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
+            );
+          },),
         ],
       ),
     );
@@ -434,7 +440,7 @@ class SettingsOption extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget? trailing;
-  final VoidCallback? onTap; // Optional onTap function
+  final VoidCallback? onTap;
 
   SettingsOption({
     required this.icon,
