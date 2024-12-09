@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../question/q1.dart';
+
 
 class DialogHelper {
   // New Dialog: showRatingPopup
@@ -74,12 +76,13 @@ class DialogHelper {
           actions: [
             TextButton(
               onPressed: () async {
-                // Launch the Google Play Store URL
-                const googlePlayLink = 'https://play.google.com/store/apps/details?id=com.popularapp.periodcalendar';
-                if (await canLaunch(googlePlayLink)) {
-                  await launch(googlePlayLink);
+                final googlePlayUri = Uri.parse(
+                  'https://play.google.com/store/apps/details?id=com.popularapp.periodcalendar&hl=en',
+                );
+                if (await canLaunchUrl(googlePlayUri)) {
+                  await launchUrl(googlePlayUri);
                 } else {
-                  throw 'Could not launch $googlePlayLink';
+                  throw 'Could not launch $googlePlayUri';
                 }
 
                 Navigator.of(context).pop(); // Close the popup
@@ -95,6 +98,7 @@ class DialogHelper {
     );
   }
 
+
   // New Dialog: Delete account showConfirmPopup
   static void showConfirmPopup(BuildContext context, VoidCallback onDelete) {
     showDialog(
@@ -102,24 +106,26 @@ class DialogHelper {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirmation'),
-          content: const Text('Are you sure to reset app and delete all data?'),
+          content: const Text('Are you sure you want to reset the app and delete all data?'),
           actions: [
-            CustomButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onDelete();
-              },
-              backgroundColor: primaryColor,
-              text: 'Delete',
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(), // Close popup
+              child: const Text('Cancel'),
             ),
-            SizedBox(height: 5),
-            CustomButton(
+            TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close popup
+                onDelete(); // Call the delete logic
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => QuestionScreen1()),
+                );
               },
-              backgroundColor: secondaryColor,
-              text: 'Cancel',
-              textColor: Colors.black,
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );

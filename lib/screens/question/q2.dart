@@ -8,6 +8,7 @@ import 'package:calender_app/screens/question/q3.dart';
 import '../../widgets/background.dart';
 import '../../widgets/question_appbar.dart';
 import '../../widgets/wheel.dart';
+import '../homeScreen.dart';
 
 class QuestionScreen2 extends StatefulWidget {
   final int selectedDays;
@@ -33,7 +34,11 @@ class _QuestionScreen2State extends State<QuestionScreen2> {
             Navigator.pop(context);
           },
           onCancel: () {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+                  (route) => false,
+            );
           },
         ),
         body: Padding(

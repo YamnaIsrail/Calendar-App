@@ -7,6 +7,7 @@ import 'package:calender_app/screens/question/q2.dart';
 import '../../widgets/background.dart';
 import '../../widgets/question_appbar.dart';
 import '../../widgets/wheel.dart';
+import '../homeScreen.dart';
 import 'ques_screen.dart';
 
 class QuestionScreen1 extends StatefulWidget {
@@ -30,7 +31,11 @@ class _QuestionScreen1State extends State<QuestionScreen1> {
             Navigator.pop(context);
           },
           onCancel: () {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+                  (route) => false,
+            );
           },
         ),
         body: Padding(

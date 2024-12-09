@@ -17,7 +17,7 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
   Widget build(BuildContext context) {
     final partnerProvider = Provider.of<PartnerProvider>(context);
     final currentWeek = partnerProvider.getCurrentWeek();
-    final daysUntilDueDate = partnerProvider.getDaysUntilDueDate();
+    final daysUntilDueDate = partnerProvider.getDaysIntoPregnancy();
 
 
     final now = DateTime.now();

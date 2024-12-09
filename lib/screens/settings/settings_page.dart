@@ -1,4 +1,5 @@
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
@@ -84,7 +85,7 @@ class SettingsPage extends StatelessWidget {
                         child: Text("Delete All Data",
                           textAlign: TextAlign.center,
                           style: TextStyle(color: primaryColor)
-                          ,)
+                         )
                     ),
                   ],
                 )
@@ -171,6 +172,8 @@ class GoalSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
+    final pregnancyModeProvider = context.watch<PregnancyModeProvider>();
+
     return Container(
       padding: EdgeInsets.all(16.0),
       margin: EdgeInsets.symmetric(vertical: 16.0),
@@ -195,12 +198,16 @@ class GoalSection extends StatelessWidget {
                 child: CustomButton(
                   text: "Track my period",
                   onPressed: () {
+                    pregnancyModeProvider.togglePregnancyMode(false);
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => PeriodLength()),
                     );
                   },
-                  backgroundColor: primaryColor,
+                  textColor:  pregnancyModeProvider.isPregnancyMode ? Colors.black : Colors.white!,
+
+                  backgroundColor: pregnancyModeProvider.isPregnancyMode ? secondaryColor! : primaryColor,
+
                 ),
               ),
               SizedBox(width: 15),
@@ -208,13 +215,16 @@ class GoalSection extends StatelessWidget {
                 child: CustomButton(
                   text: "Track my pregnancy",
                   onPressed: () {
+                    pregnancyModeProvider.togglePregnancyMode(true);
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => congrats()),
                     );
                   },
-                  backgroundColor: secondaryColor,
-                  textColor: Colors.black,
+                  backgroundColor: pregnancyModeProvider.isPregnancyMode ? primaryColor : secondaryColor!,
+
+                  textColor:  pregnancyModeProvider.isPregnancyMode ? Colors.white : Colors.black!,
+
                 ),
               ),
             ],
@@ -466,7 +476,7 @@ void _shareApp() {
 Future<void> launchEmail() async {
   final Uri emailLaunchUri = Uri(
     scheme: 'mailto',
-    path: 'developer@example.com', // Replace with the developer's email
+    path: 'yamnaisrailkhan@gmail.com',
     queryParameters: {
       'subject': 'Request a New Feature',
       'body': 'I request a new feature.\n\nPlease describe your request here.',

@@ -45,7 +45,7 @@ class HomeScreen extends StatelessWidget {
                     // If data exists, navigate to the main screen or the next page
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => Flow2Page()), // Replace with the screen you want
+                      MaterialPageRoute(builder: (context) => Flow2Page()),
                     );
                   } else {
                     // If no data exists, navigate to the question screen

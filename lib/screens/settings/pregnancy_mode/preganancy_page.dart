@@ -1,12 +1,18 @@
+import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 
 import 'congratualtions_screen.dart';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 class PregnancyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final pregnancyModeProvider = context.watch<PregnancyModeProvider>();
+
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -16,41 +22,49 @@ class PregnancyScreen extends StatelessWidget {
           leading: IconButton(
             icon: Container(
               padding: EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                    color: Color(0xFFFFC4E8),
-
-                    borderRadius: BorderRadius.circular(50)
-                ),
-                child: Icon(Icons.arrow_back)),
+              decoration: BoxDecoration(
+                  color: Color(0xFFFFC4E8),
+                  borderRadius: BorderRadius.circular(50)),
+              child: Icon(Icons.arrow_back),
+            ),
             onPressed: () => Navigator.pop(context),
           ),
-
           actions: [
             IconButton(
-              icon: Icon(Icons.check_box, color: Color(0xFFEB1D98),),
+              icon: Icon(Icons.check_box, color: Color(0xFFEB1D98)),
               onPressed: () => Navigator.pop(context),
             ),
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Section 1: Estimated start of gestation
               PregnancyOptionTile(
                 title: "Estimated start of gestation",
-                subtitle: "Oct 3, 2024",
+                subtitle: pregnancyModeProvider.gestationStart != null
+                    ? "${pregnancyModeProvider.gestationStart?.toLocal().toString().split(' ')[0]}"
+                    : "Unknown",
                 onTap: () {
-                  // Placeholder for future functionality (e.g., show date picker)
+                  // Future functionality can be implemented here
+                  print("Tapped on gestation start date.");
                 },
               ),
+              SizedBox(height: 8),
+              // Section 2: Display on the homepage with gestation progress
               PregnancyOptionTile(
                 title: "Display on the homepage",
-                subtitle: "3W 0D since pregnancy",
+                subtitle: pregnancyModeProvider.gestationWeeks != null && pregnancyModeProvider.gestationDays != null
+                    ? "${pregnancyModeProvider.gestationWeeks}W ${pregnancyModeProvider.gestationDays}D since pregnancy"
+                    : "Unknown",
                 onTap: () {
-                  // Placeholder for toggle functionality
+                  print("Toggled display on homepage feature.");
                 },
               ),
+              SizedBox(height: 8),
+              // Section 3: Placeholder for congratulation screen
               PregnancyOptionTile(
                 title: "My baby was born!",
                 subtitle: "",
@@ -62,11 +76,14 @@ class PregnancyScreen extends StatelessWidget {
                   );
                 },
               ),
+              SizedBox(height: 8),
+              // Section 4: Turn off pregnancy mode
               PregnancyOptionTile(
                 title: "Turn off pregnancy mode",
                 subtitle: "",
                 onTap: () {
-                  Navigator.pop(context); // Navigate back as a placeholder
+                  pregnancyModeProvider.togglePregnancyMode(false);
+                  Navigator.pop(context);
                 },
               ),
             ],

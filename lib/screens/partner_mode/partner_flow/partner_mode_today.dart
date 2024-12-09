@@ -13,6 +13,228 @@ class PregnancyStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final partnerProvider = Provider.of<PartnerProvider>(context);
+
+    // Extract data dynamically
+    final lastMenstrualPeriod = partnerProvider.lastMenstrualPeriod;
+    final cyclePhase = partnerProvider.currentPhase;
+    final dueDate = partnerProvider.dueDate;
+    final currentWeek = partnerProvider.getCurrentWeek();
+    final daysUntilDueDate = partnerProvider.getDaysIntoPregnancy();
+
+    // Check if we have valid pregnancy info or rely on menstrual/period predictions
+    bool isPregnancyDataAvailable = dueDate != null && lastMenstrualPeriod != null;
+
+    return bgContainer(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text("Pregnancy & Cycle Status"),
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PartnerModeSetting()),
+              );
+            },
+          ),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/bg.jpg'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: isPregnancyDataAvailable
+              ? pregnancyUI(partnerProvider, dueDate, currentWeek, daysUntilDueDate)
+              : cycleUI(partnerProvider),
+        ),
+      ),
+    );
+  }
+
+  /// UI for Pregnancy Information
+  Widget pregnancyUI(
+      PartnerProvider partnerProvider,
+      DateTime? dueDate,
+      int currentWeek,
+      int daysUntilDueDate,
+      ) {
+    return Column(
+      children: [
+        Container(
+          height: 280,
+          width: 280,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              fit: BoxFit.cover,
+              image: AssetImage("assets/cal.png"),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Pregnancy Week $currentWeek",
+                style: TextStyle(fontSize: 18, color: Colors.black),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Days into pregnancy: $daysUntilDueDate",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                buildCycleInfoCard(
+                  icon: Icons.baby_changing_station,
+                  title: 'Pregnancy Progress',
+                  subtitle: daysUntilDueDate < 0
+                      ? "You are overdue. Contact your doctor."
+                      : "Your pregnancy is progressing normally.",
+                  progressLabelStart: "Week 1",
+                  progressLabelEnd: "Week 40",
+                  progressValue: currentWeek / 40,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// UI for Cycle/Period Information
+  Widget cycleUI(PartnerProvider partnerProvider) {
+    return Column(
+      children: [
+        Container(
+          height: 280,
+          width: 280,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              fit: BoxFit.cover,
+              image: AssetImage("assets/cal.png"),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                partnerProvider.currentPhase,
+                style: TextStyle(fontSize: 18, color: Colors.black),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Cycle Day: ${partnerProvider.daysElapsed}",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                buildCycleInfoCard(
+                  icon: Icons.date_range,
+                  title: "Next Predicted Period",
+                  subtitle: partnerProvider.predictedDays.isNotEmpty
+                      ? "Next cycle: ${partnerProvider.predictedDays.first.toLocal().toString().split(' ')[0]}"
+                      : "Prediction unavailable.",
+                  progressLabelStart: "Start",
+                  progressLabelEnd: "Next Period",
+                  progressValue: 0.5,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Shared card builder
+  Widget buildCycleInfoCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String progressLabelStart,
+    required String progressLabelEnd,
+    required double progressValue,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.blueGrey,
+            ),
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Text(progressLabelStart),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: progressValue,
+                  color: Colors.blue,
+                  backgroundColor: Colors.grey[300],
+                ),
+              ),
+              Text(progressLabelEnd),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PregnancyScreen extends StatelessWidget {
+  String formatDate(DateTime date) {
+    return DateFormat('dd-MM-yyyy').format(date);
+  }
+
+  @override
+  Widget build(BuildContext context) {
    // final cycleProvider = Provider.of<CycleProvider>(context);
 
     final partnerProvider = Provider.of<PartnerProvider>(context);
@@ -23,7 +245,7 @@ class PregnancyStatusScreen extends StatelessWidget {
 
     final dueDate = partnerProvider.dueDate;
     final currentWeek = partnerProvider.getCurrentWeek();
-    final daysUntilDueDate = partnerProvider.getDaysUntilDueDate();
+    final daysUntilDueDate = partnerProvider.getDaysIntoPregnancy();
 
     bool isInfoAvailable = lastMenstrualPeriod != DateTime.now() && dueDate != DateTime.now().add(Duration(days: 280));
 
@@ -73,7 +295,7 @@ class PregnancyStatusScreen extends StatelessWidget {
                     ),
                     Text(
 
-                      "Cycle day is ${partnerProvider.daysElapsed} ",
+                      "Cycle day is ${partnerProvider.daysElapsed+1} ",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14, color: Colors.black),
                     ),

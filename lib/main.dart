@@ -1,3 +1,4 @@
+import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:calender_app/screens/settings/translation.dart';
 import 'package:flutter/material.dart';
@@ -23,9 +24,8 @@ import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'notifications/notification_storage.dart';
-import 'provider/analysis/temperature_model.dart';
 import 'provider/analysis/weight_provider.dart';
-import 'package:simplytranslate/simplytranslate.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,17 +39,21 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(NoteAdapter());
   await Hive.openBox<Note>('notesBox');
+
   Hive.registerAdapter(AuthDataAdapter());
   await Hive.openBox('partner_codes');
   await NotificationStorage.init();
+
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');
+  await CycleProvider().loadCycleDataFromHive();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CycleProvider()),
         ChangeNotifierProvider(create: (_) => PartnerProvider()),
+        ChangeNotifierProvider(create: (_) => PregnancyModeProvider()),
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
         ChangeNotifierProvider(create: (_) => NoteProvider()),
         ChangeNotifierProvider(create: (_) => WeightProvider()),
@@ -84,6 +88,13 @@ class _CalenderAppState extends State<CalenderApp> {
   void initState() {
     super.initState();
     _loadLanguage();
+    _initializeCycleProvider();
+  }
+  void _initializeCycleProvider() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cycleProvider = Provider.of<CycleProvider>(context, listen: false);
+      cycleProvider.initialize(context);
+    });
   }
 
   // Load language preference from Hive storage
@@ -134,4 +145,3 @@ class _CalenderAppState extends State<CalenderApp> {
     );
   }
 }
-

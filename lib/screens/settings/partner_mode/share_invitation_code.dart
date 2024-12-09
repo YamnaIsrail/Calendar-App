@@ -46,7 +46,7 @@ class _ShareCodeScreenState extends State<ShareCodeScreen> {
         expiryTime = DateTime.now().add(Duration(hours: 24)).toLocal().toString().split(' ')[1];
       });
     }
-  }
+    }
 
   void _copyToClipboard(BuildContext context) {
     if (code != null) {

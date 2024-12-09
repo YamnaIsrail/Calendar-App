@@ -1,8 +1,10 @@
+import 'package:calender_app/provider/preg_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
+import 'package:provider/provider.dart';
 
 import '../firebase/user_session.dart';
 import '../hive/cycle_model.dart';
@@ -11,8 +13,15 @@ import 'package:flutter/foundation.dart';
 
 
 class CycleProvider with ChangeNotifier {
-  // Private fields with default values
+  late BuildContext _context;
 
+  // Set context when provider is initialized
+  void initialize(BuildContext context) {
+    _context = context;
+    notifyListeners();
+  }
+
+  // Private fields with default values
   DateTime _lastPeriodStart = DateTime.now();
   int _cycleLength = 28;
   int _periodLength = 5;
@@ -26,8 +35,6 @@ class CycleProvider with ChangeNotifier {
   List<DateTime> lutealPhaseDays = [];
   List<String> _symptoms = [];
 
-  // List<DateTime> pastPeriods = [];
-
 
   // Getters
   DateTime get lastPeriodStart => _lastPeriodStart;
@@ -36,7 +43,6 @@ class CycleProvider with ChangeNotifier {
   int get lutealPhaseLength => _lutealPhaseLength;
   List<String> get symptoms => _symptoms;
 
-  List<DateTime> get pastPeriods => pastPeriods;
 
   List<DateTime> getPeriodDays() => periodDays;
   List<DateTime> getPredictedDays() => predictedDays;
@@ -48,10 +54,7 @@ class CycleProvider with ChangeNotifier {
 
   // Getter for the user name
   String get userName => _userName;
-  void addPeriod(DateTime period) {
-    pastPeriods.add(period);  // Add the new period to the list
-    notifyListeners();  // Notify listeners that the list has been updated
-  }
+
   // Setter for the user name
   void updateUserName(String name) {
     _userName = name;
@@ -222,19 +225,14 @@ class CycleProvider with ChangeNotifier {
     // Sync updated data with Hive
     _saveToHive();
   }
-  // Add new period to past periods
 
   Future<void> _saveToHive() async {
-    List<String> pastPeriodsList = List.generate(5, (index) => DateTime.now().subtract(Duration(days: index * _cycleLength)).toIso8601String()
-    );
-
     CycleData cycleData = CycleData(
       cycleStartDate: _lastPeriodStart.toString(),
       cycleEndDate:
       _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
       periodLength: _periodLength,
       cycleLength: _cycleLength,
-        pastPeriods: pastPeriodsList
     );
 
     // Open the Hive box
@@ -243,33 +241,70 @@ class CycleProvider with ChangeNotifier {
     print("Cycle data saved to Hive.");
 
     saveCycleDataToFirestore();
+
   }
   Future<void> saveCycleDataToFirestore() async {
     if (await SessionManager.checkUserLoginStatus()) {
       try {
         String? userId = await SessionManager.getUserId();
         if (userId != null) {
-          CollectionReference cycles = FirebaseFirestore.instance.collection('cycles');
+          final cycles = FirebaseFirestore.instance.collection('cycles');
 
-          List<String> pastPeriodsList = List.generate(5, (index) => DateTime.now().subtract(Duration(days: index * _cycleLength)).toIso8601String());
-
-          await cycles.doc(userId).set({
-            'cycleStartDate': _lastPeriodStart.toString(),
-            'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
+          Map<String, dynamic> cycleData = {
+            'cycleStartDate': _lastPeriodStart.toIso8601String(),
+            'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toIso8601String(),
             'periodLength': _periodLength,
             'cycleLength': _cycleLength,
-            'pastPeriods': pastPeriodsList,
-          }, SetOptions(merge: true)); // Merge to avoid overwriting data
+          };
+          final pregnancyProvider = Provider.of<PregnancyModeProvider>(_context, listen: false);
 
-          print("Cycle data saved to Firebase.");
+           if (pregnancyProvider.isPregnancyMode) {
+            cycleData.addAll({
+              'pregnancyMode': true,
+              'gestationStart': pregnancyProvider.gestationStart?.toIso8601String(),
+            });
+          }else{
+             await cycles.doc(userId).update({
+               'pregnancyMode': FieldValue.delete(),
+               'gestationStart': FieldValue.delete(),
+             });
+             print("Deleted pregnancyMode and gestationStart fields from Firestore.");
+             return; // Exit early after deletion
+           }
+
+          await cycles.doc(userId).set(cycleData, SetOptions(merge: true));
+          print("Cycle data saved successfully.");
         }
       } catch (e) {
-        print("Error saving cycle data to Firebase: $e");
+        print("Error saving data: $e");
       }
     } else {
-      print("User is not logged in. Cycle data will not be saved to Firebase.");
+      print("User is not logged in.");
     }
   }
+
+  // Future<void> saveCycleDataToFirestore() async {
+  //   if (await SessionManager.checkUserLoginStatus()) {
+  //     try {
+  //       String? userId = await SessionManager.getUserId();
+  //       if (userId != null) {
+  //         CollectionReference cycles = FirebaseFirestore.instance.collection('cycles');
+  //         await cycles.doc(userId).set({
+  //           'cycleStartDate': _lastPeriodStart.toString(),
+  //           'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
+  //           'periodLength': _periodLength,
+  //           'cycleLength': _cycleLength,
+  //         }, SetOptions(merge: true)); // Merge to avoid overwriting data
+  //         print("Cycle data saved to Firebase.");
+  //       }
+  //     } catch (e) {
+  //       print("Error saving cycle data to Firebase: $e");
+  //     }
+  //   } else {
+  //     print("User is not logged in. Cycle data will not be saved to Firebase.");
+  //   }
+  // }
+
 
   void updateCycleLength(int cycleLength) {
     if (cycleLength <= 0) {
@@ -393,45 +428,205 @@ class CycleProvider with ChangeNotifier {
   }
 }
 
+// class PartnerProvider with ChangeNotifier {
+//   DateTime? _lastMenstrualPeriod; // No default value
+//   int? _cycleLength; // No default value
+//   int? _periodLength; // No default value
+//   DateTime? _dueDate; // Will be calculated based on the fetched data
+//
+//   DateTime? get lastMenstrualPeriod => _lastMenstrualPeriod;
+//   DateTime? get dueDate => _dueDate;
+//   int? get cycleLength => _cycleLength;
+//   int? get periodLength => _periodLength;
+//   List<DateTime> periodDays = [];
+//   List<DateTime> predictedDays = [];
+//   List<DateTime> fertileDays = [];
+//
+// // Modify the method to accept a userId as a parameter
+//   Future<void> fetchUser1CycleData(String user1Id) async {
+//     try {
+//       // Fetch the cycle data for User 1 using their UID
+//       DocumentSnapshot user1Doc = await FirebaseFirestore.instance
+//           .collection('cycles')
+//           .doc(user1Id) // Use the user1Id here
+//           .get();
+//
+//       if (user1Doc.exists) {
+//         var pregnancyData = user1Doc.data() as Map<String, dynamic>;
+//
+//         // Parse and update the pregnancy data
+//         DateTime cycleStartDate =
+//         DateTime.parse(pregnancyData['cycleStartDate']);
+//         int cycleLength = pregnancyData['cycleLength'];
+//         int periodLength = pregnancyData['periodLength'];
+//
+//         _lastMenstrualPeriod = cycleStartDate;
+//         _cycleLength = cycleLength;
+//         _periodLength = periodLength;
+//
+//         _initializeCycleData(); // Initialize cycle data
+//       } else {
+//         print("No data found for User 1.");
+//       }
+//     } catch (e) {
+//       print("Error fetching User 1's cycle data: $e");
+//     }
+//   }
+//
+//   // Initialize cycle data (predicted days, fertile days, period days)
+//   void _initializeCycleData() {
+//     if (_lastMenstrualPeriod == null ||
+//         _cycleLength == null ||
+//         _periodLength == null) {
+//       print("Cycle data is incomplete.");
+//       return; // Exit if any required data is null
+//     }
+//
+//     // Predict period days (from last period start date)
+//     predictedDays = List.generate(
+//       _periodLength!,
+//           (index) =>
+//           _lastMenstrualPeriod!.add(Duration(days: _cycleLength! + index)),
+//     );
+//
+//     // Fertile window (typically between cycleLength - 14 and cycleLength - 6)
+//     fertileDays = List.generate(
+//       _cycleLength! - 14 + 1,
+//           (index) =>
+//           _lastMenstrualPeriod!.add(Duration(days: _cycleLength! - 14 + index)),
+//     );
+//
+//     // Period days (starting from the last period start)
+//     periodDays = List.generate(
+//       _periodLength!,
+//           (index) => _lastMenstrualPeriod!.add(Duration(days: index)),
+//     );
+//
+//     notifyListeners(); // Notify listeners to update the UI
+//   }
+//
+//   // Get the current week of pregnancy
+//   int getCurrentWeek() {
+//     if (_lastMenstrualPeriod == null) {
+//       return 0; // Default to 0 if no data is available yet
+//     }
+//     return DateTime.now().difference(_lastMenstrualPeriod!).inDays ~/ 7;
+//   }
+//
+//   // Get the days until the due date
+//   int getDaysUntilDueDate() {
+//     if (_dueDate == null) {
+//       return 0; // Default to 0 if no due date is available yet
+//     }
+//     return _dueDate!.difference(DateTime.now()).inDays;
+//   }
+//
+// // Get the current day of the cycle
+//   int get cycleDay {
+//     if (_lastMenstrualPeriod == null) {
+//       return 0; // Default to 0 if no last period date is available yet
+//     }
+//
+//     // Check if today is the first day of the period
+//     DateTime today = DateTime.now();
+//     if (_lastMenstrualPeriod!.year == today.year &&
+//         _lastMenstrualPeriod!.month == today.month &&
+//         _lastMenstrualPeriod!.day == today.day) {
+//       return 1; // Today is the first day of the period, so cycle day is 1
+//     }
+//
+//     // If today is not the first day, calculate the cycle day normally
+//     return today.difference(_lastMenstrualPeriod!).inDays + 1;
+//   }
+//
+// // Get current cycle phase
+//   String get currentPhase {
+//     if (_cycleLength == null || _periodLength == null) {
+//       return 'Unknown Phase'; // Return a fallback if data is incomplete
+//     }
+//
+//     int cycleDay = this.cycleDay;
+//
+//     // Check phase based on cycle day
+//     if (cycleDay <= _periodLength!) {
+//       return 'Menstrual Phase'; // During menstruation
+//     } else if (cycleDay <= _cycleLength! - 14) {
+//       return 'Follicular Phase'; // After menstruation but before ovulation
+//     } else if (cycleDay <= _cycleLength! - 6) {
+//       return 'Ovulation Phase'; // Ovulation phase
+//     } else {
+//       return 'Luteal Phase'; // After ovulation
+//     }
+//   }
+//
+//   // Get the number of days elapsed since the last period
+//   int get daysElapsed {
+//     if (_lastMenstrualPeriod == null) {
+//       return 0; // Default to 0 if no last period date is available yet
+//     }
+//     return DateTime.now().difference(_lastMenstrualPeriod!).inDays;
+//   }
+// }
+
 
 
 class PartnerProvider with ChangeNotifier {
-  DateTime? _lastMenstrualPeriod; // No default value
-  int? _cycleLength; // No default value
-  int? _periodLength; // No default value
-  DateTime? _dueDate; // Will be calculated based on the fetched data
+  DateTime? _lastMenstrualPeriod;
+  int? _cycleLength;
+  int? _periodLength;
+  DateTime? _dueDate;
+  bool _pregnancyMode = false;
+  DateTime? _gestationStart;
 
+  // Getters
   DateTime? get lastMenstrualPeriod => _lastMenstrualPeriod;
   DateTime? get dueDate => _dueDate;
   int? get cycleLength => _cycleLength;
   int? get periodLength => _periodLength;
+  bool get pregnancyMode => _pregnancyMode;
+  DateTime? get gestationStart => _gestationStart;
+
+
   List<DateTime> periodDays = [];
   List<DateTime> predictedDays = [];
   List<DateTime> fertileDays = [];
 
-// Modify the method to accept a userId as a parameter
+  // Fetch user1's cycle data
   Future<void> fetchUser1CycleData(String user1Id) async {
     try {
-      // Fetch the cycle data for User 1 using their UID
       DocumentSnapshot user1Doc = await FirebaseFirestore.instance
           .collection('cycles')
-          .doc(user1Id) // Use the user1Id here
+          .doc(user1Id)
           .get();
 
       if (user1Doc.exists) {
         var pregnancyData = user1Doc.data() as Map<String, dynamic>;
 
-        // Parse and update the pregnancy data
-        DateTime cycleStartDate =
-        DateTime.parse(pregnancyData['cycleStartDate']);
+        // Parse mandatory fields
+        DateTime cycleStartDate = DateTime.parse(pregnancyData['cycleStartDate']);
         int cycleLength = pregnancyData['cycleLength'];
         int periodLength = pregnancyData['periodLength'];
+
+        // Handle optional fields safely
+        bool isPregnancyMode = pregnancyData['pregnancyMode'] ?? false;
+        DateTime? gestationStart = pregnancyData['gestationStart'] != null
+            ? DateTime.parse(pregnancyData['gestationStart'])
+            : null;
 
         _lastMenstrualPeriod = cycleStartDate;
         _cycleLength = cycleLength;
         _periodLength = periodLength;
+        _pregnancyMode = isPregnancyMode;
+        _gestationStart = gestationStart;
 
-        _initializeCycleData(); // Initialize cycle data
+        if (_pregnancyMode && _gestationStart != null) {
+          _dueDate = _gestationStart!.add(Duration(days: 280));
+        } else {
+          _dueDate = null;
+        }
+
+        _initializeCycleData();
+        notifyListeners();
       } else {
         print("No data found for User 1.");
       }
@@ -440,97 +635,101 @@ class PartnerProvider with ChangeNotifier {
     }
   }
 
-  // Initialize cycle data (predicted days, fertile days, period days)
+  // Initialize cycle data
   void _initializeCycleData() {
-    if (_lastMenstrualPeriod == null ||
-        _cycleLength == null ||
-        _periodLength == null) {
+    if (_lastMenstrualPeriod == null || _cycleLength == null || _periodLength == null) {
       print("Cycle data is incomplete.");
-      return; // Exit if any required data is null
+      return;
     }
 
-    // Predict period days (from last period start date)
     predictedDays = List.generate(
       _periodLength!,
-      (index) =>
-          _lastMenstrualPeriod!.add(Duration(days: _cycleLength! + index)),
+          (index) => _lastMenstrualPeriod!.add(Duration(days: index)),
     );
 
-    // Fertile window (typically between cycleLength - 14 and cycleLength - 6)
     fertileDays = List.generate(
       _cycleLength! - 14 + 1,
-      (index) =>
-          _lastMenstrualPeriod!.add(Duration(days: _cycleLength! - 14 + index)),
+          (index) => _lastMenstrualPeriod!.add(Duration(days: _cycleLength! - 14 + index)),
     );
 
-    // Period days (starting from the last period start)
     periodDays = List.generate(
       _periodLength!,
-      (index) => _lastMenstrualPeriod!.add(Duration(days: index)),
+          (index) => _lastMenstrualPeriod!.add(Duration(days: index)),
     );
 
-    notifyListeners(); // Notify listeners to update the UI
+    notifyListeners();
   }
 
-  // Get the current week of pregnancy
+  /// Calculate "days until due date" only if pregnancy mode is enabled and gestation start is set
+  int get daysUntilDueDate {
+    if (!_pregnancyMode || _dueDate == null) {
+      return 0;
+    }
+
+    final remainingDays = _dueDate!.difference(DateTime.now()).inDays;
+    return remainingDays >= 0 ? remainingDays : 0;
+  }
+
+  /// Get the current pregnancy week dynamically
   int getCurrentWeek() {
-    if (_lastMenstrualPeriod == null) {
-      return 0; // Default to 0 if no data is available yet
-    }
-    return DateTime.now().difference(_lastMenstrualPeriod!).inDays ~/ 7;
+    if (!_pregnancyMode || _gestationStart == null) return 0;
+
+    final daysPregnant = DateTime.now().difference(_gestationStart!).inDays;
+    final weeksPregnant = (daysPregnant / 7).floor() + 1;
+
+    return weeksPregnant;
   }
 
-  // Get the days until the due date
-  int getDaysUntilDueDate() {
-    if (_dueDate == null) {
-      return 0; // Default to 0 if no due date is available yet
-    }
-    return _dueDate!.difference(DateTime.now()).inDays;
+  /// Get days into pregnancy
+  int getDaysIntoPregnancy() {
+    if (!_pregnancyMode || _gestationStart == null) return 0;
+
+    final daysPregnant = DateTime.now().difference(_gestationStart!).inDays;
+    return daysPregnant;
   }
 
-// Get the current day of the cycle
-  int get cycleDay {
-    if (_lastMenstrualPeriod == null) {
-      return 0; // Default to 0 if no last period date is available yet
-    }
-
-    // Check if today is the first day of the period
-    DateTime today = DateTime.now();
-    if (_lastMenstrualPeriod!.year == today.year &&
-        _lastMenstrualPeriod!.month == today.month &&
-        _lastMenstrualPeriod!.day == today.day) {
-      return 1; // Today is the first day of the period, so cycle day is 1
-    }
-
-    // If today is not the first day, calculate the cycle day normally
-    return today.difference(_lastMenstrualPeriod!).inDays + 1;
-  }
-
-// Get current cycle phase
+  /// Logic for cycle phases depending on the current cycle state
   String get currentPhase {
-    if (_cycleLength == null || _periodLength == null) {
-      return 'Unknown Phase'; // Return a fallback if data is incomplete
-    }
 
     int cycleDay = this.cycleDay;
 
-    // Check phase based on cycle day
     if (cycleDay <= _periodLength!) {
-      return 'Menstrual Phase'; // During menstruation
+      return 'Menstrual Phase';
     } else if (cycleDay <= _cycleLength! - 14) {
-      return 'Follicular Phase'; // After menstruation but before ovulation
+      return 'Follicular Phase';
     } else if (cycleDay <= _cycleLength! - 6) {
-      return 'Ovulation Phase'; // Ovulation phase
+      return 'Ovulation Phase';
     } else {
-      return 'Luteal Phase'; // After ovulation
+      return 'Luteal Phase';
     }
   }
 
-  // Get the number of days elapsed since the last period
+  /// Determine days elapsed into the current cycle
   int get daysElapsed {
-    if (_lastMenstrualPeriod == null) {
-      return 0; // Default to 0 if no last period date is available yet
-    }
+    if (_lastMenstrualPeriod == null) return 0;
     return DateTime.now().difference(_lastMenstrualPeriod!).inDays;
+  }
+
+  int get cycleDay {
+    if (_lastMenstrualPeriod == null) return 0;
+
+    DateTime today = DateTime.now();
+    if (_lastMenstrualPeriod!.isAtSameMomentAs(today)) {
+      return 1;
+    }
+    return today.difference(_lastMenstrualPeriod!).inDays ;
+  }
+
+  /// Toggle pregnancy mode and update necessary values accordingly
+  void togglePregnancyMode(bool isEnabled) {
+    _pregnancyMode = isEnabled;
+
+    if (_pregnancyMode && _gestationStart != null) {
+      _dueDate = _gestationStart!.add(Duration(days: 280));
+    } else {
+      _dueDate = null;
+    }
+
+    notifyListeners();
   }
 }

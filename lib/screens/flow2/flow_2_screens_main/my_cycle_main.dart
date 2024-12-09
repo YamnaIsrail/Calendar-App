@@ -57,7 +57,7 @@ class CycleTrackerScreen extends StatelessWidget {
                 FlowSection(),
                 const SizedBox(height: 20),
 
-                CycleInfoCard(
+            CycleInfoCard(
                   title: "My Cycles",
                   subtitle: "${cycleProvider.totalCyclesLogged} cycles logged", // Dynamic subtitle
                   progressLabelStart: formatDate(cycleProvider.lastPeriodStart),

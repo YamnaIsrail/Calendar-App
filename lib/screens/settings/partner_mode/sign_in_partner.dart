@@ -37,8 +37,7 @@ class _PartnerModeSignInScreenState extends State<PartnerModeSignInScreen> {
           context,
           MaterialPageRoute(builder: (context) => PartnerLinkScreen()),
         );
-        await CycleProvider().saveCycleDataToFirestore();
-      }
+         }
     } catch (error) {
       print('Error checking user session: $error');
     } finally {

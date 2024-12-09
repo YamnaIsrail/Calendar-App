@@ -57,7 +57,10 @@ class congrats extends StatelessWidget {
 
                     CustomButton(text: "Continue",
                         onPressed: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=> PregnancyScreen()));
+                          Navigator.push(context,
+                              MaterialPageRoute(
+                                  builder: (
+                                      context)=> PregnancyScreen()));
                         },
                         backgroundColor: primaryColor),
                   ],

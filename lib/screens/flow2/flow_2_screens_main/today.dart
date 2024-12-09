@@ -1,4 +1,6 @@
+import 'package:calender_app/hive/cycle_model.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/today_cycle_phase/period_phase.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
@@ -6,8 +8,11 @@ import 'package:calender_app/widgets/cycle_info_card.dart';
 import 'package:calender_app/widgets/cycle_phase_card.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import '../../../main.dart';
 
 class CycleStatusScreen extends StatelessWidget {
   final String? userImageUrl;
@@ -20,15 +25,12 @@ class CycleStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cycleProvider = Provider.of<CycleProvider>(context);
-
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: CustomAppBar(
           pageTitle: "",
           onCancel: () {},
-        //  userImageUrl: userImageUrl,
           onBack: () {
             Navigator.push(
               context,
@@ -36,11 +38,19 @@ class CycleStatusScreen extends StatelessWidget {
             );
           },
         ),
-        body: Consumer<CycleProvider>(
-          builder: (context, cycleProvider, child) {
+        body: Consumer2<CycleProvider, PregnancyModeProvider>(
+          builder: (context, cycleProvider, pregnancyModeProvider, child) {
             final daysUntilNextPeriod = cycleProvider.getDaysUntilNextPeriod();
             final nextPeriodDate = cycleProvider.getNextPeriodDate();
             final currentCycleDay = cycleProvider.daysElapsed + 1;
+
+            String getFormattedDueDate(DateTime? dueDate) {
+              if (dueDate == null) return "No due date";
+              return DateFormat('yyyy-MM-dd').format(dueDate);
+            }
+            // Determine if in pregnancy mode
+            bool isPregnancyMode = pregnancyModeProvider.isPregnancyMode;
+
             return Column(
               children: [
                 Container(
@@ -58,23 +68,29 @@ class CycleStatusScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          daysUntilNextPeriod < 0
+                         Text(
+                          isPregnancyMode
+                              ? pregnancyModeProvider.gestationWeeks != null
+                              ? "Expected date\n ${getFormattedDueDate(pregnancyModeProvider.dueDate)}"
+                              : "Pregnancy Mode Active"
+                              : daysUntilNextPeriod < 0
                               ? "${daysUntilNextPeriod.abs()} Days Late"
                               : "$daysUntilNextPeriod Days Left",
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 20, color: Colors.black),
+                          style: TextStyle(fontSize: 16, color: Colors.black),
                         ),
                         SizedBox(height: 5),
                         Text(
-                          daysUntilNextPeriod< 0
+                          isPregnancyMode
+                              ? pregnancyModeProvider.gestationStart != null
+                              ? " ${pregnancyModeProvider.gestationDays !}Weeks ${pregnancyModeProvider.gestationWeeks !}Days"
+                              : ""
+                              : daysUntilNextPeriod < 0
                               ? "Next period was expected\non ${formatDate(nextPeriodDate)}."
-
                               : "Next period will start\non ${formatDate(nextPeriodDate)}",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 12, color: Colors.black),
                         ),
-
                       ],
                     ),
                   ),
@@ -112,10 +128,22 @@ class CycleStatusScreen extends StatelessWidget {
                                     IconButton(
                                       icon: Icon(Icons.arrow_forward_ios_rounded),
                                       onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => PeriodPhaseScreen()),
-                                        );
+                                        try {
+                                          final box = Hive.box<CycleData>('cycledata');
+                                          print("Stored Data:");
+                                          print("Last Period Start: ${box.get('lastPeriodStart')}");
+                                          print("Cycle Length: ${box.get('cycleLength')}");
+                                          print("Period Length: ${box.get('periodLength')}");
+
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => PeriodPhaseScreen(),
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          print("Error: $e");
+                                        }
                                       },
                                     ),
                                   ],
@@ -128,26 +156,26 @@ class CycleStatusScreen extends StatelessWidget {
                                       CyclePhaseCard(
                                         icon: Icons.favorite,
                                         color: Colors.red[100]!,
-                                        phase: "Menstrual Phase",
-                                        date: "Start Date: ${formatDate(cycleProvider.lastPeriodStart)}",
+                                        phase: isPregnancyMode
+                                            ? "First Trimester"
+                                            : "Menstrual Phase",
+                                        date: isPregnancyMode
+                                            ? pregnancyModeProvider.gestationStart != null
+                                            ? "Pregnancy start ${formatDate(pregnancyModeProvider.gestationStart!)}"
+                                            : ""
+                                            : "Start Date: ${formatDate(cycleProvider.lastPeriodStart)}",
                                       ),
                                       CyclePhaseCard(
                                         icon: Icons.fiber_manual_record,
                                         color: Colors.green[100]!,
-                                        phase: "Follicular Phase",
-                                        date: "Start Date: ${formatDate(cycleProvider.lastPeriodStart.add(Duration(days: cycleProvider.cycleLength - 14)))}",
-                                      ),
-                                      CyclePhaseCard(
-                                        icon: Icons.beach_access,
-                                        color: Colors.blue[100]!,
-                                        phase: "Ovulation Phase",
-                                        date: "Start Date: ${formatDate(cycleProvider.lastPeriodStart.add(Duration(days: cycleProvider.cycleLength - 14 + 14)))}",
-                                      ),
-                                      CyclePhaseCard(
-                                        icon: Icons.water_drop,
-                                        color: Colors.orange[100]!,
-                                        phase: "Next Period",
-                                        date: "Start Date: ${formatDate(cycleProvider.getNextPeriodDate())}",
+                                        phase: isPregnancyMode
+                                            ? "Second Trimester"
+                                            : "Follicular Phase",
+                                        date: isPregnancyMode
+                                            ? pregnancyModeProvider.gestationStart != null
+                                            ? "Due soon"
+                                            : ""
+                                            : "Start Date: ${formatDate(cycleProvider.lastPeriodStart.add(Duration(days: cycleProvider.cycleLength - 14)))}",
                                       ),
                                     ],
                                   ),
@@ -157,18 +185,32 @@ class CycleStatusScreen extends StatelessWidget {
                           ),
                           SizedBox(height: 20),
 
-                          // Today's Cycle Status
+                          // Today's Cycle Status with pregnancy logic
                           buildCycleInfoCard(
                             icon: Icons.replay_5,
-                            title: ' Today - Cycle Day $currentCycleDay ',
-                            subtitle: 'High chance of getting periods',
-                            progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
-                            progressLabelEnd: formatDate(
+                            title: isPregnancyMode
+                                ? "Pregnancy Progress"
+                                : 'Today - Cycle Day $currentCycleDay',
+                            subtitle: isPregnancyMode
+                                ? "Track your pregnancy milestones"
+                                : 'High chance of getting periods',
+                            progressLabelStart: isPregnancyMode
+                                ? pregnancyModeProvider.gestationStart != null
+                                ? formatDate(pregnancyModeProvider.gestationStart!)
+                                : ""
+                                : formatDate(cycleProvider.lastPeriodStart),
+                            progressLabelEnd: isPregnancyMode
+                                ? pregnancyModeProvider.dueDate != null
+                                ? formatDate(pregnancyModeProvider.dueDate!)
+                                : ""
+                                : formatDate(
                               cycleProvider.lastPeriodStart.add(
                                 Duration(days: cycleProvider.periodLength),
                               ),
                             ),
-                            progressValue: currentCycleDay / cycleProvider.cycleLength,
+                            progressValue: isPregnancyMode
+                                ? (pregnancyModeProvider.gestationWeeks ?? 1) / 40.0
+                                : currentCycleDay / cycleProvider.cycleLength,
                           ),
                         ],
                       ),

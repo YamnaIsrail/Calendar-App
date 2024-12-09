@@ -8,7 +8,7 @@ class SessionManager {
   //   await storeUserSession(userId);
   //
   //   // After login, call the CycleProvider's method to sync cycle data
-  //   CycleProvider cycleProvider = CycleProvider(); // Make sure you're using a proper instance
+  //   CycleProvider cycleProvider = CycleProvider();
   //   await cycleProvider.saveCycleDataToFirestore();
   //   print("User logged in. Cycle data is now synced.");
   // }

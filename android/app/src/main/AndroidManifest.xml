@@ -37,19 +37,19 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"
                 />
-            <intent>
-                <action android:name="android.intent.action.VIEW" />
-                <data android:scheme="sms" />
-            </intent>
-            <!-- If your app checks for call support -->
-            <intent>
-                <action android:name="android.intent.action.VIEW" />
-                <data android:scheme="tel" />
-            </intent>
-            <!-- If your application checks for inAppBrowserView launch mode support -->
-            <intent>
-                <action android:name="android.support.customtabs.action.CustomTabsService" />
-            </intent>
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+<!--                <data android:scheme="sms" />-->
+<!--            </intent-filter>-->
+<!--            &lt;!&ndash; If your app checks for call support &ndash;&gt;-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+<!--                <data android:scheme="tel" />-->
+
+<!--                <action android:name="android.support.customtabs.action.CustomTabsService" />-->
+<!--            </intent-filter>-->
+
+
             <intent-filter>
 
                 <action android:name="android.intent.action.MAIN"/>
