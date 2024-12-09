@@ -79,12 +79,12 @@ class PregnancyStatusScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Pregnancy Week $currentWeek",
+                "Pregnancy\n Week $currentWeek",
                 style: TextStyle(fontSize: 18, color: Colors.black),
               ),
               SizedBox(height: 8),
               Text(
-                "Days into pregnancy: $daysUntilDueDate",
+                "Day: $daysUntilDueDate",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.black),
               ),
