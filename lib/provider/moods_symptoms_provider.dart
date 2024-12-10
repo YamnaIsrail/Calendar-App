@@ -18,8 +18,8 @@ class SymptomsProvider with ChangeNotifier {
       _selectedSymptoms.add(label);
       final symptomEntry = TimelineEntry(
         id: DateTime.now().millisecondsSinceEpoch, // Generate a unique ID
-        type: 'symptom',
-        details: {'label': label, 'iconPath': iconPath},
+        type: 'Symptom',
+        details: {'You feel': label},
       );
       // Correctly access the provider via context
       final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
@@ -45,12 +45,12 @@ class MoodsProvider with ChangeNotifier {
       // Map the mood to a TimelineEntry and send to TimelineProvider
       final moodEntry = TimelineEntry(
         id: DateTime.now().millisecondsSinceEpoch, // Generate a unique ID
-        type: 'mood',
-        details: {'label': label, 'iconPath': iconPath},
+        type: 'Mood',
+        details: {'You Feel': label},
       );
       // Correctly access the provider via context
-      final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-      timelineProvider.addEntry(moodEntry);
+     final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+       timelineProvider.addEntry(moodEntry);
 
       notifyListeners();
     }

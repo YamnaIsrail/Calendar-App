@@ -62,7 +62,6 @@ void main() async {
   await CycleProvider().loadCycleDataFromHive();
   Hive.registerAdapter(TimelineEntryAdapter()); // Register Hive Adapter
   await Hive.openBox<TimelineEntry>('timelineBox');
-  await TimelineProvider().initialize(); // Open the Hive box here
 
   await Hive.openBox<AuthData>('authBox');
 

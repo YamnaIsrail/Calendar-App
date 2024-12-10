@@ -58,7 +58,7 @@ class Notes extends StatelessWidget {
                           backgroundColor: primaryColor,
                           onPressed: () {
                             if (_noteController.text.isNotEmpty) {
-                              provider.addNote(_noteController.text);
+                              provider.addNote(context,_noteController.text);
                               _noteController.clear();
                             }
                           },
@@ -132,7 +132,7 @@ class Notes extends StatelessWidget {
                         backgroundColor: primaryColor,
                         onPressed: () {
                           if (_noteController.text.isNotEmpty) {
-                            provider.addNote(_noteController.text);
+                            provider.addNote(context,_noteController.text);
                             _noteController.clear();
                           }
                         },

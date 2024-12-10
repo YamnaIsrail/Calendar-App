@@ -4,96 +4,128 @@ import 'package:provider/provider.dart';
 
 import '../../../../hive/timeline_entry.dart';
 import 'timeline/time_line_providers.dart';
-
-class TimeLineCheck extends StatelessWidget {
-  const TimeLineCheck({super.key});
-
+class TimelinePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timelineProvider = Provider.of<TimelineProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Timeline"),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFE8EAF6), Color(0xFFF3E5F5)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
+        title: Text('Timeline'),
       ),
       body: timelineProvider.entries.isEmpty
-          ? Center(child: CircularProgressIndicator()) // Wait until data is initialized
-          : SingleChildScrollView(
-        child: Column(
-          children: timelineProvider.groupedEntries.entries.map((entry) {
-            return buildCard(context, entry.key, entry.value);
-          }).toList(),
-        ),
-      ),
-    );
-  }
+          ? Center(child: Text('No timeline entries available.'))
+          : ListView.builder(
+        itemCount: timelineProvider.entries.length,
+        itemBuilder: (context, index) {
+          final entry = timelineProvider.entries[index];
+          final date = entry.date.toLocal();
+          final day = date.day.toString();
+          final month = _getMonthAbbreviation(date.month);
+          final weekDay = _getWeekdayAbbreviation(date.weekday);
 
-  Widget buildCard(BuildContext context, String date, List<TimelineEntry> entries) {
-    final notifications = entries.where((e) => e.details['notification'] != null).toList();
-    final moods = entries.where((e) => e.details['mood'] != null).toList();
-    final symptoms = entries.where((e) => e.details['symptom'] != null).toList();
-
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              date,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          return Card(
+            margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  // Date Container
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.pink[100],
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          weekDay, // Dynamic weekday
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          day, // Dynamic date
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          month, // Dynamic month
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  // Content Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.type, // Dynamic title
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          entry.details.toString().replaceAll('{', '').replaceAll('}', ''),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Delete Button
+                  IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      _confirmDelete(context, timelineProvider, entry.id);
+                    },
+                  ),
+                ],
+              ),
             ),
-            Divider(),
-            if (notifications.isNotEmpty)
-              buildListView(
-                "Notifications",
-                notifications.map((e) => e.details['notification'] as String).toList(),
-              ),
-            if (moods.isNotEmpty)
-              buildListView(
-                "Moods",
-                moods.map((e) => e.details['mood'] as String).toList(),
-              ),
-            if (symptoms.isNotEmpty)
-              buildListView(
-                "Symptoms",
-                symptoms.map((e) => e.details['symptom'] as String).toList(),
-              ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget buildListView(String title, List<String> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 4),
-        for (var item in items)
-          Text(
-            item,
-            style: TextStyle(fontSize: 14),
+  /// Helper method to confirm deletion
+  void _confirmDelete(BuildContext context, TimelineProvider provider, int id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Entry'),
+        content: Text('Are you sure you want to delete this entry?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text('Cancel'),
           ),
-        SizedBox(height: 8),
-      ],
+          TextButton(
+            onPressed: () {
+              provider.deleteEntry(id); // Delete the entry
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
+  }
+
+  /// Helper method to get the abbreviated weekday
+  String _getWeekdayAbbreviation(int weekday) {
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return weekdays[weekday - 1];
+  }
+
+  /// Helper method to get the abbreviated month
+  String _getMonthAbbreviation(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
   }
 }

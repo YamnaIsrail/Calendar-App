@@ -1,50 +1,28 @@
-import 'package:hive/hive.dart';
 import 'package:calender_app/notifications/notification_model.dart';
-import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_entry.dart';
-
-import '../hive/timeline_entry.dart';
+import 'package:hive/hive.dart';
 
 class NotificationStorage {
   static late Box<NotificationModel> notificationBox;
-  static late Box<TimelineEntry> timelineBox; // Add the timelineBox here.
 
-  /// Initialize Hive and open both the notifications and timeline boxes
+  /// Initialize Hive and open the notifications box
   static Future<void> init() async {
     notificationBox = await Hive.openBox<NotificationModel>('notifications');
-    timelineBox = await Hive.openBox<TimelineEntry>('timeline'); // Open timeline box
   }
 
   /// Save or Update a notification using unique id as the key
   static Future<void> saveNotification(NotificationModel notification) async {
-    await notificationBox.put(notification.id, notification);
-  }
-
-  /// Save or Update a timeline entry
-  static Future<void> saveTimelineEntry(TimelineEntry timelineEntry) async {
-    await timelineBox.put(timelineEntry.id, timelineEntry);
+    await notificationBox.put(notification.id, notification);  // Save with ID as the key
   }
 
   /// Get all notifications stored in the database
   static List<NotificationModel> getNotifications() {
-    return notificationBox.values.toList();
-  }
-
-  /// Get all timeline entries stored in the database
-  static List<TimelineEntry> getTimelineEntries() {
-    return timelineBox.values.toList();
+    return notificationBox.values.toList();  // Retrieve all notifications
   }
 
   /// Delete a notification by ID
   static Future<void> deleteNotification(int id) async {
-    if (notificationBox.containsKey(id)) {
+    if (notificationBox.containsKey(id)) { // Check if the key exists
       await notificationBox.delete(id);
-    }
-  }
-
-  /// Delete a timeline entry by ID
-  static Future<void> deleteTimelineEntry(int id) async {
-    if (timelineBox.containsKey(id)) {
-      await timelineBox.delete(id);
     }
   }
 }

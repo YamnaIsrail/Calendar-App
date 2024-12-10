@@ -2,6 +2,7 @@ import 'package:calender_app/hive/timeline_entry.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:provider/provider.dart';
 import '../hive/notes_model.dart';
 
 class NoteWithDate {
@@ -32,7 +33,7 @@ class NoteProvider extends ChangeNotifier {
     notifyListeners(); // Notify listeners that initialization is complete
   }
 
-  void addNote(String content) {
+  void addNote(BuildContext context,String content) {
     final newNote = NoteWithDate(content: content, date: DateTime.now());
     final note = Note(content: content);
 
@@ -41,11 +42,14 @@ class NoteProvider extends ChangeNotifier {
     // Add into the timeline system
     final noteEntry = TimelineEntry(
       id: DateTime.now().millisecondsSinceEpoch,
-      type: 'note',
-      details: {'content': content},
+      type: 'Note',
+      details: {'': content},
     );
 
-    TimelineProvider().addEntry(noteEntry);
+    // Correctly access the provider via context
+    final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+    timelineProvider.addEntry(noteEntry);
+
     notifyListeners();
   }
 

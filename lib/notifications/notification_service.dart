@@ -134,35 +134,6 @@ import 'notification_storage.dart';
       ));
     }
 
-    // static Future<void> showScheduleNotification(
-    //     String title, String body, DateTime scheduleDate, {required int id}) async {
-    //   const NotificationDetails platformChannels = NotificationDetails(
-    //     android: AndroidNotificationDetails("channelId", "channelName",
-    //         importance: Importance.high, priority: Priority.high),
-    //     iOS: DarwinNotificationDetails(),
-    //   );
-    //
-    //   // Schedule the notification
-    //   await flutterLocalNotification.zonedSchedule(
-    //     id,
-    //     title,
-    //     body,
-    //     tz.TZDateTime.from(scheduleDate, tz.local),
-    //     platformChannels,
-    //     uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    //     androidScheduleMode: AndroidScheduleMode.exact,
-    //     matchDateTimeComponents: DateTimeComponents.dateAndTime,
-    //   );
-    //
-    //   // Save the notification details to Hive
-    //   NotificationStorage.saveNotification(NotificationModel(
-    //     id: id,
-    //     title: title,
-    //     body: body,
-    //     scheduleTime: scheduleDate,
-    //   ));
-    // }
-
     static Future<void> cancelAllNotifications() async {
       await flutterLocalNotification.cancelAll();
     }

@@ -83,6 +83,9 @@ class CategoryGrid extends StatelessWidget {
                       : null,
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min, // Ensure it only takes the necessary space
+                  mainAxisAlignment: MainAxisAlignment.center,
+
                   children: [
                     item.iconPath.endsWith('.svg')
                         ? SvgPicture.asset(item.iconPath, height: 30, width: 30)
