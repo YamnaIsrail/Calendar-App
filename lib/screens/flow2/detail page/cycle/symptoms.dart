@@ -70,7 +70,7 @@ class Symptoms extends StatelessWidget {
         CategoryGrid(
           folderName: folderName,
           onItemSelected: (iconPath, label) {
-            context.read<SymptomsProvider>().addSymptom(iconPath, label);
+            context.read<SymptomsProvider>().addSymptom(context,iconPath, label);
           },
           isSelected: (label) => context.watch<SymptomsProvider>().isSelected(label),
         ),

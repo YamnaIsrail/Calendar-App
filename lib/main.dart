@@ -24,6 +24,7 @@ import 'firebase_option.dart';
 import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'hive/timeline_entry.dart';
 import 'notifications/notification_storage.dart';
 import 'provider/analysis/weight_provider.dart';
 
@@ -59,6 +60,9 @@ void main() async {
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');
   await CycleProvider().loadCycleDataFromHive();
+  Hive.registerAdapter(TimelineEntryAdapter()); // Register Hive Adapter
+  await Hive.openBox<TimelineEntry>('timelineBox');
+  await TimelineProvider().initialize(); // Open the Hive box here
 
   await Hive.openBox<AuthData>('authBox');
 
@@ -75,11 +79,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MoodsProvider()),
         ChangeNotifierProvider(create: (_) => SymptomsProvider()),
         ChangeNotifierProvider(create: (_) => PartnerModeProvider()),
-        ChangeNotifierProvider(create: (_) => TimelineProvider(
-            noteProvider: NoteProvider(),
-            symptomsProvider: SymptomsProvider(),
-            moodsProvider: MoodsProvider()
-        )),
+        ChangeNotifierProvider(create: (_) => TimelineProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),  // Add the AuthProvider here
       ],
       child: CalenderApp(),

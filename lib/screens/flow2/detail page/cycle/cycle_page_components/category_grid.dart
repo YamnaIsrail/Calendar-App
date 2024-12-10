@@ -30,14 +30,12 @@ Future<List<CategoryItem>> loadCategoryItems(String folderName) async {
 class CategoryGrid extends StatelessWidget {
   final String folderName;
   final int? itemCount;
-  final bool isLabel;
-  final Function(String, String)? onItemSelected;
+   final Function(String, String)? onItemSelected;
   final bool Function(String)? isSelected;
 
   const CategoryGrid({
     required this.folderName,
     this.itemCount,
-    this.isLabel = true,
     this.onItemSelected,
     this.isSelected,
     Key? key,
@@ -89,7 +87,6 @@ class CategoryGrid extends StatelessWidget {
                     item.iconPath.endsWith('.svg')
                         ? SvgPicture.asset(item.iconPath, height: 30, width: 30)
                         : Image.asset(item.iconPath, height: 30, width: 30),
-                    if (isLabel)
                       Text(
                         item.label,
                         style: TextStyle(fontSize: 12),
@@ -105,70 +102,3 @@ class CategoryGrid extends StatelessWidget {
     );
   }
 }
-
-// class CategoryGrid extends StatelessWidget {
-//   final String folderName;
-//   final int? itemCount;
-//
-//   final bool isLabel; // New optional parameter
-//
-//   const CategoryGrid({
-//     required this.folderName,
-//     this.itemCount,
-//     this.isLabel = true, // Default value is true
-//     Key? key,
-//   }) : super(key: key);
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return FutureBuilder<List<CategoryItem>>(
-//       future: loadCategoryItems(folderName),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.waiting) {
-//           return Center(child: CircularProgressIndicator());
-//         }
-//
-//         if (snapshot.hasError) {
-//           return Center(child: Text('Error: ${snapshot.error}'));
-//         }
-//
-//         var categoryItems = snapshot.data ?? [];
-//
-//         // Limit the list to `itemCount` if it's provided
-//         if (itemCount != null && itemCount! < categoryItems.length) {
-//           categoryItems = categoryItems.sublist(0, itemCount!);
-//         }
-//
-//         return GridView.builder(
-//           // scrollDirection: Axis.vertical,
-//           physics: NeverScrollableScrollPhysics(), // Disable scrolling
-//
-//           shrinkWrap: true,
-//           itemCount: categoryItems.length,
-//           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//             crossAxisCount: 4, // 4 items per row
-//             crossAxisSpacing: 8,
-//             mainAxisSpacing: 8,
-//           ),
-//           itemBuilder: (context, index) {
-//             final item = categoryItems[index];
-//             return Column(
-//               children: [
-//                 item.iconPath.endsWith('.svg')
-//                     ? SvgPicture.asset(item.iconPath,height: 30, width: 30, fit: BoxFit.contain)
-//                     : Image.asset(item.iconPath, height: 30, width: 30, fit: BoxFit.contain),
-//                  if (isLabel)
-//
-//                   Text(
-//                     item.label,
-//                     style: TextStyle(fontSize: 12),
-//                     textAlign: TextAlign.center,
-//                   ),
-//                 ],
-//             );
-//           },
-//         );
-//       },
-//     );
-//   }
-// }

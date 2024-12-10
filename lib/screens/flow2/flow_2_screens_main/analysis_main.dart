@@ -2,7 +2,6 @@ import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/analysis/temperature_provider.dart';
 import 'package:calender_app/provider/analysis/weight_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline.dart';
-import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline_dynamic.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/weight_screens.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/contain.dart';

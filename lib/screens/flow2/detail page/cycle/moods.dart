@@ -45,9 +45,8 @@ class Moods extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: CategoryGrid(
                 folderName: 'emoji',
-                isLabel: false,
                 onItemSelected: (iconPath, label) {
-                  context.read<MoodsProvider>().addMood(iconPath, label);
+                  context.read<MoodsProvider>().addMood(context,iconPath, label);
                 },
                 isSelected: (label) => context.watch<MoodsProvider>().isSelected(label),
               ),

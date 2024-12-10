@@ -1,3 +1,5 @@
+import 'package:calender_app/hive/timeline_entry.dart';
+import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../hive/notes_model.dart';
@@ -36,6 +38,14 @@ class NoteProvider extends ChangeNotifier {
 
     _notesBox.add(note);
     notesWithDates.add(newNote);
+    // Add into the timeline system
+    final noteEntry = TimelineEntry(
+      id: DateTime.now().millisecondsSinceEpoch,
+      type: 'note',
+      details: {'content': content},
+    );
+
+    TimelineProvider().addEntry(noteEntry);
     notifyListeners();
   }
 

@@ -1,79 +1,72 @@
 
-import 'package:calender_app/notifications/notification_storage.dart';
-import 'package:calender_app/provider/moods_symptoms_provider.dart';
-import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline_dynamic.dart';
+import 'package:calender_app/hive/timeline_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
-import '../../../../../provider/notes_provider.dart';
-import 'time_line_entry.dart';
+class TimelineProvider with ChangeNotifier {
+  List<TimelineEntry> _entries = [];
+  Box<TimelineEntry>? _timelineBox; // Change this to nullable
 
+  List<TimelineEntry> get entries => _entries;
 
-class TimelineProvider extends ChangeNotifier {
-  List<TimelineEntry> timelineEntries = [];
+   Future<void> initialize() async {
+    try {
+      _timelineBox = await Hive.openBox<TimelineEntry>('timelineBox');
+      _entries = _timelineBox?.values.toList() ?? [];
+      notifyListeners();
+    } catch (e) {
+      print('Failed to initialize timeline data: $e');
+    }
+  }
 
-  final NoteProvider noteProvider;
-  final SymptomsProvider symptomsProvider;
-  final MoodsProvider moodsProvider;
+  /// Add data safely only when `_timelineBox` has been initialized
+  void addEntry(TimelineEntry entry) {
+    if (_timelineBox != null) {
+      _timelineBox!.add(entry);
+      _entries.add(entry);
+      notifyListeners();
+    } else {
+      print('Timeline box not initialized yet!');
+    }
+  }
 
-  TimelineProvider({
-    required this.noteProvider,
-    required this.symptomsProvider,
-    required this.moodsProvider,
-  });
+  Map<String, List<TimelineEntry>> get groupedEntries {
+    final groupedData = <String, List<TimelineEntry>>{};
 
-  Future<void> initialize() async {
-    // Fetch notes from the NoteProvider
-    final notes = noteProvider.notesWithDates;
-    // Fetch recent symptoms and moods
-    final symptoms = symptomsProvider.recentSymptoms;
-    final moods = moodsProvider.recentMoods;
-
-    // Fetch notifications from NotificationStorage
-    final notifications = NotificationStorage.getNotifications();
-
-    // Combine all the data into timeline entries
-    timelineEntries = [];
-
-    // Add notes to the timeline
-    for (var note in notes) {
-      timelineEntries.add(TimelineEntry(
-        title: 'Note',
-        description: note.content,
-        date: note.date,
-      ));
+    if (_entries.isNotEmpty) {
+      for (var entry in _entries) {
+        final dateKey = "${entry.date.year}-${entry.date.month}-${entry.date.day}";
+        if (!groupedData.containsKey(dateKey)) {
+          groupedData[dateKey] = [];
+        }
+        groupedData[dateKey]!.add(entry);
+      }
     }
 
-    // Add recent moods to the timeline
-    for (var mood in moods) {
-      timelineEntries.add(TimelineEntry(
-        title: 'Mood',
-        description: mood['label']!,
-        date: DateTime.now(),
-        mood: mood['label'],
-      ));
-    }
+    return groupedData;
+  }
+}
 
-    // Add recent symptoms to the timeline
-    for (var symptom in symptoms) {
-      timelineEntries.add(TimelineEntry(
-        title: 'Symptom',
-        description: symptom['label']!,
-        date: DateTime.now(),
-        symptom: symptom['label'],
-      ));
-    }
+class TimelinexProvider with ChangeNotifier {
+  List<TimelineEntry> _entries = [];
 
-    // Add notifications to the timeline
-    for (var notification in notifications) {
-      timelineEntries.add(TimelineEntry(
-        title: notification.title,
-        description: notification.body, date:  notification.scheduleTime,
-      ));
-    }
+  List<TimelineEntry> get entries => _entries;
 
-    // Sort the timeline entries by date
-    timelineEntries.sort((a, b) => b.date.compareTo(a.date));
-
+  void addEntry(TimelineEntry entry) {
+    _entries.add(entry);
     notifyListeners();
+  }
+
+  /// Group data by date into a map
+  Map<String, List<TimelineEntry>> get groupedEntries {
+    Map<String, List<TimelineEntry>> groupedData = {};
+    for (var entry in _entries) {
+      String dateKey = "${entry.date.year}-${entry.date.month}-${entry.date.day}";
+      if (!groupedData.containsKey(dateKey)) {
+        groupedData[dateKey] = [];
+      }
+      groupedData[dateKey]!.add(entry);
+    }
+    return groupedData;
   }
 }
