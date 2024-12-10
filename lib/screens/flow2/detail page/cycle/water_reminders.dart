@@ -182,9 +182,9 @@ class _WaterReminderScreenState extends State<WaterReminderScreen> {
       if (current.isAfter(now)) {
         // Schedule the notification with a unique ID
         await NotificationService.showScheduleNotification(
-          "Water Reminder",
-          message,
-          current,
+         title:  "Water Reminder",
+         body:  message,
+         scheduleDate:  current,
           id: idCounter, // Pass unique ID for each notification
         );
 

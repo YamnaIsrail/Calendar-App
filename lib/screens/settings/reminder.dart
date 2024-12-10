@@ -94,9 +94,9 @@ class _ReminderScreenState extends State<ReminderScreen> {
     required DateTime dateTime,
   }) async {
     await NotificationService.showScheduleNotification(
-      title,
-      body,
-      dateTime, id: 2,
+      title: title,
+      body: body,
+      scheduleDate: dateTime, id: 2,
     );
   }
   @override

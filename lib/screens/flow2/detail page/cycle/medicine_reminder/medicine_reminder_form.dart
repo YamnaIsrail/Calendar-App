@@ -111,9 +111,9 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
 
     // Schedule notification
     await NotificationService.showScheduleNotification(
-      "Medicine Reminder",
-      "It's time to take your medicine: ${medicineController.text}",
-      scheduleDate, id: 3,
+      title: "Medicine Reminder",
+      body: "It's time to take your medicine: ${medicineController.text}",
+      scheduleDate: scheduleDate, id: 3,
     );
 
     // Update the list or add new medicine

@@ -50,7 +50,7 @@ class CycleProvider with ChangeNotifier {
   List<DateTime> getLutealPhaseDays() => lutealPhaseDays;
 
   //USER NAME
-  String _userName = ""; // Default name
+  String _userName = "Default User"; // Default name
 
   // Getter for the user name
   String get userName => _userName;
@@ -408,7 +408,13 @@ class CycleProvider with ChangeNotifier {
     return currentDate.isAfter(fertileStartDate) &&
         currentDate.isBefore(fertileEndDate);
   }
+  static final CycleProvider _instance = CycleProvider._internal();
 
+  factory CycleProvider() {
+    return _instance;
+  }
+
+  CycleProvider._internal();
   Future<void> loadCycleDataFromHive() async {
     var box = await Hive.openBox<CycleData>('cycleData');
     CycleData? cycleData = box.get('cycle');

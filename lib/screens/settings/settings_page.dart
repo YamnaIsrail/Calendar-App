@@ -151,10 +151,11 @@ class UserProfileSection1 extends StatelessWidget {
                        ),
                      ),
                       onPressed: (){
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => BackupAndRestoreScreen()),
-                        );
+                        Provider.of<CycleProvider>(context, listen: false).saveCycleDataToFirestore();
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(builder: (context) => BackupAndRestoreScreen()),
+                        // );
                       },
                     ),
                   ),

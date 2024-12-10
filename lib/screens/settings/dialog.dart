@@ -1,16 +1,51 @@
+import 'package:calender_app/firebase/user_session.dart';
+import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/wheel.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../question/q1.dart';
+import 'backup_restore/session_manager_backup.dart';
+
+class ReminderService {
+  static int selectedFrequency = 1; // Default to weekly
+
+  /// Schedule notifications based on user selection
+  static Future<void> scheduleBackupNotification(int frequency) async {
+    // Cancel all previously scheduled notifications
+    await NotificationService.cancelAllNotifications();
+
+    final now = DateTime.now();
+    DateTime nextNotificationTime = now;
+
+    if (frequency == 1) {
+      // Weekly reminder: Set notification 7 days from now
+      nextNotificationTime = now.add(Duration(days: 7));
+    } else if (frequency == 2) {
+      // Monthly reminder: Set notification 30 days from now
+      nextNotificationTime = now.add(Duration(days: 30));
+    }
+
+    // Schedule the notification
+    await NotificationService.showScheduleNotification(
+      title: "Backup Reminder",
+      body: "Time to back up your data.",
+      scheduleDate: nextNotificationTime,
+      id: 100, // Unique identifier
+    );
+  }
 
 
+}
 class DialogHelper {
+
   // New Dialog: showRatingPopup
 
   static void showRatingPopup(
@@ -133,7 +168,7 @@ class DialogHelper {
     );
   }
 
-  // New Dialog: Sign Out Confirmation
+
   static void showSignOutPopup(BuildContext context, VoidCallback onSignOut) {
     showDialog(
       context: context,
@@ -146,22 +181,23 @@ class DialogHelper {
               children: [
                 Expanded(
                   child: CustomButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      // Sign out logic
+                      await SessionManager.logoutUser();
                       Navigator.of(context).pop();
+                      onSignOut();
                     },
-                    backgroundColor: blueColor,
-                    text: 'Sign out',
+                    backgroundColor: Colors.blue,
+                    text: 'Sign Out',
                   ),
                 ),
-                SizedBox(
-                  width: 5,
-                ),
+                SizedBox(width: 5),
                 Expanded(
                   child: CustomButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    backgroundColor: blueColor,
+                    backgroundColor: Colors.blue,
                     text: 'Cancel',
                   ),
                 ),
@@ -173,39 +209,37 @@ class DialogHelper {
     );
   }
 
-  // New Dialog: Delete Account
-  static void showDeleteAccountPopup(
-      BuildContext context, VoidCallback onDelete) {
+  static void showDeleteAccountPopup(BuildContext context, VoidCallback onDelete) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Delete Account?"),
-          content:
-              Text("All your cloud and local data will be completely cleared."),
+          content: Text(
+            "All your cloud and local data will be completely cleared.",
+          ),
           actions: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: CustomButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.of(context).pop();
+                      await deleteUserAccount();
                       onDelete();
                     },
-                    backgroundColor: blueColor,
+                    backgroundColor: Colors.red,
                     text: 'Delete',
                   ),
                 ),
-                SizedBox(
-                  width: 5,
-                ),
+                SizedBox(width: 5),
                 Expanded(
                   child: CustomButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    backgroundColor: blueColor,
+                    backgroundColor: Colors.blue,
                     text: 'Keep',
                   ),
                 ),
@@ -217,7 +251,29 @@ class DialogHelper {
     );
   }
 
-  // New Dialog: Data Lost
+  /// Deletes user's account data from Firebase & Hive
+  static Future<void> deleteUserAccount() async {
+    try {
+      String? userId = await SessionManager.getUserId();
+      if (userId != null) {
+        // Firestore logic: Delete user data from Firebase
+        final userDocRef = FirebaseFirestore.instance.collection('users').doc(userId);
+
+        await userDocRef.delete();
+        print("User's Firestore account deleted.");
+
+        // Also clear session and local Hive data
+        await SessionManager.logoutUser();
+        final box = await Hive.openBox('user_session');
+        await box.clear();
+        print("Local session cleared.");
+      }
+    } catch (e) {
+      print("Error during account deletion: $e");
+    }
+  }
+
+// New Dialog: Data Lost
   static void showDataLostPopup(BuildContext context, VoidCallback onRecover) {
     showDialog(
       context: context,
@@ -538,7 +594,10 @@ class DialogHelper {
   }
 
   // Select Reminder Frequency Dialog
+
   static void showReminderFrequencyDialog(BuildContext context) {
+    int selectedOption = 1; // Default to weekly
+
     showDialog(
       context: context,
       builder: (context) {
@@ -547,27 +606,47 @@ class DialogHelper {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              RadioListTile(
+              // Weekly Reminder Option
+              RadioListTile<int>(
                 title: Text("Weekly data backup reminder"),
                 value: 1,
-                groupValue: 1, // replace with actual state variable
+                groupValue: selectedOption,
                 onChanged: (value) {
-                  // setState or update logic here
-                },
-              ),
-              RadioListTile(
+                 selectedOption = value!;
+                  }),
+              // Monthly Reminder Option
+              RadioListTile<int>(
                 title: Text("Monthly data backup reminder"),
                 value: 2,
-                groupValue: 1, // replace with actual state variable
+                groupValue: selectedOption,
                 onChanged: (value) {
-                  // setState or update logic here
-                },
-              ),
+                    selectedOption = value!;
+                  }),
+
             ],
           ),
           actions: [
             CustomButton(
-              onPressed: () {
+              onPressed: () async {
+                final now = DateTime.now();
+                DateTime nextNotificationTime = now;
+
+                if (selectedOption == 1) {
+                  // Schedule weekly notification
+                  nextNotificationTime = now.add(Duration(days: 7));
+                } else if (selectedOption == 2) {
+                  // Schedule monthly notification
+                  nextNotificationTime = now.add(Duration(days: 30));
+                }
+
+                // Call to schedule the notification
+                await NotificationService.showScheduleNotification(
+                 title:  "Backup Reminder",
+                  body: "Time to back up your data.",
+                  scheduleDate: nextNotificationTime,
+                  id: selectedOption,
+                );
+
                 Navigator.of(context).pop();
               },
               backgroundColor: primaryColor,
@@ -794,3 +873,5 @@ class CalendarDialogHelper {
     );
   }
 }
+
+

@@ -65,17 +65,37 @@ class ShowHideOption extends StatelessWidget {
                       )
                   ),
                 ),
-                CustomItem(title: 'Intercourse Option'),
-                CustomItem(title: 'Condom Option'),
-                CustomItem(title: 'Chance of getting pregnant'),
-                CustomItem(title: 'Ovulation / Fertile'),
-                CustomItem(title: 'Future Period'),
-                CustomItem(title: 'Contraceptive Medicine'),
+                Item(title: 'Intercourse Option'),
+                Item(title: 'Condom Option'),
+                Item(title: 'Chance of getting pregnant'),
+                Item(title: 'Ovulation / Fertile'),
+                Item(title: 'Future Period'),
+                Item(title: 'Contraceptive Medicine'),
 
               ],
             ),
           ),
         )
+    );
+  }
+}
+class Item extends StatelessWidget {
+  final String title;
+  const Item({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return  Container(
+      margin: EdgeInsets.symmetric(vertical: 5),
+      color: Colors.white,
+      child: ListTile(
+        title: Text(title,
+          style: TextStyle(
+              fontSize: 16
+          ),
+        ),
+        trailing: Switch(value: false, onChanged: (bool value) {}),
+      ),
     );
   }
 }

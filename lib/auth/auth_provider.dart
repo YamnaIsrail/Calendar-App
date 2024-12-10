@@ -20,10 +20,13 @@ class AuthProvider with ChangeNotifier {
   String? get pin => _authData.pin;
   bool get usePassword => _authData.usePassword;
 
+
   Future<void> savePassword(String password) async {
     _authData = AuthData(password: password, usePassword: true);
+    print('Saving to Hive: $_authData');
     await _authBox.put('authData', _authData);
     notifyListeners();
+    print('Saved auth data to Hive');
   }
 
   Future<void> savePin(String pin) async {

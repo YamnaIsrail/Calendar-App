@@ -1,4 +1,5 @@
 import 'package:calender_app/provider/preg_provider.dart';
+import 'package:calender_app/screens/settings/auth/password/enter_password.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:calender_app/screens/settings/translation.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +33,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await Hive.initFlutter();
+  Hive.registerAdapter(AuthDataAdapter());
+
+  // Open the authBox
+  final authBox = await Hive.openBox<AuthData>('authBox');
+  final authData = authBox.get('authData', defaultValue: AuthData())!;
+  await Hive.openBox('partner_codes');
+
+  // Decide initial route
+  final initialRoute = (authData.password != null || authData.pin != null)
+      ? '/login'
+      : '/home';
 
   await NotificationService.init();
   tz.initializeTimeZones();
@@ -40,13 +53,14 @@ void main() async {
   Hive.registerAdapter(NoteAdapter());
   await Hive.openBox<Note>('notesBox');
 
-  Hive.registerAdapter(AuthDataAdapter());
-  await Hive.openBox('partner_codes');
   await NotificationStorage.init();
+  var box = await Hive.openBox('myBox');
 
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');
   await CycleProvider().loadCycleDataFromHive();
+
+  await Hive.openBox<AuthData>('authBox');
 
   runApp(
     MultiProvider(
@@ -131,6 +145,7 @@ class _CalenderAppState extends State<CalenderApp> {
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Tracking App',
       debugShowCheckedModeBanner: false,
@@ -140,8 +155,11 @@ class _CalenderAppState extends State<CalenderApp> {
         fontFamily: 'Roboto',
       ),
       locale: Locale(_getLanguageCode(_selectedLanguage)),
-      home: SplashScreen()
-
+      home: SplashScreen(),
+      routes: {
+    '/login': (context) => EnterPasswordScreen(),
+    '/home': (context) => HomeScreen(),
+    },
     );
   }
 }

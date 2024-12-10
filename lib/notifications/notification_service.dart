@@ -52,28 +52,80 @@ import 'notification_storage.dart';
     static Future<void> cancelNotification(String id) async {
       await flutterLocalNotification.cancel(id.hashCode); // Use hashCode for ID consistency
     }
-
-    static Future<void> showScheduleNotification(
-        String title, String body, DateTime scheduleDate, {required int id}) async {
+    static Future<void> showScheduleNotification({
+      required String title,
+      required String body,
+      required DateTime scheduleDate,
+      required int id,
+      bool repeatDaily = false,
+      bool repeatWeekly = false,
+      bool repeatMonthly = false,
+    }) async {
       const NotificationDetails platformChannels = NotificationDetails(
-        android: AndroidNotificationDetails("channelId", "channelName",
-            importance: Importance.high, priority: Priority.high),
+        android: AndroidNotificationDetails(
+          "channelId",
+          "channelName",
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
         iOS: DarwinNotificationDetails(),
       );
 
-      // Schedule the notification
-      await flutterLocalNotification.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduleDate, tz.local),
-        platformChannels,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        androidScheduleMode: AndroidScheduleMode.exact,
-        matchDateTimeComponents: DateTimeComponents.dateAndTime,
-      );
+      // Cancel any previously scheduled notifications for this ID
+      await flutterLocalNotification.cancel(id);
 
-      // Save the notification details to Hive
+      if (repeatDaily) {
+        // Schedule repeated daily notifications
+        await flutterLocalNotification.zonedSchedule(
+          id,
+          title,
+          body,
+          tz.TZDateTime.from(scheduleDate, tz.local),
+          platformChannels,
+          androidScheduleMode: AndroidScheduleMode.exact,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+        );
+      } else if (repeatWeekly) {
+        // Schedule weekly notifications
+        await flutterLocalNotification.zonedSchedule(
+          id,
+          title,
+          body,
+          tz.TZDateTime.from(scheduleDate, tz.local),
+          platformChannels,
+          androidScheduleMode: AndroidScheduleMode.exact,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
+      } else if (repeatMonthly) {
+        // Schedule monthly notifications
+        await flutterLocalNotification.zonedSchedule(
+          id,
+          title,
+          body,
+          tz.TZDateTime.from(scheduleDate, tz.local),
+          platformChannels,
+          androidScheduleMode: AndroidScheduleMode.exact,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.dateAndTime,
+        );
+      } else {
+        // Schedule a one-off notification
+        await flutterLocalNotification.zonedSchedule(
+          id,
+          title,
+          body,
+          tz.TZDateTime.from(scheduleDate, tz.local),
+          platformChannels,
+          androidScheduleMode: AndroidScheduleMode.exact,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.dateAndTime,
+        );
+      }
+
+      // Optionally save the notification details (if you're persisting them)
+
       NotificationStorage.saveNotification(NotificationModel(
         id: id,
         title: title,
@@ -83,26 +135,34 @@ import 'notification_storage.dart';
     }
 
     // static Future<void> showScheduleNotification(
-    //     String title, String body, DateTime  scheduleDate) async {
-    //   //define notification details
-    //   const NotificationDetails platformChannels= NotificationDetails(
-    //       android: AndroidNotificationDetails("channelId", "channelName", importance: Importance.high, priority: Priority.high),
-    //       iOS: DarwinNotificationDetails()
+    //     String title, String body, DateTime scheduleDate, {required int id}) async {
+    //   const NotificationDetails platformChannels = NotificationDetails(
+    //     android: AndroidNotificationDetails("channelId", "channelName",
+    //         importance: Importance.high, priority: Priority.high),
+    //     iOS: DarwinNotificationDetails(),
     //   );
-    //   await flutterLocalNotification.zonedSchedule(0, title, body,
-    //       tz.TZDateTime.from(scheduleDate, tz.local),
-    //       platformChannels,
-    //       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation
-    //           .absoluteTime,
-    //       androidScheduleMode: AndroidScheduleMode.exact,
-    //       matchDateTimeComponents: DateTimeComponents.dateAndTime
-    //   );
-    // }
     //
+    //   // Schedule the notification
+    //   await flutterLocalNotification.zonedSchedule(
+    //     id,
+    //     title,
+    //     body,
+    //     tz.TZDateTime.from(scheduleDate, tz.local),
+    //     platformChannels,
+    //     uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    //     androidScheduleMode: AndroidScheduleMode.exact,
+    //     matchDateTimeComponents: DateTimeComponents.dateAndTime,
+    //   );
+    //
+    //   // Save the notification details to Hive
+    //   NotificationStorage.saveNotification(NotificationModel(
+    //     id: id,
+    //     title: title,
+    //     body: body,
+    //     scheduleTime: scheduleDate,
+    //   ));
+    // }
 
-
-
-    // Cancel all notifications
     static Future<void> cancelAllNotifications() async {
       await flutterLocalNotification.cancelAll();
     }

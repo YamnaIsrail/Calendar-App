@@ -1,6 +1,7 @@
   import 'package:calender_app/hive/cycle_model.dart';
   import 'package:calender_app/hive/medicine_model.dart';
   import 'package:calender_app/hive/notes_model.dart';
+import 'package:calender_app/notifications/notification_model.dart';
 import 'package:calender_app/notifications/notification_storage.dart';
   import 'package:calender_app/provider/app_state_provider.dart';
 import 'package:calender_app/provider/moods_symptoms_provider.dart';
@@ -180,9 +181,10 @@ import 'package:provider/provider.dart';
     @override
     Widget build(BuildContext context) {
       final noteProvider = Provider.of<NoteProvider>(context);
-      final reminder = NotificationStorage.getNotifications(); // Assuming this works
       final moodsProvider = Provider.of<MoodsProvider>(context);
       final symptomsProvider = Provider.of<SymptomsProvider>(context);
+      List<NotificationModel> notifications = NotificationStorage.getNotifications();
+      print(notifications);
 
       return Scaffold(
         appBar: AppBar(

@@ -47,17 +47,17 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                 SettingsOption(
                   icon: Icons.group,
                   title: "Track others cycles",
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TrackCycleScreen()),
-                    );
-                  },
                   trailing: Switch(
                     value: isTrackingOthers,
                     onChanged: (value) {
                       setState(() {
                         isTrackingOthers = value;
+                        if(isTrackingOthers==true){
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => TrackCycleScreen()),
+                            );
+                        }
                       });
                     },
                   ),
@@ -75,6 +75,9 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                     onChanged: (value) {
                       setState(() {
                         isBackupReminderEnabled = value;
+                        if(isBackupReminderEnabled){
+                            DialogHelper.showReminderFrequencyDialog(context);
+                        }
                       });
 
                     },
