@@ -39,13 +39,17 @@ class _SplashScreenState extends State<SplashScreen> {
     });
     await Future.delayed(Duration(seconds: 3));
 
-    // After animation, check for authentication and navigate accordingly
+    // Wait until auth is initialized before navigation
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.password != null || authProvider.pin != null) {
-      // If password or PIN is set, go to the login screen
+
+    while (!authProvider.isInitialized) {
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+
+    // After initialization, decide navigation based on password/PIN
+    if (authProvider.hasPasswordOrPin) {
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => Login()));
     } else {
-      // If not set, go to the setup screen
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
     }
   }

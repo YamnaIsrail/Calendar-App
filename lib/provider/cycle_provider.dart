@@ -5,15 +5,122 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:provider/provider.dart';
-
 import '../firebase/user_session.dart';
 import '../hive/cycle_model.dart';
 import 'package:flutter/foundation.dart';
 
-
-
 class CycleProvider with ChangeNotifier {
   late BuildContext _context;
+
+
+List<String> _pastPeriods = [];  // Store all past period start dates as strings
+List<String> get pastPeriods => _pastPeriods;
+
+
+  void setPeriodLength(int length) {
+    _periodLength = length;
+    notifyListeners();
+  }
+
+  void addPastPeriod(String periodDate) {
+    print("Attempting to add period: $periodDate");
+
+    if (!_pastPeriods.contains(periodDate)) {
+      _pastPeriods.add(periodDate);  // Add the new period
+      print("Period added successfully!");
+
+      // Log the cycle (optional, depending on your implementation)
+      logCycle(periodDate);
+
+      // Sync with Hive or Firestore (optional, depending on your implementation)
+      _saveToHive();
+
+      // Print the updated list of periods
+      print("Updated list of periods: $_pastPeriods");
+
+      // Notify listeners to update the UI
+      notifyListeners();
+    } else {
+      print("Period already exists: $periodDate");
+    }
+  }
+
+
+
+  // Remove period from pastPeriods
+  void removePastPeriod(String periodDate) {
+    _pastPeriods.remove(periodDate);
+    _saveToHive();  // Sync with Hive (or Firestore)
+    notifyListeners();
+  }
+
+
+
+// Method to add new periods when fetched from Firestore
+void addPastPeriodsFromFirestore(List<String> newPeriods) {
+  // Add the fetched periods (strings) into the current list of past periods
+  for (var period in newPeriods) {
+    if (!_pastPeriods.contains(period)) {
+      _pastPeriods.add(period);
+    }
+  }
+  notifyListeners();  // Notifies listeners to update the UI
+}
+
+
+
+// Method to retrieve cycle data from Firestore (including pastPeriods)
+  Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
+    try {
+      String? userId = await SessionManager.getUserId();
+      if (userId == null) {
+        print("User is not logged in.");
+        return;
+      }
+
+      var data = await FirebaseFirestore.instance
+          .collection('cycles')
+          .doc(userId)
+          .get();
+
+      if (data.exists) {
+        List<String> restoredPastPeriods = [];
+        if (data['pastPeriods'] != null) {
+          List<String> pastPeriodsFromFirestore = List<String>.from(data['pastPeriods'] ?? []);
+          restoredPastPeriods.addAll(pastPeriodsFromFirestore);
+        }
+
+        // Update the provider with the fetched periods
+        final provider = Provider.of<CycleProvider>(context, listen: false);
+        provider.addPastPeriodsFromFirestore(restoredPastPeriods);
+
+        // Notify that the data has been successfully restored
+        print("Past periods start dates restored successfully!");
+      } else {
+        print("No data found for the user.");
+      }
+    } catch (e) {
+      print("Error fetching past periods: $e");
+    }
+  }
+
+// Method to log a cycle (you can update this logic as per your requirement)
+  void logCycle(String cycleStartDate) {
+    // Only add to the list if it doesn't already exist
+    if (!_pastPeriods.contains(cycleStartDate)) {
+      _pastPeriods.add(cycleStartDate);
+_totalCyclesLogged++;
+      // Sync the changes with Hive and Firestore
+      _saveToHive();  // Save to Hive
+      saveCycleDataToFirestore();  // Save to Firestore
+
+      // Notify listeners
+      notifyListeners();
+    }
+  }
+
+
+
 
   // Set context when provider is initialized
   void initialize(BuildContext context) {
@@ -69,7 +176,7 @@ class CycleProvider with ChangeNotifier {
     print("User name saved to Hive.");
   }
 
-  // Load the name from Hive
+
   Future<void> _loadUserNameFromHive() async {
     var box = await Hive.openBox<String>('userData');
     _userName = box.get('userName', defaultValue: "User")!;
@@ -105,6 +212,7 @@ class CycleProvider with ChangeNotifier {
 // Getter for accessing the total cycles logged
   int get totalCyclesLogged => _totalCyclesLogged;
 
+
   // Calculate the number of days elapsed since the last period
   int get daysElapsed {
     return DateTime.now().difference(_lastPeriodStart).inDays;
@@ -117,7 +225,7 @@ class CycleProvider with ChangeNotifier {
 
   // Calculate days until the next period
   int getDaysUntilNextPeriod() {
-    return getNextPeriodDate().difference(DateTime.now()).inDays;
+    return getNextPeriodDate().difference(DateTime.now()).inDays+1;
   }
 
   // Initialize and calculate all dynamic cycle data
@@ -207,7 +315,8 @@ class CycleProvider with ChangeNotifier {
     }
   }
 
-  void updateCycleInfo(DateTime lastPeriod, int cycleLength, int periodLength) {
+  void updateCycleInfo(
+      DateTime lastPeriod, int cycleLength, int periodLength) {
     if (cycleLength <= 0 || periodLength <= 0) {
       throw Exception(
           "Cycle length and period duration must be positive integers.");
@@ -215,15 +324,15 @@ class CycleProvider with ChangeNotifier {
     _lastPeriodStart = lastPeriod;
     _cycleLength = cycleLength;
     _periodLength = periodLength;
-    _totalCyclesLogged++; // Increment the count
-    print("Cycle info updated. Total cycles logged: $_totalCyclesLogged");
+    // Log the cycle to past cycles list
+    logCycle(_lastPeriodStart as String);
 
-    // Recalculate all related cycle data when core data is updated
     _initializeCycleData();
     notifyListeners();
 
     // Sync updated data with Hive
     _saveToHive();
+
   }
 
   Future<void> _saveToHive() async {
@@ -233,6 +342,7 @@ class CycleProvider with ChangeNotifier {
       _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
       periodLength: _periodLength,
       cycleLength: _cycleLength,
+      pastPeriods: _pastPeriods
     );
 
     // Open the Hive box
@@ -243,6 +353,7 @@ class CycleProvider with ChangeNotifier {
     saveCycleDataToFirestore();
 
   }
+
   Future<void> saveCycleDataToFirestore() async {
     if (await SessionManager.checkUserLoginStatus()) {
       try {
@@ -255,6 +366,7 @@ class CycleProvider with ChangeNotifier {
             'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toIso8601String(),
             'periodLength': _periodLength,
             'cycleLength': _cycleLength,
+            'pastPeriods': _pastPeriods
           };
           final pregnancyProvider = Provider.of<PregnancyModeProvider>(_context, listen: false);
 
@@ -316,7 +428,7 @@ class CycleProvider with ChangeNotifier {
     // Recalculate all related cycle data when last period start is updated
     _initializeCycleData();
     notifyListeners();
-
+ //  addPastPeriod("$lastPeriodStart");
     // Sync updated data with Hive
     _saveToHive();
   }
@@ -393,6 +505,7 @@ class CycleProvider with ChangeNotifier {
   }
 
   CycleProvider._internal();
+
   Future<void> loadCycleDataFromHive() async {
     var box = await Hive.openBox<CycleData>('cycleData');
     CycleData? cycleData = box.get('cycle');
@@ -402,7 +515,7 @@ class CycleProvider with ChangeNotifier {
       _lastPeriodStart = DateTime.parse(cycleData.cycleStartDate);
       _cycleLength = cycleData.cycleLength!;
       _periodLength = cycleData.periodLength!;
-
+      _pastPeriods=cycleData.pastPeriods;
       // Recalculate the cycle data
       _initializeCycleData();
       notifyListeners();

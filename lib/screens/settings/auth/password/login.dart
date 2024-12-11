@@ -10,8 +10,7 @@ class Login extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
-      body: Center(
+       body: Center(
         child: ElevatedButton(
           onPressed: () {
             // Navigate to either PIN or Password screen based on saved authentication mode
@@ -20,7 +19,8 @@ class Login extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (context) => EnterPasswordScreen()),
               );
-            } else {
+            }
+            else {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => EnterPinScreen()),

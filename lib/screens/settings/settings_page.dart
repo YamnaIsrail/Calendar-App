@@ -1,3 +1,4 @@
+import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
@@ -142,22 +143,41 @@ class UserProfileSection1 extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: TextButton(
-                     child: Text(
-                       "Sync Data",
-                       style: TextStyle(
-                         fontSize: 16,
-                         fontWeight: FontWeight.w500,
-                         color: Colors.white,
-                       ),
-                     ),
-                      onPressed: (){
-                        Provider.of<CycleProvider>(context, listen: false).saveCycleDataToFirestore();
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(builder: (context) => BackupAndRestoreScreen()),
-                        // );
+                      child: Text(
+                        "Sync Data",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onPressed: () async {
+                        bool isLoggedIn = await SessionManager.checkUserLoginStatus(); // Check the user's logged-in status
+
+                        if (!isLoggedIn) {
+                          context.read<CycleProvider>().saveCycleDataToFirestore();
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("You are not signed in. Please sign in to sync data."),
+                              backgroundColor: Colors.blueGrey,
+                            ),
+                          );
+                        } else {
+                          // If user is logged in, show syncing data Snackbar
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Syncing Data..."),
+                              backgroundColor: Colors.blue,
+                            ),
+                          );
+
+                          // Call saveCycleDataToFirestore function
+                          Provider.of<CycleProvider>(context, listen: false).saveCycleDataToFirestore();
+                        }
                       },
                     ),
+
                   ),
                 ),
               ],

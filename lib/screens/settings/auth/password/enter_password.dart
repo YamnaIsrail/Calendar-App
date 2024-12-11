@@ -13,10 +13,13 @@ class EnterPasswordScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return bgContainer(
         child: Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(title: Text("Enter PIN"),
-    centerTitle: true,
-    ),
+
+        title: Text("Enter Password"),
+        centerTitle: true,
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -42,24 +45,26 @@ class EnterPasswordScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
+              CustomButton(
+                backgroundColor: primaryColor,
                 onPressed: () {
-                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  final authProvider =
+                      Provider.of<AuthProvider>(context, listen: false);
                   if (passwordController.text == authProvider.password) {
                     // Navigate to the next screen upon successful authentication
                     Navigator.pushReplacementNamed(context, '/home');
                   } else {
                     // Show error if password doesn't match
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid Password')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Invalid Password')));
                   }
                 },
-                child: Text('Login'),
+                text: 'Login'
               ),
             ],
           ),
         ),
       ),
-        )
-    );
+    ));
   }
 }

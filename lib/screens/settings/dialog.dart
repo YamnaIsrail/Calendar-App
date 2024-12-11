@@ -1,49 +1,20 @@
 import 'package:calender_app/firebase/user_session.dart';
+import 'package:calender_app/hive/cycle_model.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/wheel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../question/q1.dart';
-import 'backup_restore/session_manager_backup.dart';
+import 'backup_restore/google_signin.dart';
 
-class ReminderService {
-  static int selectedFrequency = 1; // Default to weekly
-
-  /// Schedule notifications based on user selection
-  static Future<void> scheduleBackupNotification(int frequency) async {
-    // Cancel all previously scheduled notifications
-    await NotificationService.cancelAllNotifications();
-
-    final now = DateTime.now();
-    DateTime nextNotificationTime = now;
-
-    if (frequency == 1) {
-      // Weekly reminder: Set notification 7 days from now
-      nextNotificationTime = now.add(Duration(days: 7));
-    } else if (frequency == 2) {
-      // Monthly reminder: Set notification 30 days from now
-      nextNotificationTime = now.add(Duration(days: 30));
-    }
-
-    // Schedule the notification
-    await NotificationService.showScheduleNotification(
-      title: "Backup Reminder",
-      body: "Time to back up your data.",
-      scheduleDate: nextNotificationTime,
-      id: 100, // Unique identifier
-    );
-  }
-
-
-}
 class DialogHelper {
 
   // New Dialog: showRatingPopup
@@ -133,7 +104,6 @@ class DialogHelper {
     );
   }
 
-
   // New Dialog: Delete account showConfirmPopup
   static void showConfirmPopup(BuildContext context, VoidCallback onDelete) {
     showDialog(
@@ -169,6 +139,7 @@ class DialogHelper {
   }
 
 
+
   static void showSignOutPopup(BuildContext context, VoidCallback onSignOut) {
     showDialog(
       context: context,
@@ -187,7 +158,7 @@ class DialogHelper {
                       Navigator.of(context).pop();
                       onSignOut();
                     },
-                    backgroundColor: Colors.blue,
+                    backgroundColor: primaryColor,
                     text: 'Sign Out',
                   ),
                 ),
@@ -197,7 +168,8 @@ class DialogHelper {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    backgroundColor: Colors.blue,
+                    backgroundColor: secondaryColor,
+                    textColor: Colors.black,
                     text: 'Cancel',
                   ),
                 ),
@@ -229,7 +201,7 @@ class DialogHelper {
                       await deleteUserAccount();
                       onDelete();
                     },
-                    backgroundColor: Colors.red,
+                    backgroundColor: primaryColor,
                     text: 'Delete',
                   ),
                 ),
@@ -239,8 +211,8 @@ class DialogHelper {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    backgroundColor: Colors.blue,
-                    text: 'Keep',
+                    backgroundColor: secondaryColor,
+                    text: 'Keep',textColor: Colors.black,
                   ),
                 ),
               ],
@@ -274,7 +246,7 @@ class DialogHelper {
   }
 
 // New Dialog: Data Lost
-  static void showDataLostPopup(BuildContext context, VoidCallback onRecover) {
+  void showDataLostPopup(BuildContext context, VoidCallback onRecover) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -285,21 +257,36 @@ class DialogHelper {
             children: [
               Text(
                 "We've upgraded our backup system to make it more secure and convenient."
-                "\n If you find data lost, please log in to the previous backup account again, we will help to retrieve your data.",
+                    "\n If you find data lost, please log in to the previous backup account again, we will help to retrieve your data.",
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 10),
               Column(
                 children: [
+                  // Google Account Sign-In
                   ListTile(
-                    onTap: () {
+                    onTap: () async {
                       Navigator.of(context).pop();
-                      onRecover();
+
+                      // Check if user is already signed in
+                      if (FirebaseAuth.instance.currentUser != null) {
+                        // User already signed in, proceed with data retrieval
+                        await Provider.of<CycleProvider>(context, listen: false).retrieveCycleDataFromFirestore(context);
+                      } else {
+                        // User is not signed in, sign in through Google
+                        bool success = await GoogleSignInService().signInWithGoogle();
+                        if (success) {
+                          await Provider.of<CycleProvider>(context, listen: false).retrieveCycleDataFromFirestore(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-in failed. Please try again!')));
+                        }
+                      }
                     },
                     leading: Icon(Icons.g_mobiledata_outlined),
                     title: Text('Google Account'),
                     textColor: primaryColor,
                   ),
+                  // Other recovery methods
                   ListTile(
                     onTap: () {
                       Navigator.of(context).pop();
@@ -336,6 +323,69 @@ class DialogHelper {
     );
   }
 
+
+//   static void showDataLostPopup(BuildContext context, VoidCallback onRecover) {
+//     showDialog(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return AlertDialog(
+//           title: Text("Data Lost?"),
+//           content: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Text(
+//                 "We've upgraded our backup system to make it more secure and convenient."
+//                 "\n If you find data lost, please log in to the previous backup account again, we will help to retrieve your data.",
+//                 textAlign: TextAlign.center,
+//               ),
+//               SizedBox(height: 10),
+//               Column(
+//                 children: [
+//                   ListTile(
+//                     onTap: () {
+//                       Navigator.of(context).pop();
+//                       onRecover();
+//                     },
+//                     leading: Icon(Icons.g_mobiledata_outlined),
+//                     title: Text('Google Account'),
+//                     textColor: primaryColor,
+//                   ),
+//                   ListTile(
+//                     onTap: () {
+//                       Navigator.of(context).pop();
+//                       onRecover();
+//                     },
+//                     leading: Icon(Icons.mail),
+//                     title: Text('Email Attachment'),
+//                     textColor: primaryColor,
+//                   ),
+//                   ListTile(
+//                     onTap: () {
+//                       Navigator.of(context).pop();
+//                       onRecover();
+//                     },
+//                     leading: Icon(Icons.draw),
+//                     title: Text("Dropbox"),
+//                     textColor: primaryColor,
+//                   ),
+//                   ListTile(
+//                     onTap: () {
+//                       Navigator.of(context).pop();
+//                       onRecover();
+//                     },
+//                     leading: Icon(Icons.cloud_download),
+//                     title: Text('Cloud Storage'),
+//                     textColor: primaryColor,
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+
   static void showRenamePopup(BuildContext context) {
     TextEditingController _nameController = TextEditingController();
 
@@ -370,26 +420,36 @@ class DialogHelper {
             ],
           ),
           actions: [
-            CustomButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              backgroundColor: secondaryColor,
-              text: 'Cancel',
-              textColor: Colors.black,
+            Row(
+              children: [
+                Expanded(
+                  child: CustomButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    backgroundColor: secondaryColor,
+                    text: 'Cancel',
+                    textColor: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 5,width: 5,),
+                Expanded(
+                  child: CustomButton(
+                    onPressed: () {
+                      if (_nameController.text.isNotEmpty) {
+                        provider.updateUserName(_nameController.text.trim());
+                      }
+                      Navigator.of(context).pop();
+                    },
+                    backgroundColor: primaryColor,
+                    text: 'Save',
+                    textColor: Colors.white,
+                  ),
+                ),
+
+              ],
             ),
-            CustomButton(
-              onPressed: () {
-                if (_nameController.text.isNotEmpty) {
-                  provider.updateUserName(_nameController.text.trim());
-                }
-                Navigator.of(context).pop();
-              },
-              backgroundColor: primaryColor,
-              text: 'Save',
-              textColor: Colors.white,
-            ),
-          ],
+            ],
         );
       },
     );
@@ -497,106 +557,9 @@ class DialogHelper {
     );
   }
 //**************************
-
-  //showtranferdata
-  static void showTransferDataDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Transfer data to new device"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color(0xffE893FF),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text("Transfer to Android"),
-                        Icon(
-                          Icons.android_rounded,
-                          color: Colors.white,
-                        )
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                    decoration: BoxDecoration(
-                      color: Color(0xff939AFF),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text("Transfer to Ios"),
-                        Icon(
-                          Icons.apple,
-                          color: Colors.white,
-                        )
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              ListTile(
-                title: Text("Cloud storage"),
-                leading: Icon(
-                  Icons.cloud,
-                  color: Colors.blue,
-                ),
-              ),
-              ListTile(
-                title: Text("Email attachment"),
-                leading: Icon(
-                  Icons.mail,
-                  color: Colors.black,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Close"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Select Reminder Frequency Dialog
-
-  static void showReminderFrequencyDialog(BuildContext context) {
-    int selectedOption = 1; // Default to weekly
+// Select Reminder Frequency Dialog
+  static void showReminderFrequencyDialog(BuildContext context, int currentFrequency, Function(int) onFrequencyChanged) {
+    int selectedOption = currentFrequency; // Use the current frequency as the initial selection
 
     showDialog(
       context: context,
@@ -612,42 +575,48 @@ class DialogHelper {
                 value: 1,
                 groupValue: selectedOption,
                 onChanged: (value) {
-                 selectedOption = value!;
-                  }),
+                  selectedOption = value!;
+                },
+              ),
               // Monthly Reminder Option
               RadioListTile<int>(
                 title: Text("Monthly data backup reminder"),
                 value: 2,
                 groupValue: selectedOption,
                 onChanged: (value) {
-                    selectedOption = value!;
-                  }),
-
+                  selectedOption = value!;
+                },
+              ),
             ],
           ),
           actions: [
             CustomButton(
               onPressed: () async {
+                // Update the parent widget with the new frequency selection
+                onFrequencyChanged(selectedOption); // Pass the selected option to the callback
+
+                // Cancel any existing notifications for the current frequency
+                NotificationService.cancelNotification(currentFrequency as String); // Cancel the existing notification
+
                 final now = DateTime.now();
                 DateTime nextNotificationTime = now;
 
+                // Schedule the new notification based on the selected frequency
                 if (selectedOption == 1) {
-                  // Schedule weekly notification
-                  nextNotificationTime = now.add(Duration(days: 7));
+                  nextNotificationTime = now.add(Duration(days: 7)); // Weekly
                 } else if (selectedOption == 2) {
-                  // Schedule monthly notification
-                  nextNotificationTime = now.add(Duration(days: 30));
+                  nextNotificationTime = now.add(Duration(days: 30)); // Monthly
                 }
 
-                // Call to schedule the notification
+                // Schedule the notification with the new frequency
                 await NotificationService.showScheduleNotification(
-                 title:  "Backup Reminder",
+                  title: "Backup Reminder",
                   body: "Time to back up your data.",
                   scheduleDate: nextNotificationTime,
-                  id: selectedOption,
+                  id: selectedOption, // Use frequency as id
                 );
 
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close the dialog after scheduling
               },
               backgroundColor: primaryColor,
               text: 'Save',
@@ -658,7 +627,101 @@ class DialogHelper {
     );
   }
 
-//other backups
+  //showtranferdata
+    static void showTransferDataDialog(BuildContext context) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Transfer data to new device"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Color(0xffE893FF),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text("Transfer to Android"),
+                          Icon(
+                            Icons.android_rounded,
+                            color: Colors.white,
+                          )
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      decoration: BoxDecoration(
+                        color: Color(0xff939AFF),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text("Transfer to Ios"),
+                          Icon(
+                            Icons.apple,
+                            color: Colors.white,
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                ListTile(
+                  title: Text("Cloud storage"),
+                  leading: Icon(
+                    Icons.cloud,
+                    color: Colors.blue,
+                  ),
+                ),
+                ListTile(
+                  title: Text("Email attachment"),
+                  leading: Icon(
+                    Icons.mail,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Close"),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  //other backups
   static void showOtherBackupMethods(BuildContext context) {
     showDialog(
       context: context,
@@ -676,7 +739,6 @@ class DialogHelper {
       },
     );
   }
-
   // Import From Others Dialog
   static void showImportFromOthersDialog(BuildContext context) {
     showDialog(
@@ -703,6 +765,8 @@ class DialogHelper {
       },
     );
   }
+
+
 }
 
 class CalendarDialogHelper {

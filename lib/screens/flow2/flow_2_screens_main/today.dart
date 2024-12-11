@@ -74,8 +74,8 @@ class CycleStatusScreen extends StatelessWidget {
                               ? "Expected date\n ${getFormattedDueDate(pregnancyModeProvider.dueDate)}"
                               : "Pregnancy Mode Active"
                               : daysUntilNextPeriod < 0
-                              ? "${daysUntilNextPeriod.abs()} Days Late"
-                              : "$daysUntilNextPeriod Days Left",
+                              ? "${daysUntilNextPeriod.abs()} Day(s) Late"
+                              : "$daysUntilNextPeriod Day(s) Left",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 16, color: Colors.black),
                         ),

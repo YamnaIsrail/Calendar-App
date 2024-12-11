@@ -3,17 +3,9 @@ import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/widgets/cycle_info_card.dart';
 import 'package:calender_app/widgets/date_format.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date formatting
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:calender_app/provider/cycle_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:provider/provider.dart';
+
 class CustomCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -90,9 +82,24 @@ class CustomCalendar extends StatelessWidget {
                         }
                       } else {
                         // Cycle Mode Calendar Logic
+                        for (var periodStartDateString in cycleProvider.pastPeriods) {
+                          final startDate = DateTime.parse(periodStartDateString);  // Parse the start date
+                          final periodLength = cycleProvider.periodLength;  // You can get the period length from the provider
+                          final endDate = startDate.add(Duration(days: periodLength));  // Calculate the end date
+
+                          // Check if the normalizedDate falls within the cycle's start and end date
+                          if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+                              normalizedDate.isBefore(endDate.add(Duration(days: 1)))) {
+                            return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
+                          }
+                        }
+
+
                         if (cycleProvider.periodDays.contains(normalizedDate)) {
                           return _buildCalendarCell(date: date, color: Colors.red);
-                        } else if (cycleProvider.predictedDays.contains(normalizedDate)) {
+                        }
+
+                        else if (cycleProvider.predictedDays.contains(normalizedDate)) {
                           return _buildCalendarCell(
                             date: date,
                             border: Border.all(color: Colors.blue, width: 2),

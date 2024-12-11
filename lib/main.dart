@@ -42,10 +42,6 @@ void main() async {
   final authData = authBox.get('authData', defaultValue: AuthData())!;
   await Hive.openBox('partner_codes');
 
-  // Decide initial route
-  final initialRoute = (authData.password != null || authData.pin != null)
-      ? '/login'
-      : '/home';
 
   await NotificationService.init();
   tz.initializeTimeZones();
@@ -59,6 +55,7 @@ void main() async {
 
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');
+
   await CycleProvider().loadCycleDataFromHive();
   Hive.registerAdapter(TimelineEntryAdapter()); // Register Hive Adapter
   await Hive.openBox<TimelineEntry>('timelineBox');

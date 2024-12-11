@@ -14,7 +14,8 @@ class EnterPinScreen extends StatelessWidget {
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(title: Text("Enter PIN"),
+        appBar: AppBar(
+            title: Text("Enter PIN"),
           backgroundColor: Colors.transparent,
           centerTitle: true
         ),
@@ -43,7 +44,8 @@ class EnterPinScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20),
-                ElevatedButton(
+                CustomButton(
+                  backgroundColor: primaryColor,
                   onPressed: () {
                     final authProvider = Provider.of<AuthProvider>(context, listen: false);
                     if (pinController.text == authProvider.pin) {
@@ -53,7 +55,7 @@ class EnterPinScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid PIN')));
                     }
                   },
-                  child: Text('Submit'),
+                 text: 'Submit'
                 ),
               ],
             ),
