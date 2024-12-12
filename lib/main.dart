@@ -92,30 +92,36 @@ class CalenderApp extends StatefulWidget {
 
 class _CalenderAppState extends State<CalenderApp> {
   String _selectedLanguage = 'English'; // Default language
-
-  // Create an instance of the DynamicTranslation class
   final DynamicTranslation _dynamicTranslation = DynamicTranslation();
+  Map<String, String> _localizedStrings = {};
 
-  @override
-  void initState() {
-    super.initState();
-    _loadLanguage();
-    _initializeCycleProvider();
-  }
-  void _initializeCycleProvider() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final cycleProvider = Provider.of<CycleProvider>(context, listen: false);
-      cycleProvider.initialize(context);
-    });
-  }
-
-  // Load language preference from Hive storage
-  _loadLanguage() async {
+  void _loadLanguage() async {
     final languageBox = await Hive.openBox('settingsBox');
     final savedLanguage = languageBox.get('language', defaultValue: 'English');
+    _changeLanguage(savedLanguage);
+  }
+
+  void _saveLanguage(String language) async {
+    final languageBox = await Hive.openBox('settingsBox');
+    await languageBox.put('language', language);
+  }
+
+  Future<void> _changeLanguage(String language) async {
     setState(() {
-      _selectedLanguage = savedLanguage;
+      _selectedLanguage = language;
     });
+
+    final languageCode = _getLanguageCode(language);
+
+    // Get the translated words for the selected language
+    final translatedStrings = await _dynamicTranslation.translateStrings(AppStrings.words, languageCode);
+
+    // Update UI with the translated words
+    setState(() {
+      _localizedStrings = translatedStrings;
+    });
+
+    _saveLanguage(language);
   }
 
   // Helper method to map language name to its code
@@ -142,6 +148,20 @@ class _CalenderAppState extends State<CalenderApp> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+    _initializeCycleProvider();
+  }
+  void _initializeCycleProvider() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cycleProvider = Provider.of<CycleProvider>(context, listen: false);
+      cycleProvider.initialize(context);
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
 
     return MaterialApp(
@@ -157,6 +177,12 @@ class _CalenderAppState extends State<CalenderApp> {
       routes: {
     '/login': (context) => EnterPasswordScreen(),
     '/home': (context) => HomeScreen(),
+        '/languageSelection': (context) => LanguageSelectionScreen(
+          onLanguageChanged: (language) {
+            _changeLanguage(language);  // Update language when user selects a new language
+          },
+        ),
+
     },
     );
   }

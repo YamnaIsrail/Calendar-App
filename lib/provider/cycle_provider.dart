@@ -1,4 +1,6 @@
 import 'package:calender_app/provider/preg_provider.dart';
+import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/widgets/buttons.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -86,6 +88,12 @@ void addPastPeriodsFromFirestore(List<String> newPeriods) {
           .get();
 
       if (data.exists) {
+        // Retrieve data from Firestore
+        int? fetchedCycleLength = data['cycleLength'];
+        int? fetchedPeriodLength = data['periodLength'];
+        DateTime? fetchedLastPeriodStart =
+        data['cycleStartDate'] != null ? DateTime.parse(data['cycleStartDate']) : null;
+
         List<String> restoredPastPeriods = [];
         if (data['pastPeriods'] != null) {
           List<String> pastPeriodsFromFirestore = List<String>.from(data['pastPeriods'] ?? []);
@@ -96,21 +104,141 @@ void addPastPeriodsFromFirestore(List<String> newPeriods) {
         final provider = Provider.of<CycleProvider>(context, listen: false);
         provider.addPastPeriodsFromFirestore(restoredPastPeriods);
 
-        // Notify the user that the data has been successfully restored
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Cycle data restored successfully!")));
-        print("Past periods start dates restored successfully!");
-      } else {
-        print("No data found for the user.");
-        ScaffoldMessenger.of(context).showSnackBar(
+        // Show popup to ask the user if they want to update the cycle details
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            bool updateCycleLength = false;
+            bool updatePeriodLength = false;
+            bool updateLastPeriodStart = false;
+
+            return AlertDialog(
+              title: Text("Update Cycle Details"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (fetchedCycleLength != null)
+                    Row(
+                      children: [
+                        Expanded(child: Text("Update Cycle Length?")),
+                        Switch(
+                          value: updateCycleLength,
+                          onChanged: (value) {
+                            updateCycleLength = value;
+                          },
+                        ),
+                      ],
+                    ),
+                  if (fetchedPeriodLength != null)
+                    Row(
+                      children: [
+                        Expanded(child: Text("Update Period Length?")),
+                        Switch(
+                          value: updatePeriodLength,
+                          onChanged: (value) {
+                            updatePeriodLength = value;
+                          },
+                        ),
+                      ],
+                    ),
+                  if (fetchedLastPeriodStart != null)
+                    Row(
+                      children: [
+                        Expanded(child: Text("Update Last Period Start?")),
+                        Switch(
+                          value: updateLastPeriodStart,
+                          onChanged: (value) {
+                            updateLastPeriodStart = value;
+                          },
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Cancel"),
+                ),
+                CustomButton(
+                  backgroundColor: primaryColor,
+                  onPressed: () {
+                    if (updateCycleLength && fetchedCycleLength != null) {
+                      provider.updateCycleLength(fetchedCycleLength);
+                    }
+                    if (updatePeriodLength && fetchedPeriodLength != null) {
+                      provider.updatePeriodLength(fetchedPeriodLength);
+                    }
+                    if (updateLastPeriodStart && fetchedLastPeriodStart != null) {
+                      provider.updateLastPeriodStart(fetchedLastPeriodStart);
+                    }
+
+                    Navigator.of(context).pop();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Cycle data updated successfully!")),
+                    );
+                  },
+                 text: "Submit"
+                ),
+              ],
+            );
+          },
+        );
+
+       } else {
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("No cycle data found for your account.")));
       }
     } catch (e) {
-      print("Error fetching past periods: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
+       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("An error occurred while fetching data.")));
     }
   }
+
+//   Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
+//     try {
+//       String? userId = await SessionManager.getUserId();
+//       if (userId == null) {
+//         print("User is not logged in.");
+//         ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text("User not logged in. Please log in first.")));
+//         return;
+//       }
+//
+//       var data = await FirebaseFirestore.instance
+//           .collection('cycles')
+//           .doc(userId)
+//           .get();
+//
+//       if (data.exists) {
+//         List<String> restoredPastPeriods = [];
+//         if (data['pastPeriods'] != null) {
+//           List<String> pastPeriodsFromFirestore = List<String>.from(data['pastPeriods'] ?? []);
+//           restoredPastPeriods.addAll(pastPeriodsFromFirestore);
+//         }
+//
+//         // Update the provider with the fetched periods
+//         final provider = Provider.of<CycleProvider>(context, listen: false);
+//         provider.addPastPeriodsFromFirestore(restoredPastPeriods);
+//
+//         // Notify the user that the data has been successfully restored
+//         ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text("Cycle data restored successfully!")));
+//         print("Past periods start dates restored successfully!");
+//       } else {
+//         print("No data found for the user.");
+//         ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text("No cycle data found for your account.")));
+//       }
+//     } catch (e) {
+//       print("Error fetching past periods: $e");
+//       ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text("An error occurred while fetching data.")));
+//     }
+//   }
 
 // Method to log a cycle (you can update this logic as per your requirement)
   void logCycle(String cycleStartDate) {
@@ -434,16 +562,36 @@ _totalCyclesLogged++;
     _initializeCycleData();
     notifyListeners();
   }
-
+ //
+ //  void updateLastPeriodStart(DateTime lastPeriodStart) {
+ //    _lastPeriodStart = lastPeriodStart;
+ //
+ //    // Recalculate all related cycle data when last period start is updated
+ //    _initializeCycleData();
+ //    notifyListeners();
+ // //  addPastPeriod("$lastPeriodStart");
+ //    // Sync updated data with Hive
+ //    _saveToHive();
+ //  }
   void updateLastPeriodStart(DateTime lastPeriodStart) {
     _lastPeriodStart = lastPeriodStart;
-
-    // Recalculate all related cycle data when last period start is updated
-    _initializeCycleData();
+    // Add the new date to the list of past periods (if it's not already present)
+    String formattedDate = lastPeriodStart.toIso8601String();
+    if (!_pastPeriods.contains(formattedDate)) {
+      _pastPeriods.add(formattedDate);
+    }
+    _lastPeriodStart = _calculateLatestDate();
+     _initializeCycleData();
     notifyListeners();
- //  addPastPeriod("$lastPeriodStart");
-    // Sync updated data with Hive
-    _saveToHive();
+      _saveToHive();
+  }
+  DateTime _calculateLatestDate() {
+    if (_pastPeriods.isNotEmpty) {
+      List<DateTime> parsedDates = _pastPeriods.map((dateStr) => DateTime.parse(dateStr)).toList();
+      return parsedDates.reduce((a, b) => a.isAfter(b) ? a : b);
+    } else {
+      return DateTime.now(); // Fallback if there are no past periods
+    }
   }
 
   void addSymptom(String symptom) {

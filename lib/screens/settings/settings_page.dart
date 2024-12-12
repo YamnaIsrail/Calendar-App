@@ -81,7 +81,10 @@ class SettingsPage extends StatelessWidget {
                     GestureDetector(
                         onTap: () {
                           // Call showFirstDayOfWeekDialog
-                          DialogHelper.showConfirmPopup(context, (){});  },
+                          DialogHelper.showConfirmPopup(context, (){
+                            DialogHelper.deleteAllHiveData();  // Call to delete all Hive data from DialogHelper
+
+                          });  },
 
                         child: Text("Delete All Data",
                           textAlign: TextAlign.center,

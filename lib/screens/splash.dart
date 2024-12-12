@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'package:calender_app/auth/auth_provider.dart';
+import 'package:calender_app/screens/question/q1.dart';
 import 'package:calender_app/screens/settings/auth/password/login.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
+import '../hive/cycle_model.dart';
+import 'flow2/home_flow2.dart';
 import 'homeScreen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -45,12 +49,32 @@ class _SplashScreenState extends State<SplashScreen> {
     while (!authProvider.isInitialized) {
       await Future.delayed(Duration(milliseconds: 100));
     }
+    Future<bool> checkIfCycleDataExists() async {
+      var box = await Hive.openBox<CycleData>('cycleData');
+      CycleData? cycleData = box.get('cycle'); // Retrieve the cycle data
+      return cycleData != null; // Return true if data exists, otherwise false
+    }
 
     // After initialization, decide navigation based on password/PIN
     if (authProvider.hasPasswordOrPin) {
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => Login()));
     } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
+      bool hasCycleData = await checkIfCycleDataExists();
+      if (hasCycleData) {
+        // If data exists, navigate to the main screen or the next page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Flow2Page()),
+        );
+      } else {
+        // If no data exists, navigate to homescreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      }
+
+    //   Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
     }
   }
 

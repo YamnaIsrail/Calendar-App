@@ -13,6 +13,9 @@ import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../auth/auth_model.dart';
+import '../../hive/notes_model.dart';
+import '../../hive/timeline_entry.dart';
 import '../question/q1.dart';
 import 'backup_restore/google_signin.dart';
 import 'backup_restore/transfer_data_page.dart';
@@ -106,7 +109,6 @@ class DialogHelper {
     );
   }
 
-  // New Dialog: Delete account showConfirmPopup
   static void showConfirmPopup(BuildContext context, VoidCallback onDelete) {
     showDialog(
       context: context,
@@ -124,7 +126,6 @@ class DialogHelper {
               onPressed: () {
                 Navigator.of(context).pop(); // Close popup
                 onDelete(); // Call the delete logic
-
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => QuestionScreen1()),
@@ -139,6 +140,26 @@ class DialogHelper {
         );
       },
     );
+  }
+
+  static void deleteAllHiveData() async {
+    // Clear all Hive boxes
+    var authBox = await Hive.openBox<AuthData>('authBox');
+    var partnerCodesBox = await Hive.openBox('partner_codes');
+    var notesBox = await Hive.openBox<Note>('notesBox');
+    var notificationStorageBox = await Hive.openBox('myBox');
+    var cycleDataBox = await Hive.openBox<CycleData>('cycleData');
+    var timelineBox = await Hive.openBox<TimelineEntry>('timelineBox');
+
+    await authBox.clear();  // Clear the authBox
+    await partnerCodesBox.clear();  // Clear partner codes box
+    await notesBox.clear();  // Clear notes box
+    await notificationStorageBox.clear();  // Clear notification box
+    await cycleDataBox.clear();  // Clear cycle data box
+    await timelineBox.clear();  // Clear timeline box
+
+    // Optionally, delete from disk if you want to remove all data permanently
+    await Hive.deleteFromDisk();
   }
 
 

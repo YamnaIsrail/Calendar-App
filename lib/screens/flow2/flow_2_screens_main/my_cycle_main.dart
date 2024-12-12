@@ -74,7 +74,7 @@ class CycleTrackerScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 NoteSection(),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 CategorySection(
                   title: "Intercourse",
                   folderName: "intercourse",

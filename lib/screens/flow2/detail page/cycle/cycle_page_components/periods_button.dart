@@ -3,7 +3,7 @@ import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-
+import 'package:intl/intl.dart';
 // class PeriodButtons extends StatelessWidget {
 //   @override
 //   Widget build(BuildContext context) {
@@ -138,22 +138,54 @@ class PeriodButtons extends StatelessWidget {
     }
   }
 
+  // Future<String?> _selectPeriodToRemove(BuildContext context, CycleProvider provider) async {
+  //   // This is a simple implementation. You can display a list or use other logic for selection.
+  //   final periodToRemove = await showDialog<String>(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text("Select Period to Remove"),
+  //         content: SingleChildScrollView(
+  //           child: Column(
+  //             children: provider.pastPeriods.map((period) {
+  //               return ListTile(
+  //                 title: Text(period),
+  //                 onTap: () {
+  //                   Navigator.pop(context, period);  // Return the selected period
+  //                 },
+  //               );
+  //             }).toList(),
+  //           ),
+  //         )
+  //       );
+  //     },
+  //   );
+  //
+  //   return periodToRemove;  // Return the selected start date string
+  // }
+
   Future<String?> _selectPeriodToRemove(BuildContext context, CycleProvider provider) async {
-    // This is a simple implementation. You can display a list or use other logic for selection.
     final periodToRemove = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Select Period to Remove"),
-          content: Column(
-            children: provider.pastPeriods.map((period) {
-              return ListTile(
-                title: Text(period),
-                onTap: () {
-                  Navigator.pop(context, period);  // Return the selected period
-                },
-              );
-            }).toList(),
+          content: SingleChildScrollView(  // Wrap the Column with SingleChildScrollView for scrolling
+            child: Column(
+              mainAxisSize: MainAxisSize.min,  // Ensures the Column takes only the necessary height
+              children: provider.pastPeriods.map((period) {
+                // Assuming period is in ISO 8601 format (e.g., "2024-12-12T00:00:00.000")
+                DateTime parsedDate = DateTime.parse(period);
+                String formattedDate = DateFormat('yyyy-MM-dd').format(parsedDate);  // Format the date to "YYYY-MM-DD"
+
+                return ListTile(
+                  title: Text(formattedDate),  // Display the formatted date
+                  onTap: () {
+                    Navigator.pop(context, period);  // Return the selected period
+                  },
+                );
+              }).toList(),
+            ),
           ),
         );
       },
@@ -161,4 +193,5 @@ class PeriodButtons extends StatelessWidget {
 
     return periodToRemove;  // Return the selected start date string
   }
+
 }

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'translation.dart';  // Make sure to import the translation file
-import 'package:flutter/material.dart';
-import 'package:translator/translator.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
+  final Function(String) onLanguageChanged;
 
-  final Function(String) onLanguageChanged; // Change this to accept a String
   LanguageSelectionScreen({required this.onLanguageChanged});
 
   @override
-  _LanguageSelectionScreenState createState() => _LanguageSelectionScreenState();
+  _LanguageSelectionScreenState createState() =>
+      _LanguageSelectionScreenState();
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
@@ -34,14 +32,13 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     {"name": "Urdu", "code": "ur"},
   ];
 
-
   void _onLanguageSelected(Map<String, String> language) {
     setState(() {
       _selectedLanguage = language['name']!;
     });
 
     widget.onLanguageChanged(language['name']!);
-    // After language selection, reload the app's texts with the new language
+    Navigator.pop(context);  // Close the language selection screen after selection
   }
 
   @override
