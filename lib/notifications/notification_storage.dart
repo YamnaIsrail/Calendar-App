@@ -7,11 +7,16 @@ class NotificationStorage {
   /// Initialize Hive and open the notifications box
   static Future<void> init() async {
     notificationBox = await Hive.openBox<NotificationModel>('notifications');
+
   }
 
   /// Save or Update a notification using unique id as the key
   static Future<void> saveNotification(NotificationModel notification) async {
-    await notificationBox.put(notification.id, notification);  // Save with ID as the key
+    try {
+      await notificationBox.put(notification.id, notification);
+    } catch (e) {
+      print("Error saving notification: $e");
+    } // Save with ID as the key
   }
 
   /// Get all notifications stored in the database

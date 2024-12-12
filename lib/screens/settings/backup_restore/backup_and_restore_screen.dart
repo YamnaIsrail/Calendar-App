@@ -52,6 +52,9 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                 SettingsOption(
                   icon: Icons.group,
                   title: "Track others cycles",
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>TrackCycleScreen()));
+                  },
             ),
 
 //backup reminder
@@ -117,7 +120,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   icon: Icons.sync,
                   title: "Transfer data to new device",
                   onTap: () {
-                    ShowTransferDialog.showTransferDataDialog(context);
+                    DialogHelper.showTransferDataDialog(context);
                     print("Transfer data to new device selected");
                     // Add transfer data functionality here
                   },
@@ -204,6 +207,7 @@ class UserProfileSection extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text("Syncing Data..."),
+
                     backgroundColor: Colors.blue,
                   ),
                 );

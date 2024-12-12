@@ -25,6 +25,7 @@ import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'hive/timeline_entry.dart';
+import 'notifications/notification_model.dart';
 import 'notifications/notification_storage.dart';
 import 'provider/analysis/weight_provider.dart';
 
@@ -52,6 +53,7 @@ void main() async {
 
   await NotificationStorage.init();
   var box = await Hive.openBox('myBox');
+  Hive.registerAdapter(NotificationModelAdapter());
 
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');

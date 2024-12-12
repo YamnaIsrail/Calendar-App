@@ -75,6 +75,8 @@ void addPastPeriodsFromFirestore(List<String> newPeriods) {
       String? userId = await SessionManager.getUserId();
       if (userId == null) {
         print("User is not logged in.");
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("User not logged in. Please log in first.")));
         return;
       }
 
@@ -94,13 +96,19 @@ void addPastPeriodsFromFirestore(List<String> newPeriods) {
         final provider = Provider.of<CycleProvider>(context, listen: false);
         provider.addPastPeriodsFromFirestore(restoredPastPeriods);
 
-        // Notify that the data has been successfully restored
+        // Notify the user that the data has been successfully restored
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Cycle data restored successfully!")));
         print("Past periods start dates restored successfully!");
       } else {
         print("No data found for the user.");
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("No cycle data found for your account.")));
       }
     } catch (e) {
       print("Error fetching past periods: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("An error occurred while fetching data.")));
     }
   }
 
@@ -358,37 +366,42 @@ _totalCyclesLogged++;
     if (await SessionManager.checkUserLoginStatus()) {
       try {
         String? userId = await SessionManager.getUserId();
-        if (userId != null) {
-          final cycles = FirebaseFirestore.instance.collection('cycles');
-
-          Map<String, dynamic> cycleData = {
-            'cycleStartDate': _lastPeriodStart.toIso8601String(),
-            'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toIso8601String(),
-            'periodLength': _periodLength,
-            'cycleLength': _cycleLength,
-            'pastPeriods': _pastPeriods
-          };
-          final pregnancyProvider = Provider.of<PregnancyModeProvider>(_context, listen: false);
-
-           if (pregnancyProvider.isPregnancyMode) {
-            cycleData.addAll({
-              'pregnancyMode': true,
-              'gestationStart': pregnancyProvider.gestationStart?.toIso8601String(),
-            });
-          }else{
-             await cycles.doc(userId).update({
-               'pregnancyMode': FieldValue.delete(),
-               'gestationStart': FieldValue.delete(),
-             });
-             print("Deleted pregnancyMode and gestationStart fields from Firestore.");
-             return; // Exit early after deletion
-           }
-
-          await cycles.doc(userId).set(cycleData, SetOptions(merge: true));
-          print("Cycle data saved successfully.");
+        if (userId == null) {
+          print("User ID is null. Cannot save data.");
+          return;
         }
-      } catch (e) {
+
+        final cycles = FirebaseFirestore.instance.collection('cycles');
+        Map<String, dynamic> cycleData = {
+          'cycleStartDate': _lastPeriodStart.toIso8601String(),
+          'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toIso8601String(),
+          'periodLength': _periodLength,
+          'cycleLength': _cycleLength,
+          'pastPeriods': _pastPeriods
+        };
+
+        final pregnancyProvider = Provider.of<PregnancyModeProvider>(_context, listen: false);
+
+        if (pregnancyProvider.isPregnancyMode) {
+          cycleData.addAll({
+            'pregnancyMode': true,
+            'gestationStart': pregnancyProvider.gestationStart?.toIso8601String(),
+          });
+        } else {
+          // If pregnancy mode is disabled, remove pregnancy-related fields
+          await cycles.doc(userId).update({
+            'pregnancyMode': FieldValue.delete(),
+            'gestationStart': FieldValue.delete(),
+          });
+          print("Deleted pregnancyMode and gestationStart fields from Firestore.");
+        }
+
+        // Save cycle data, including pregnancy-related fields if necessary
+        await cycles.doc(userId).set(cycleData, SetOptions(merge: true));
+        print("Cycle data saved successfully.");
+      } catch (e, stackTrace) {
         print("Error saving data: $e");
+        print("Stack trace: $stackTrace");
       }
     } else {
       print("User is not logged in.");

@@ -89,7 +89,7 @@ class CustomCalendar extends StatelessWidget {
 
                           // Check if the normalizedDate falls within the cycle's start and end date
                           if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
-                              normalizedDate.isBefore(endDate.add(Duration(days: 1)))) {
+                              normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
                             return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
                           }
                         }

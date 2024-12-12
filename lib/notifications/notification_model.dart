@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'notification_model.g.dart'; // This generates the TypeAdapter for the model.
 
-@HiveType(typeId: 0)
+@HiveType(typeId: 6)
 class NotificationModel extends HiveObject {
   @HiveField(0)
   final int id;

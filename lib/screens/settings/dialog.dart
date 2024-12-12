@@ -15,14 +15,13 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../question/q1.dart';
 import 'backup_restore/google_signin.dart';
+import 'backup_restore/transfer_data_page.dart';
 
 class DialogHelper {
 
   // New Dialog: showRatingPopup
-  static void showRatingPopup(
-      BuildContext context,
-      ValueChanged<int> onRatingSelected,
-      ) {
+  static void showRatingPopup(BuildContext context,
+      ValueChanged<int> onRatingSelected,) {
     int _rating = 0; // Default rating is 0
 
     showDialog(
@@ -53,25 +52,28 @@ class DialogHelper {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
                           5,
-                              (index) => GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _rating = index + 1;
-                              });
-                              onRatingSelected(_rating);
-                            },
-                            child: Icon(
-                              _rating > index ? Icons.star : Icons.star_border,
-                              color: Colors.amber,
-                              size: 40,
-                            ),
-                          ),
+                              (index) =>
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _rating = index + 1;
+                                  });
+                                  onRatingSelected(_rating);
+                                },
+                                child: Icon(
+                                  _rating > index ? Icons.star : Icons
+                                      .star_border,
+                                  color: Colors.amber,
+                                  size: 40,
+                                ),
+                              ),
                         ),
                       ),
                       SizedBox(height: 10),
                       Text(
                         'Current Rating: $_rating',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ],
                   );
@@ -111,7 +113,8 @@ class DialogHelper {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirmation'),
-          content: const Text('Are you sure you want to reset the app and delete all data?'),
+          content: const Text(
+              'Are you sure you want to reset the app and delete all data?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(), // Close popup
@@ -139,7 +142,6 @@ class DialogHelper {
   }
 
 
-
   static void showSignOutPopup(BuildContext context, VoidCallback onSignOut) {
     showDialog(
       context: context,
@@ -157,6 +159,14 @@ class DialogHelper {
                       await SessionManager.logoutUser();
                       Navigator.of(context).pop();
                       onSignOut();
+
+                      // Show Snackbar indicating successful sign-out
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Successfully signed out."),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
                     },
                     backgroundColor: primaryColor,
                     text: 'Sign Out',
@@ -198,8 +208,19 @@ class DialogHelper {
                   child: CustomButton(
                     onPressed: () async {
                       Navigator.of(context).pop();
-                      await deleteUserAccount();
+                      await deleteUserAccount(); // Perform account deletion
                       onDelete();
+
+                      // Automatically sign out after account deletion
+                      await SessionManager.logoutUser();
+
+                      // Show Snackbar indicating successful account deletion
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Your account has been deleted and logged out."),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     },
                     backgroundColor: primaryColor,
                     text: 'Delete',
@@ -212,7 +233,8 @@ class DialogHelper {
                       Navigator.of(context).pop();
                     },
                     backgroundColor: secondaryColor,
-                    text: 'Keep',textColor: Colors.black,
+                    text: 'Keep',
+                    textColor: Colors.black,
                   ),
                 ),
               ],
@@ -229,7 +251,8 @@ class DialogHelper {
       String? userId = await SessionManager.getUserId();
       if (userId != null) {
         // Firestore logic: Delete user data from Firebase
-        final userDocRef = FirebaseFirestore.instance.collection('users').doc(userId);
+        final userDocRef = FirebaseFirestore.instance.collection('users').doc(
+            userId);
 
         await userDocRef.delete();
         print("User's Firestore account deleted.");
@@ -271,14 +294,20 @@ class DialogHelper {
                       // Check if user is already signed in
                       if (FirebaseAuth.instance.currentUser != null) {
                         // User already signed in, proceed with data retrieval
-                        await Provider.of<CycleProvider>(context, listen: false).retrieveCycleDataFromFirestore(context);
+                        await Provider.of<CycleProvider>(context, listen: false)
+                            .retrieveCycleDataFromFirestore(context);
                       } else {
                         // User is not signed in, sign in through Google
-                        bool success = await GoogleSignInService().signInWithGoogle();
+                        bool success = await GoogleSignInService()
+                            .signInWithGoogle();
                         if (success) {
-                          await Provider.of<CycleProvider>(context, listen: false).retrieveCycleDataFromFirestore(context);
+                          await Provider.of<CycleProvider>(
+                              context, listen: false)
+                              .retrieveCycleDataFromFirestore(context);
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-in failed. Please try again!')));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  'Sign-in failed. Please try again!')));
                         }
                       }
                     },
@@ -432,7 +461,7 @@ class DialogHelper {
                     textColor: Colors.black,
                   ),
                 ),
-                SizedBox(height: 5,width: 5,),
+                SizedBox(height: 5, width: 5,),
                 Expanded(
                   child: CustomButton(
                     onPressed: () {
@@ -449,7 +478,7 @@ class DialogHelper {
 
               ],
             ),
-            ],
+          ],
         );
       },
     );
@@ -457,8 +486,8 @@ class DialogHelper {
 
 
   //Calendar Setting Day
-  static void showFirstDayOfWeekDialog(
-      BuildContext context, String selectedDay, Function(String) onSelected) {
+  static void showFirstDayOfWeekDialog(BuildContext context, String selectedDay,
+      Function(String) onSelected) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -475,7 +504,7 @@ class DialogHelper {
           title: Text("Select first day of week"),
           content: Container(
             width:
-                double.maxFinite, // Allow the container to take the max width
+            double.maxFinite, // Allow the container to take the max width
             child: ListView(
               shrinkWrap: true,
               children: daysOfWeek.map((day) {
@@ -527,7 +556,7 @@ class DialogHelper {
           title: Text("Select Date Format"),
           content: Container(
             width:
-                double.maxFinite, // Allow the container to take the max width
+            double.maxFinite, // Allow the container to take the max width
             child: ListView(
               shrinkWrap: true,
               children: dateFormats.map((format) {
@@ -556,47 +585,61 @@ class DialogHelper {
       },
     );
   }
+
 //**************************
 // Select Reminder Frequency Dialog
-  static void showReminderFrequencyDialog(BuildContext context, int currentFrequency, Function(int) onFrequencyChanged) {
-    int selectedOption = currentFrequency; // Use the current frequency as the initial selection
+  static void showReminderFrequencyDialog(BuildContext context,
+      int currentFrequency,
+      Function(int) onFrequencyChanged,) {
+    // Use the current frequency as the initial selection
+    int selectedOption = currentFrequency;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text("Select reminder frequency"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Weekly Reminder Option
-              RadioListTile<int>(
-                title: Text("Weekly data backup reminder"),
-                value: 1,
-                groupValue: selectedOption,
-                onChanged: (value) {
-                  selectedOption = value!;
-                },
-              ),
-              // Monthly Reminder Option
-              RadioListTile<int>(
-                title: Text("Monthly data backup reminder"),
-                value: 2,
-                groupValue: selectedOption,
-                onChanged: (value) {
-                  selectedOption = value!;
-                },
-              ),
-            ],
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Weekly Reminder Option
+                  RadioListTile<int>(
+                    title: Text("Weekly data backup reminder"),
+                    value: 1,
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value!;
+                      });
+                    },
+                  ),
+                  // Monthly Reminder Option
+                  RadioListTile<int>(
+                    title: Text("Monthly data backup reminder"),
+                    value: 2,
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value!;
+                      });
+                    },
+                  ),
+                ],
+              );
+            },
           ),
           actions: [
             CustomButton(
               onPressed: () async {
                 // Update the parent widget with the new frequency selection
-                onFrequencyChanged(selectedOption); // Pass the selected option to the callback
+                onFrequencyChanged(
+                    selectedOption); // Pass the selected option to the callback
 
                 // Cancel any existing notifications for the current frequency
-                NotificationService.cancelNotification(currentFrequency as String); // Cancel the existing notification
+                NotificationService.cancelNotification(currentFrequency
+                    .toString()); // Cancel the existing notification
 
                 final now = DateTime.now();
                 DateTime nextNotificationTime = now;
@@ -616,7 +659,8 @@ class DialogHelper {
                   id: selectedOption, // Use frequency as id
                 );
 
-                Navigator.of(context).pop(); // Close the dialog after scheduling
+                Navigator.of(context)
+                    .pop(); // Close the dialog after scheduling
               },
               backgroundColor: primaryColor,
               text: 'Save',
@@ -628,51 +672,11 @@ class DialogHelper {
   }
 
 
-   void showTransferDataDialog(BuildContext context) {
-    final GoogleSignIn _googleSignIn = GoogleSignIn();
-    bool _isLoading = false;
+  static void showTransferDataDialog(BuildContext context) async {
+    // Initialize GoogleSignIn instance
+    final GoogleSignIn googleSignIn = GoogleSignIn();
 
-    Future<void> _handleGoogleSignIn() async {
-      _isLoading = true;
-
-      try {
-        // Trigger the Google Sign-In flow
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
-        if (googleUser != null) {
-          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-          final AuthCredential credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth.accessToken,
-            idToken: googleAuth.idToken,
-          );
-
-          final UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-
-          // Store user session
-          await SessionManager.storeUserSession(userCredential.user?.uid ?? '');
-
-          // Call saveCycleDataToFirestore after successful sign-in
-          await saveCycleDataToFirestore();
-          Navigator.pop(context); // Close the dialog
-        } else {
-          // User canceled the sign-in process
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sign-in canceled by user')),
-          );
-        }
-      } catch (error) {
-        // Handle any errors
-        print('Google Sign-In Error: $error');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google Sign-In failed. Please try again.')),
-        );
-      } finally {
-        _isLoading = false;
-      }
-    }
-
+    // Show the dialog
     showDialog(
       context: context,
       builder: (context) {
@@ -681,19 +685,20 @@ class DialogHelper {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_isLoading)
-                Center(child: CircularProgressIndicator())
-              else ...[
-                ElevatedButton.icon(
-                  onPressed: _handleGoogleSignIn,
-                  icon: Icon(Icons.login),
-                  label: Text("Sign in with Google"),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Android button
+                  GestureDetector(
+                    onTap: ()  {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TransferDataPage(transferTo: "Android"),
+                        ),
+                      );
+                      },
+                    child: Container(
                       decoration: BoxDecoration(
                         color: Color(0xffE893FF),
                         borderRadius: BorderRadius.circular(16),
@@ -706,23 +711,30 @@ class DialogHelper {
                           ),
                         ],
                       ),
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text("Transfer to Android"),
-                          Icon(
-                            Icons.android_rounded,
-                            color: Colors.white,
-                          )
+                          Icon(Icons.android_rounded, color: Colors.white),
                         ],
                       ),
                     ),
-                    Container(
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  ),
+                  // iOS button
+                  GestureDetector(
+                    onTap: ()  {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TransferDataPage(transferTo: "Ios"),
+                        ),
+                      );
+                    },
+
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                       decoration: BoxDecoration(
                         color: Color(0xff939AFF),
                         borderRadius: BorderRadius.circular(16),
@@ -740,31 +752,40 @@ class DialogHelper {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text("Transfer to iOS"),
-                          Icon(
-                            Icons.apple,
-                            color: Colors.white,
-                          )
+                          Icon(Icons.apple, color: Colors.white),
                         ],
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 10),
-                ListTile(
-                  title: Text("Cloud storage"),
-                  leading: Icon(
-                    Icons.cloud,
-                    color: Colors.blue,
                   ),
-                ),
-                ListTile(
-                  title: Text("Email attachment"),
-                  leading: Icon(
-                    Icons.mail,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
+                ],
+              ),
+              SizedBox(height: 10),
+              ListTile(
+                title: Text("Cloud storage"),
+                leading: Icon(Icons.cloud, color: Colors.blue),
+                onTap: ()  {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TransferDataPage(transferTo: "Cloud"),
+                    ),
+                  );
+                },
+
+              ),
+              ListTile(
+                title: Text("Email attachment"),
+                leading: Icon(Icons.mail, color: Colors.black),
+                onTap: ()  {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TransferDataPage(transferTo: "Email"),
+                    ),
+                  );
+                },
+
+              ),
             ],
           ),
           actions: [
@@ -778,27 +799,7 @@ class DialogHelper {
     );
   }
 
-  Future<void> saveCycleDataToFirestore() async {
-    if (await SessionManager.checkUserLoginStatus()) {
-      try {
-        String? userId = await SessionManager.getUserId();
-        if (userId != null) {
-          final cycles = FirebaseFirestore.instance.collection('cycles');
 
-          Map<String, dynamic> cycleData = {
-            // Populate your data here
-          };
-
-          await cycles.doc(userId).set(cycleData, SetOptions(merge: true));
-          print("Cycle data saved successfully.");
-        }
-      } catch (e) {
-        print("Error saving data: $e");
-      }
-    } else {
-      print("User is not logged in.");
-    }
-  }
 
 
 
@@ -1046,9 +1047,7 @@ class ShowTransferDialog {
     _isLoading = true;
 
     try {
-
       await Provider.of<CycleProvider>(context, listen: false).saveCycleDataToFirestore();
-
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data transfer successful')));
       Navigator.pop(context);
