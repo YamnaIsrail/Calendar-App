@@ -8,6 +8,7 @@ import 'package:calender_app/widgets/wheel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +19,6 @@ import 'backup_restore/google_signin.dart';
 class DialogHelper {
 
   // New Dialog: showRatingPopup
-
   static void showRatingPopup(
       BuildContext context,
       ValueChanged<int> onRatingSelected,
@@ -627,16 +627,69 @@ class DialogHelper {
     );
   }
 
-  //showtranferdata
-    static void showTransferDataDialog(BuildContext context) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Transfer data to new device"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+
+   void showTransferDataDialog(BuildContext context) {
+    final GoogleSignIn _googleSignIn = GoogleSignIn();
+    bool _isLoading = false;
+
+    Future<void> _handleGoogleSignIn() async {
+      _isLoading = true;
+
+      try {
+        // Trigger the Google Sign-In flow
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+        if (googleUser != null) {
+          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+          final AuthCredential credential = GoogleAuthProvider.credential(
+            accessToken: googleAuth.accessToken,
+            idToken: googleAuth.idToken,
+          );
+
+          final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+          // Store user session
+          await SessionManager.storeUserSession(userCredential.user?.uid ?? '');
+
+          // Call saveCycleDataToFirestore after successful sign-in
+          await saveCycleDataToFirestore();
+          Navigator.pop(context); // Close the dialog
+        } else {
+          // User canceled the sign-in process
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign-in canceled by user')),
+          );
+        }
+      } catch (error) {
+        // Handle any errors
+        print('Google Sign-In Error: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed. Please try again.')),
+        );
+      } finally {
+        _isLoading = false;
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Transfer data to new device"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isLoading)
+                Center(child: CircularProgressIndicator())
+              else ...[
+                ElevatedButton.icon(
+                  onPressed: _handleGoogleSignIn,
+                  icon: Icon(Icons.login),
+                  label: Text("Sign in with Google"),
+                ),
+                SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -653,7 +706,8 @@ class DialogHelper {
                           ),
                         ],
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      padding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -667,7 +721,8 @@ class DialogHelper {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      padding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                       decoration: BoxDecoration(
                         color: Color(0xff939AFF),
                         borderRadius: BorderRadius.circular(16),
@@ -684,7 +739,7 @@ class DialogHelper {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text("Transfer to Ios"),
+                          Text("Transfer to iOS"),
                           Icon(
                             Icons.apple,
                             color: Colors.white,
@@ -710,18 +765,46 @@ class DialogHelper {
                   ),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Close"),
-              ),
             ],
-          );
-        },
-      );
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> saveCycleDataToFirestore() async {
+    if (await SessionManager.checkUserLoginStatus()) {
+      try {
+        String? userId = await SessionManager.getUserId();
+        if (userId != null) {
+          final cycles = FirebaseFirestore.instance.collection('cycles');
+
+          Map<String, dynamic> cycleData = {
+            // Populate your data here
+          };
+
+          await cycles.doc(userId).set(cycleData, SetOptions(merge: true));
+          print("Cycle data saved successfully.");
+        }
+      } catch (e) {
+        print("Error saving data: $e");
+      }
+    } else {
+      print("User is not logged in.");
     }
-  //other backups
+  }
+
+
+
+
+
+    //other backups
   static void showOtherBackupMethods(BuildContext context) {
     showDialog(
       context: context,
@@ -939,3 +1022,113 @@ class CalendarDialogHelper {
 }
 
 
+
+class ShowTransferDialog {
+  static void showTransferDataDialog(BuildContext context) async {
+    // Check if the user is logged in through the session
+    bool isLoggedIn = await SessionManager.checkUserLoginStatus();
+
+    if (isLoggedIn) {
+      // If the user is logged in, proceed directly to the data transfer logic
+      // Call the method to save data or transfer data
+      await _handleDataTransfer(context);
+    } else {
+      // If the user is not logged in, show the Google Sign-In option
+      _showGoogleSignInDialog(context);
+    }
+  }
+
+  // This method handles the data transfer process
+  static Future<void> _handleDataTransfer(BuildContext context) async {
+    bool _isLoading = false;
+
+    // Start loading
+    _isLoading = true;
+
+    try {
+
+      await Provider.of<CycleProvider>(context, listen: false).saveCycleDataToFirestore();
+
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data transfer successful')));
+      Navigator.pop(context);
+    } catch (error) {
+      print('Data Transfer Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data transfer failed. Please try again.')));
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  // This method shows the Google Sign-In dialog
+  static void _showGoogleSignInDialog(BuildContext context) {
+    final GoogleSignIn _googleSignIn = GoogleSignIn();
+    bool _isLoading = false;
+
+    Future<void> _handleGoogleSignIn() async {
+      _isLoading = true;
+
+      try {
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+        if (googleUser != null) {
+          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+          final AuthCredential credential = GoogleAuthProvider.credential(
+            accessToken: googleAuth.accessToken,
+            idToken: googleAuth.idToken,
+          );
+
+          final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+          await SessionManager.storeUserSession(userCredential.user?.uid ?? '');
+
+          // After successful Google Sign-In, proceed with data transfer
+          await _handleDataTransfer(context);
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign-in canceled by user')),
+          );
+        }
+      } catch (error) {
+        print('Google Sign-In Error: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed. Please try again.')),
+        );
+      } finally {
+        _isLoading = false;
+      }
+    }
+
+    // Show dialog for Google Sign-In if user is not logged in
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Transfer Data"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isLoading)
+                CircularProgressIndicator()
+              else
+                ElevatedButton.icon(
+                  onPressed: _handleGoogleSignIn,
+                  icon: Icon(Icons.login),
+                  label: Text("Sign in with Google"),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

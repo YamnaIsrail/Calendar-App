@@ -117,7 +117,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   icon: Icons.sync,
                   title: "Transfer data to new device",
                   onTap: () {
-                    DialogHelper.showTransferDataDialog(context);
+                    ShowTransferDialog.showTransferDataDialog(context);
                     print("Transfer data to new device selected");
                     // Add transfer data functionality here
                   },
