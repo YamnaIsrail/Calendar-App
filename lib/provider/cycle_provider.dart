@@ -14,64 +14,126 @@ import 'package:flutter/foundation.dart';
 class CycleProvider with ChangeNotifier {
   late BuildContext _context;
 
+  DateTime _lastPeriodStart = DateTime.now();
+  int _cycleLength = 28;
+  int _periodLength = 5;
+  int _lutealPhaseLength = 14;
+  bool isNewUser = true; // Flag to check if it's a new user or not
+  List<Map<String, String>> _pastPeriods = [];  // Store all past period start dates as strings
 
-List<String> _pastPeriods = [];  // Store all past period start dates as strings
-List<String> get pastPeriods => _pastPeriods;
+  // Dynamic cycle data
+  List<DateTime> periodDays = [];
+  List<DateTime> predictedDays = [];
+  List<DateTime> fertileDays = [];
+  List<DateTime> lutealPhaseDays = [];
+  List<String> _symptoms = [];
 
 
-  void setPeriodLength(int length) {
-    _periodLength = length;
+  // Getters
+  List<Map<String, String>> get pastPeriods => _pastPeriods;
+  DateTime get lastPeriodStart => _lastPeriodStart;
+  int get cycleLength => _cycleLength;
+  int get periodLength => _periodLength;
+  int get lutealPhaseLength => _lutealPhaseLength;
+  List<String> get symptoms => _symptoms;
+
+
+  List<DateTime> getPeriodDays() => periodDays;
+  List<DateTime> getPredictedDays() => predictedDays;
+  List<DateTime> getFertileDays() => fertileDays;
+  List<DateTime> getLutealPhaseDays() => lutealPhaseDays;
+
+  //USER NAME
+  String _userName = "Default User"; // Default name
+  String get userName => _userName;
+  void updateUserName(String name) {
+    _userName = name;
+    notifyListeners();
+    _saveUserNameToHive();
+  }
+  Future<void> _saveUserNameToHive() async {
+    var box = await Hive.openBox<String>('userData');
+    await box.put('userName', _userName);
+    print("User name saved to Hive.");
+  }
+  Future<void> _loadUserNameFromHive() async {
+    var box = await Hive.openBox<String>('userData');
+    _userName = box.get('userName', defaultValue: "User")!;
     notifyListeners();
   }
 
-  void addPastPeriod(String periodDate) {
-    print("Attempting to add period: $periodDate");
 
-    if (!_pastPeriods.contains(periodDate)) {
-      _pastPeriods.add(periodDate);  // Add the new period
-      print("Period added successfully!");
+  // Method to calculate luteal phase days
+  void _calculateLutealPhaseDays() {
+    lutealPhaseDays = List.generate(
+      _lutealPhaseLength - 6,
+          (index) => _lastPeriodStart.add(
+        Duration(days: _cycleLength - _lutealPhaseLength + index),
+      ),
+    );
+  }
 
-      // Log the cycle (optional, depending on your implementation)
-      logCycle(periodDate);
 
-      // Sync with Hive or Firestore (optional, depending on your implementation)
-      _saveToHive();
 
-      // Print the updated list of periods
-      print("Updated list of periods: $_pastPeriods");
+  // Singleton instance for MenstrualCycleWidget
+  MenstrualCycleWidget? _widget;
 
-      // Notify listeners to update the UI
-      notifyListeners();
+  MenstrualCycleWidget get cycleWidget {
+    _widget ??= MenstrualCycleWidget.init(
+      secretKey: "11a1215l0119a140409p0919",
+      ivKey: "23a1dfr5lyhd9a1404845001",
+    );
+    return _widget!;
+  }
+
+  int _totalCyclesLogged = 0;
+  int get totalCyclesLogged => _totalCyclesLogged;
+  void addPastPeriod(DateTime startDate, DateTime endDate) {
+    String startDateStr = startDate.toIso8601String();
+    String endDateStr = endDate.toIso8601String();
+
+    // Check if the period with the same start date already exists
+    int existingPeriodIndex = _pastPeriods.indexWhere((period) =>
+    period['startDate'] == startDateStr);
+
+    if (existingPeriodIndex != -1) {
+      // Update the existing period's end date
+      _pastPeriods[existingPeriodIndex]['endDate'] = endDateStr;
+      print("Period updated: Start: $startDateStr, End: $endDateStr");
     } else {
-      print("Period already exists: $periodDate");
+      // Add a new period if none exists
+      _pastPeriods.add({'startDate': startDateStr, 'endDate': endDateStr});
+      print("New period added: Start: $startDateStr, End: $endDateStr");
     }
+
+    _saveToHive(); // Sync with Hive storage
+    notifyListeners(); // Notify listeners to update UI
   }
 
 
-
-  // Remove period from pastPeriods
-  void removePastPeriod(String periodDate) {
-    _pastPeriods.remove(periodDate);
-    _saveToHive();  // Sync with Hive (or Firestore)
+  void removePastPeriod(String startDate) {
+    pastPeriods.removeWhere((period) => period['startDate'] == startDate);
     notifyListeners();
   }
 
+  void addPastPeriodsFromFirestore(List<Map<String, String>> newPeriods) {
+    for (var newPeriod in newPeriods) {
+      String startDateStr = newPeriod['startDate']!;
+      String endDateStr = newPeriod['endDate']!;
 
-
-// Method to add new periods when fetched from Firestore
-void addPastPeriodsFromFirestore(List<String> newPeriods) {
-  // Add the fetched periods (strings) into the current list of past periods
-  for (var period in newPeriods) {
-    if (!_pastPeriods.contains(period)) {
-      _pastPeriods.add(period);
+      if (!_pastPeriods.any((period) =>
+      period['startDate'] == startDateStr && period['endDate'] == endDateStr)) {
+        _pastPeriods.add(newPeriod);
+        print("Added new period: Start: $startDateStr, End: $endDateStr");
+      } else {
+        print("Period already exists: Start: $startDateStr, End: $endDateStr");
+      }
     }
+
+    // Notify listeners to update the UI
+    notifyListeners();
   }
-  notifyListeners();  // Notifies listeners to update the UI
-}
 
-
-
-// Method to retrieve cycle data from Firestore (including pastPeriods)
   Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
     try {
       String? userId = await SessionManager.getUserId();
@@ -102,7 +164,7 @@ void addPastPeriodsFromFirestore(List<String> newPeriods) {
 
         // Update the provider with the fetched periods
         final provider = Provider.of<CycleProvider>(context, listen: false);
-        provider.addPastPeriodsFromFirestore(restoredPastPeriods);
+        provider.addPastPeriodsFromFirestore(restoredPastPeriods.cast<Map<String, String>>());
 
         // Show popup to ask the user if they want to update the cycle details
         showDialog(
@@ -163,191 +225,69 @@ void addPastPeriodsFromFirestore(List<String> newPeriods) {
                   child: Text("Cancel"),
                 ),
                 CustomButton(
-                  backgroundColor: primaryColor,
-                  onPressed: () {
-                    if (updateCycleLength && fetchedCycleLength != null) {
-                      provider.updateCycleLength(fetchedCycleLength);
-                    }
-                    if (updatePeriodLength && fetchedPeriodLength != null) {
-                      provider.updatePeriodLength(fetchedPeriodLength);
-                    }
-                    if (updateLastPeriodStart && fetchedLastPeriodStart != null) {
-                      provider.updateLastPeriodStart(fetchedLastPeriodStart);
-                    }
+                    backgroundColor: primaryColor,
+                    onPressed: () {
+                      if (updateCycleLength && fetchedCycleLength != null) {
+                        provider.updateCycleLength(fetchedCycleLength);
+                      }
+                      if (updatePeriodLength && fetchedPeriodLength != null) {
+                        provider.updatePeriodLength(fetchedPeriodLength);
+                      }
+                      if (updateLastPeriodStart && fetchedLastPeriodStart != null) {
+                        provider.updateLastPeriodStart(fetchedLastPeriodStart);
+                      }
 
-                    Navigator.of(context).pop();
+                      Navigator.of(context).pop();
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Cycle data updated successfully!")),
-                    );
-                  },
-                 text: "Submit"
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Cycle data updated successfully!")),
+                      );
+                    },
+                    text: "Submit"
                 ),
               ],
             );
           },
         );
 
-       } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("No cycle data found for your account.")));
       }
     } catch (e) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("An error occurred while fetching data.")));
     }
   }
 
-//   Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
-//     try {
-//       String? userId = await SessionManager.getUserId();
-//       if (userId == null) {
-//         print("User is not logged in.");
-//         ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(content: Text("User not logged in. Please log in first.")));
-//         return;
-//       }
-//
-//       var data = await FirebaseFirestore.instance
-//           .collection('cycles')
-//           .doc(userId)
-//           .get();
-//
-//       if (data.exists) {
-//         List<String> restoredPastPeriods = [];
-//         if (data['pastPeriods'] != null) {
-//           List<String> pastPeriodsFromFirestore = List<String>.from(data['pastPeriods'] ?? []);
-//           restoredPastPeriods.addAll(pastPeriodsFromFirestore);
-//         }
-//
-//         // Update the provider with the fetched periods
-//         final provider = Provider.of<CycleProvider>(context, listen: false);
-//         provider.addPastPeriodsFromFirestore(restoredPastPeriods);
-//
-//         // Notify the user that the data has been successfully restored
-//         ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(content: Text("Cycle data restored successfully!")));
-//         print("Past periods start dates restored successfully!");
-//       } else {
-//         print("No data found for the user.");
-//         ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(content: Text("No cycle data found for your account.")));
-//       }
-//     } catch (e) {
-//       print("Error fetching past periods: $e");
-//       ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text("An error occurred while fetching data.")));
-//     }
-//   }
-
-// Method to log a cycle (you can update this logic as per your requirement)
   void logCycle(String cycleStartDate) {
-    // Only add to the list if it doesn't already exist
-    if (!_pastPeriods.contains(cycleStartDate)) {
-      _pastPeriods.add(cycleStartDate);
-_totalCyclesLogged++;
+    // Create a new period map with start and end dates
+    String formattedStartDate = cycleStartDate;
+    String formattedEndDate = DateTime.parse(formattedStartDate).add(Duration(days: _periodLength)).toIso8601String();
+    Map<String, String> newCyclePeriod = {
+      'startDate': formattedStartDate,
+      'endDate': formattedEndDate,
+    };
+
+    // Only add the new period if it doesn't already exist
+    if (!_pastPeriods.any((period) =>
+    period['startDate'] == newCyclePeriod['startDate'] && period['endDate'] == newCyclePeriod['endDate'])) {
+      _pastPeriods.add(newCyclePeriod);
+      _totalCyclesLogged++;
+
       // Sync the changes with Hive and Firestore
       _saveToHive();  // Save to Hive
       saveCycleDataToFirestore();  // Save to Firestore
 
-      // Notify listeners
+      // Notify listeners to update the UI
       notifyListeners();
     }
   }
 
-
-
-
-  // Set context when provider is initialized
   void initialize(BuildContext context) {
     _context = context;
     notifyListeners();
   }
-
-  // Private fields with default values
-  DateTime _lastPeriodStart = DateTime.now();
-  int _cycleLength = 28;
-  int _periodLength = 5;
-  int _lutealPhaseLength = 14;
-  bool isNewUser = true; // Flag to check if it's a new user or not
-
-  // Dynamic cycle data
-  List<DateTime> periodDays = [];
-  List<DateTime> predictedDays = [];
-  List<DateTime> fertileDays = [];
-  List<DateTime> lutealPhaseDays = [];
-  List<String> _symptoms = [];
-
-
-  // Getters
-  DateTime get lastPeriodStart => _lastPeriodStart;
-  int get cycleLength => _cycleLength;
-  int get periodLength => _periodLength;
-  int get lutealPhaseLength => _lutealPhaseLength;
-  List<String> get symptoms => _symptoms;
-
-
-  List<DateTime> getPeriodDays() => periodDays;
-  List<DateTime> getPredictedDays() => predictedDays;
-  List<DateTime> getFertileDays() => fertileDays;
-  List<DateTime> getLutealPhaseDays() => lutealPhaseDays;
-
-  //USER NAME
-  String _userName = "Default User"; // Default name
-
-  // Getter for the user name
-  String get userName => _userName;
-
-  // Setter for the user name
-  void updateUserName(String name) {
-    _userName = name;
-    notifyListeners();
-    _saveUserNameToHive();
-  }
-
-  // Save the name to Hive for persistence
-  Future<void> _saveUserNameToHive() async {
-    var box = await Hive.openBox<String>('userData');
-    await box.put('userName', _userName);
-    print("User name saved to Hive.");
-  }
-
-
-  Future<void> _loadUserNameFromHive() async {
-    var box = await Hive.openBox<String>('userData');
-    _userName = box.get('userName', defaultValue: "User")!;
-    notifyListeners();
-  }
-
-
-  // Method to calculate luteal phase days
-  void _calculateLutealPhaseDays() {
-    lutealPhaseDays = List.generate(
-      _lutealPhaseLength - 6,
-          (index) => _lastPeriodStart.add(
-        Duration(days: _cycleLength - _lutealPhaseLength + index),
-      ),
-    );
-  }
-
-
-
-  // Singleton instance for MenstrualCycleWidget
-  MenstrualCycleWidget? _widget;
-
-  MenstrualCycleWidget get cycleWidget {
-    _widget ??= MenstrualCycleWidget.init(
-      secretKey: "11a1215l0119a140409p0919",
-      ivKey: "23a1dfr5lyhd9a1404845001",
-    );
-    return _widget!;
-  }
-
-  int _totalCyclesLogged = 0; // Tracks the total number of cycles logged
-
-// Getter for accessing the total cycles logged
-  int get totalCyclesLogged => _totalCyclesLogged;
-
 
   // Calculate the number of days elapsed since the last period
   int get daysElapsed {
@@ -490,6 +430,25 @@ _totalCyclesLogged++;
 
   }
 
+
+  Future<void> loadCycleDataFromHive() async {
+    var box = await Hive.openBox<CycleData>('cycleData');
+    CycleData? cycleData = box.get('cycle');
+
+    if (cycleData != null) {
+      // Initialize the provider with data from Hive
+      _lastPeriodStart = DateTime.parse(cycleData.cycleStartDate);
+      _cycleLength = cycleData.cycleLength!;
+      _periodLength = cycleData.periodLength!;
+      _pastPeriods=cycleData.pastPeriods;
+      // Recalculate the cycle data
+      _initializeCycleData();
+      notifyListeners();
+    } else {
+      print("No cycle data found in Hive.");
+    }
+  }
+
   Future<void> saveCycleDataToFirestore() async {
     if (await SessionManager.checkUserLoginStatus()) {
       try {
@@ -557,37 +516,55 @@ _totalCyclesLogged++;
       throw Exception("Period length must be a positive integer.");
     }
     _periodLength = periodLength;
+    final endDate = lastPeriodStart.add(Duration(days: _periodLength)); // Calculate end date
 
     // Recalculate all related cycle data when period length is updated
     _initializeCycleData();
     notifyListeners();
   }
- //
- //  void updateLastPeriodStart(DateTime lastPeriodStart) {
- //    _lastPeriodStart = lastPeriodStart;
- //
- //    // Recalculate all related cycle data when last period start is updated
- //    _initializeCycleData();
- //    notifyListeners();
- // //  addPastPeriod("$lastPeriodStart");
- //    // Sync updated data with Hive
- //    _saveToHive();
- //  }
+
   void updateLastPeriodStart(DateTime lastPeriodStart) {
     _lastPeriodStart = lastPeriodStart;
-    // Add the new date to the list of past periods (if it's not already present)
+
+    // Create the new period map with start and end dates
     String formattedDate = lastPeriodStart.toIso8601String();
-    if (!_pastPeriods.contains(formattedDate)) {
-      _pastPeriods.add(formattedDate);
+    Map<String, String> newPeriod = {
+      'startDate': formattedDate,
+      'endDate': lastPeriodStart.add(Duration(days: _periodLength)).toIso8601String(),
+    };
+
+    // Add the new period to the list if it doesn't already exist
+    if (!_pastPeriods.any((period) =>
+    period['startDate'] == newPeriod['startDate'] && period['endDate'] == newPeriod['endDate'])) {
+      _pastPeriods.add(newPeriod);
     }
+
+    // Calculate the latest date from the periods
     _lastPeriodStart = _calculateLatestDate();
-     _initializeCycleData();
+
+    _initializeCycleData();
+
+    // Notify listeners to update the UI
     notifyListeners();
-      _saveToHive();
+
+    // Sync with Hive
+    _saveToHive();
+  }
+
+  DateTime? getLastPeriodStartForEnd() {
+    if (pastPeriods.isEmpty) {
+      return lastPeriodStart ?? DateTime.now(); // Use lastPeriodStart if available, otherwise today's date
+    } else {
+      final lastPeriod = pastPeriods.last;
+      return DateTime.parse(lastPeriod['startDate']!);  // Return the end date of the last period
+    }
   }
   DateTime _calculateLatestDate() {
     if (_pastPeriods.isNotEmpty) {
-      List<DateTime> parsedDates = _pastPeriods.map((dateStr) => DateTime.parse(dateStr)).toList();
+      // Parse startDate from the map and find the latest date
+      List<DateTime> parsedDates = _pastPeriods
+          .map((period) => DateTime.parse(period['startDate']!))
+          .toList();
       return parsedDates.reduce((a, b) => a.isAfter(b) ? a : b);
     } else {
       return DateTime.now(); // Fallback if there are no past periods
@@ -667,23 +644,6 @@ _totalCyclesLogged++;
 
   CycleProvider._internal();
 
-  Future<void> loadCycleDataFromHive() async {
-    var box = await Hive.openBox<CycleData>('cycleData');
-    CycleData? cycleData = box.get('cycle');
-
-    if (cycleData != null) {
-      // Initialize the provider with data from Hive
-      _lastPeriodStart = DateTime.parse(cycleData.cycleStartDate);
-      _cycleLength = cycleData.cycleLength!;
-      _periodLength = cycleData.periodLength!;
-      _pastPeriods=cycleData.pastPeriods;
-      // Recalculate the cycle data
-      _initializeCycleData();
-      notifyListeners();
-    } else {
-      print("No cycle data found in Hive.");
-    }
-  }
 }
 
 

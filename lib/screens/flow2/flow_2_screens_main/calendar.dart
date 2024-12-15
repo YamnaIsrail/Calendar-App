@@ -82,14 +82,13 @@ class CustomCalendar extends StatelessWidget {
                         }
                       } else {
                         // Cycle Mode Calendar Logic
-                        for (var periodStartDateString in cycleProvider.pastPeriods) {
-                          final startDate = DateTime.parse(periodStartDateString);  // Parse the start date
-                          final periodLength = cycleProvider.periodLength;  // You can get the period length from the provider
-                          final endDate = startDate.add(Duration(days: periodLength));  // Calculate the end date
+                        for (var period in cycleProvider.pastPeriods) {
+                          final startDate = DateTime.parse(period['startDate']!);  // Parse the start date
+                          final endDate = DateTime.parse(period['endDate']!);  // Parse the end date
 
                           // Check if the normalizedDate falls within the cycle's start and end date
                           if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
-                              normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
+                              normalizedDate.isBefore(endDate.add(Duration(days: 1)))) {
                             return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
                           }
                         }
