@@ -135,10 +135,17 @@ class PeriodButtons extends StatelessWidget {
   // Method to remove a period
   void _removePeriod(BuildContext context) async {
     final provider = Provider.of<CycleProvider>(context, listen: false);
-    final startDate = await _selectPeriodToRemove(context, provider);
-    if (startDate != null) {
-      provider.removePastPeriod(startDate.toIso8601String());
-      print("Period removed: $startDate");
+
+    if (provider.pastPeriods.length > 1) {
+      final startDate = await _selectPeriodToRemove(context, provider);
+
+      if (startDate != null) {
+        // Remove the selected period
+        provider.removePastPeriod(startDate.toIso8601String());
+        print("Period removed: $startDate");
+      }
+    } else {
+      _showSnackbar(context, "You cannot delete all records. At least one period is required.");
     }
   }
 
@@ -279,3 +286,5 @@ class CustomDatePicker extends StatelessWidget {
     }
   }
 }
+
+

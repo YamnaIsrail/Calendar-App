@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 
 class MedicineReminderScreen extends StatefulWidget {
   final List<String> selectedMedicines;
-  final String? editingMedicine; // Optional parameter for editing a specific medicine
-
+  final String? editingMedicine;
   MedicineReminderScreen({
     required this.selectedMedicines,
     this.editingMedicine,

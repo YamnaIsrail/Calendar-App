@@ -83,7 +83,7 @@ class CycleStatusScreen extends StatelessWidget {
                         Text(
                           isPregnancyMode
                               ? pregnancyModeProvider.gestationStart != null
-                              ? " ${pregnancyModeProvider.gestationDays !}Weeks ${pregnancyModeProvider.gestationWeeks !}Days"
+                              ? " ${pregnancyModeProvider.gestationWeeks !}Weeks ${pregnancyModeProvider.gestationDays !}Days"
                               : ""
                               : daysUntilNextPeriod < 0
                               ? "Next period was expected\non ${formatDate(nextPeriodDate)}."

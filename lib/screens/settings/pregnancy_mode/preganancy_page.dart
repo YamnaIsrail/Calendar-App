@@ -48,8 +48,7 @@ class PregnancyScreen extends StatelessWidget {
                     ? "${pregnancyModeProvider.gestationStart?.toLocal().toString().split(' ')[0]}"
                     : "Unknown",
                 onTap: () {
-                  // Future functionality can be implemented here
-                  print("Tapped on gestation start date.");
+                  _showDatePicker(context, pregnancyModeProvider);
                 },
               ),
               SizedBox(height: 8),
@@ -136,5 +135,20 @@ class PregnancyOptionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+void _showDatePicker(BuildContext context, PregnancyModeProvider pregnancyModeProvider) async {
+  DateTime? newDate = await showDatePicker(
+    context: context,
+    initialDate: pregnancyModeProvider.gestationStart ?? DateTime.now(),
+    firstDate: DateTime(2000),
+    lastDate: DateTime(2100),
+  );
+
+  if (newDate != null) {
+    // Update the gestation start date in the provider
+    pregnancyModeProvider._gestationStart = newDate;
+    pregnancyModeProvider._calculateGestationWeeksAndDays();  // Recalculate gestation weeks and days
+    pregnancyModeProvider.notifyListeners();
   }
 }
