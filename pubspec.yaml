@@ -36,7 +36,6 @@ dependencies:
   url_launcher: ^6.3.1
   googleapis: ^13.2.0
   googleapis_auth: ^1.6.0
-  flutter_foreground_task: ^8.17.0
 
 dev_dependencies:
   flutter_test:
@@ -69,7 +68,6 @@ flutter:
     - assets/partner_mode/
     - assets/pregnancy/
     - assets/chat.png
-    - lib/l10n/
 
 
     #    - assets/emoji/

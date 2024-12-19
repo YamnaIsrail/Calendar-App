@@ -43,7 +43,6 @@ void main() async {
   final authData = authBox.get('authData', defaultValue: AuthData())!;
   await Hive.openBox('partner_codes');
 
-
   await NotificationService.init();
   tz.initializeTimeZones();
 
@@ -54,6 +53,7 @@ void main() async {
   await NotificationStorage.init();
   var box = await Hive.openBox('myBox');
   Hive.registerAdapter(NotificationModelAdapter());
+  await NotificationStorage.init();
 
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');
@@ -153,6 +153,7 @@ class _CalenderAppState extends State<CalenderApp> {
     _loadLanguage();
     _initializeCycleProvider();
   }
+
   void _initializeCycleProvider() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cycleProvider = Provider.of<CycleProvider>(context, listen: false);

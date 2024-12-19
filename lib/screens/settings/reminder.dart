@@ -1,7 +1,7 @@
 import 'package:calender_app/hive/settingsPageNotifications.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
-import 'package:calender_app/screens/flow2/detail%20page/cycle/medicine_reminder/medicine_reminder_form.dart';
+import 'package:calender_app/screens/flow2/detail%20page/cycle/medicine_reminder_form.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/water.dart';
 import 'package:calender_app/screens/settings/item.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';

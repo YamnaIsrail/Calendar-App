@@ -57,9 +57,9 @@ class CycleTrackerScreen extends StatelessWidget {
                 FlowSection(),
                 const SizedBox(height: 20),
 
-            CycleInfoCard(
+                CycleInfoCard(
                   title: "My Cycles",
-                  subtitle: "${cycleProvider.totalCyclesLogged} cycles logged", // Dynamic subtitle
+                  subtitle: "${cycleProvider.logCycle()} cycles logged", // Dynamic subtitle
                   progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
                   progressLabelEnd: formatDate(cycleProvider.getNextPeriodDate()),
                   progressValue: (cycleProvider.daysElapsed / cycleProvider.cycleLength).clamp(0.0, 1.0),
@@ -90,133 +90,157 @@ class CycleTrackerScreen extends StatelessWidget {
                   folderName: "emoji",
                   targetPage: Moods(),
                 ),
-                CardContain(
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .spaceBetween, // To space out the text and button
-                        children: [
-                          Text(
-                            "Ovulation",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                GestureDetector(
+                  onTap:  ()  {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          IconButton(
-                            onPressed: ()  {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return Dialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Container(
-                                    child: OvulationScreen(), // Your ContraceptivePage widget here
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                            icon: Icon(Icons.arrow_forward_ios_rounded),
+                          child: Container(
+                            child: OvulationScreen(), // Your ContraceptivePage widget here
                           ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 10),
-                            //  height: 50,
-                            //width: 100,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF5EB1E7),
-                              borderRadius: BorderRadius.circular(30),
+                        );
+                      },
+                    );
+                  },
+                  child: CardContain(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceBetween, // To space out the text and button
+                          children: [
+                            Text(
+                              "Ovulation",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  "assets/ovulation/pos.svg",
-                                  height: 15,
-                                  width: 20,
-                                ),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                Text(
-                                  "Positive",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                )
-                              ],
+                            IconButton(
+                              onPressed: ()  {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Container(
+                                      child: OvulationScreen(), // Your ContraceptivePage widget here
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              icon: Icon(Icons.arrow_forward_ios_rounded),
                             ),
-                          ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 10),
-                            //  height: 50,
-                            //width: 100,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF5EB1E7),
-                              borderRadius: BorderRadius.circular(30),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 10),
+                              //  height: 50,
+                              //width: 100,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF5EB1E7),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    "assets/ovulation/pos.svg",
+                                    height: 15,
+                                    width: 20,
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(
+                                    "Positive",
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  )
+                                ],
+                              ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  "assets/ovulation/neg.svg",
-                                  height: 20,
-                                  width: 20,
-                                ),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                Text(
-                                  "Negative",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                )
-                              ],
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 10),
+                              //  height: 50,
+                              //width: 100,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF5EB1E7),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    "assets/ovulation/neg.svg",
+                                    height: 20,
+                                    width: 20,
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(
+                                    "Negative",
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                CardContain(
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .spaceBetween, // To space out the text and button
-                        children: [
-                          Text(
-                            "Medicine",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: (){
-                              Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) => ContraceptivePage()));
-                            },
+                GestureDetector(
+                  onTap:  (){
+          Navigator.push(context,
+          MaterialPageRoute(builder: (context) => ContraceptivePage()));
+          },
 
-                            icon: Icon(Icons.arrow_forward_ios_rounded),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          SvgPicture.asset("assets/ovulation/drug.svg"),
-                        ],
-                      ),
-                    ],
+                  child: CardContain(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceBetween, // To space out the text and button
+                          children: [
+                            Text(
+                              "Medicine",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: (){
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) => ContraceptivePage()));
+                              },
+
+                              icon: Icon(Icons.arrow_forward_ios_rounded),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SvgPicture.asset("assets/ovulation/drug.svg"),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),

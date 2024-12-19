@@ -30,7 +30,9 @@ class CycleStatusScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         appBar: CustomAppBar(
           pageTitle: "",
-          onCancel: () {},
+          onCancel: () {
+
+          },
           onBack: () {
             Navigator.push(
               context,
@@ -43,6 +45,10 @@ class CycleStatusScreen extends StatelessWidget {
             final daysUntilNextPeriod = cycleProvider.getDaysUntilNextPeriod();
             final nextPeriodDate = cycleProvider.getNextPeriodDate();
             final currentCycleDay = cycleProvider.daysElapsed + 1;
+            final lastPeriodDate = cycleProvider.lastPeriodStart;
+            final periodLength = cycleProvider.periodLength;
+            final cycleLength = cycleProvider.cycleLength;
+
 
             String getFormattedDueDate(DateTime? dueDate) {
               if (dueDate == null) return "No due date";
@@ -86,7 +92,7 @@ class CycleStatusScreen extends StatelessWidget {
                               ? " ${pregnancyModeProvider.gestationWeeks !}Weeks ${pregnancyModeProvider.gestationDays !}Days"
                               : ""
                               : daysUntilNextPeriod < 0
-                              ? "Next period was expected\non ${formatDate(nextPeriodDate)}."
+                              ? "Your period was expected\non ${formatDate(nextPeriodDate)}."
                               : "Next period will start\non ${formatDate(nextPeriodDate)}",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 12, color: Colors.black),
@@ -193,7 +199,12 @@ class CycleStatusScreen extends StatelessWidget {
                                 : 'Today - Cycle Day $currentCycleDay',
                             subtitle: isPregnancyMode
                                 ? "Track your pregnancy milestones"
-                                : 'High chance of getting periods',
+                                : getPregnancyChanceText(
+                                context,
+                                lastPeriodDate,
+                                periodLength,
+                                currentCycleDay,
+                                cycleLength),
                             progressLabelStart: isPregnancyMode
                                 ? pregnancyModeProvider.gestationStart != null
                                 ? formatDate(pregnancyModeProvider.gestationStart!)
@@ -223,5 +234,48 @@ class CycleStatusScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// String getPregnancyChanceText(int currentCycleDay) {
+//   if (currentCycleDay >= 10 && currentCycleDay <= 15) {
+//     return 'High chance of getting pregnancy'; // Ovulation phase
+//   } else if (currentCycleDay >= 5 && currentCycleDay <= 9) {
+//     return 'Medium chance of getting pregnancy'; // Follicular phase
+//   } else if (currentCycleDay >= 16 && currentCycleDay <= 20) {
+//     return 'Low chance of getting pregnancy'; // Luteal phase
+//   } else {
+//     return 'Low chance of getting pregnancy';
+//   }
+// }
+
+String getPregnancyChanceText(BuildContext context,lastPeriodDate,periodLength, int currentCycleDay, cycleLength, ) {
+
+  if (currentCycleDay <= periodLength) {
+    return 'Low chance of getting pregnancy (on period)';
+  }
+
+  // Calculate ovulation window (typically days 10-15, based on cycle length)
+  int ovulationStart = cycleLength ~/ 2 - 1;  // Ovulation starts around the middle of the cycle
+  int ovulationEnd = ovulationStart + 4;  // Ovulation lasts a few days
+
+  // Ovulation phase (days around ovulation)
+  if (currentCycleDay >= ovulationStart && currentCycleDay <= ovulationEnd) {
+    return 'High chance of getting pregnancy (ovulation phase)';
+  }
+
+  // Follicular phase (before ovulation)
+  else if (currentCycleDay >= periodLength + 1 && currentCycleDay < ovulationStart) {
+    return 'Medium chance of getting pregnancy (approaching ovulation)';
+  }
+
+  // Luteal phase (after ovulation)
+  else if (currentCycleDay > ovulationEnd && currentCycleDay <= cycleLength) {
+    return 'Low chance of getting pregnancy (luteal phase)';
+  }
+
+  // After the cycle ends (next cycle phase)
+  else {
+    return 'High chance of getting pregnancy';
   }
 }

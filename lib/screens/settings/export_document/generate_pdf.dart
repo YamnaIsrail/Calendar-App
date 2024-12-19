@@ -22,8 +22,13 @@ Future<void> generateAndSharePdf(String fileName, CycleProvider cycleProvider) a
             pw.Text("Cycle Length: ${cycleProvider.cycleLength} days"),
             pw.Text("Period Length: ${cycleProvider.periodLength} days"),
             pw.Text("Luteal Phase Length: ${cycleProvider.lutealPhaseLength} days"),
-            pw.Text("Total Cycles Logged: ${cycleProvider.totalCyclesLogged}"),
+            pw.Text("Total Cycles Logged: ${cycleProvider.logCycle()}"),
             pw.Text("Days Until Next Period: ${cycleProvider.getDaysUntilNextPeriod()}"),
+            pw.SizedBox(height: 16),
+            pw.Text("Past Periods:", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            ...cycleProvider.pastPeriods.map((period) {
+              return pw.Text("Start: ${period['startDate']}, End: ${period['endDate']}");
+            }).toList(),
           ],
         );
       },

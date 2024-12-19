@@ -166,7 +166,7 @@ class _WaterReminderScreenState extends State<WaterReminderScreen> {
       endTime!.minute,
     );
 
-    if (endDateTime.isBefore(startDateTime)) {
+    if (endDateTime.isBefore(startDateTime) && endDateTime.day == startDateTime.day) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("End time cannot be before start time")),
       );

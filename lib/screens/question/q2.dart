@@ -45,7 +45,8 @@ class _QuestionScreen2State extends State<QuestionScreen2> {
           padding: EdgeInsets.symmetric(horizontal: 15),
           child: QuestionScreen(
             statement: "How often does your cycle occur?",
-            caption: "Your cycle usually happens every 21-35 days.",
+            caption: "Your cycle usually happens every 21-35 days."
+                "\n Cycle Days include both normal and bleeding days",
             wheel: Stack(
               children: [
                 Padding(
@@ -53,7 +54,7 @@ class _QuestionScreen2State extends State<QuestionScreen2> {
                   child: Align(
                     alignment: Alignment(0, -0.5),
                     child: Container(
-                      color: Color(0xFFAFD1F3).withOpacity(0.3),
+                       color: Color(0xFFAFD1F3).withOpacity(0.3),
                       height: 40,
                       width: double.infinity,
                     ),

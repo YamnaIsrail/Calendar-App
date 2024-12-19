@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../water.dart';
 
@@ -11,6 +12,26 @@ class WaterIntakeSection extends StatefulWidget {
 class _WaterIntakeSectionState extends State<WaterIntakeSection> {
   int selectedGlasses = 0; // Keeps track of the number of glasses selected
   int totalGlasses = 8;    // Total number of glasses available for selection
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedGlasses();  // Load the saved selected glasses
+  }
+
+  // Load the selected glasses from Hive
+  Future<void> _loadSelectedGlasses() async {
+    var box = await Hive.openBox('waterIntakeBox');
+    setState(() {
+      selectedGlasses = box.get('selectedGlasses', defaultValue: 0);
+    });
+  }
+
+  // Save the selected glasses to Hive
+  Future<void> _saveSelectedGlasses() async {
+    var box = await Hive.openBox('waterIntakeBox');
+    await box.put('selectedGlasses', selectedGlasses);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +68,7 @@ class _WaterIntakeSectionState extends State<WaterIntakeSection> {
                   setState(() {
                     selectedGlasses = index + 1;  // Update selected glasses based on the clicked glass
                   });
+                  _saveSelectedGlasses();  // Save the updated number of selected glasses
                 },
               );
             }),

@@ -43,7 +43,7 @@ class NoteProvider extends ChangeNotifier {
     final noteEntry = TimelineEntry(
       id: DateTime.now().millisecondsSinceEpoch,
       type: 'Note',
-      details: {'': content},
+      details: {'Noted': content},
     );
 
     // Correctly access the provider via context

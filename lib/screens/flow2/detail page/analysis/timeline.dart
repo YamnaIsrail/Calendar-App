@@ -1,8 +1,6 @@
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../../../../hive/timeline_entry.dart';
 import 'timeline/time_line_providers.dart';
 class TimelinePage extends StatelessWidget {
   @override
@@ -13,7 +11,9 @@ class TimelinePage extends StatelessWidget {
       appBar: AppBar(
         title: Text('Timeline'),
       ),
-      body: timelineProvider.entries.isEmpty
+      body: timelineProvider.isLoading
+          ? Center(child: CircularProgressIndicator())
+          : timelineProvider.entries.isEmpty
           ? Center(child: Text('No timeline entries available.'))
           : ListView.builder(
         itemCount: timelineProvider.entries.length,
@@ -30,7 +30,6 @@ class TimelinePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 children: [
-                  // Date Container
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
@@ -41,28 +40,27 @@ class TimelinePage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          weekDay, // Dynamic weekday
+                          weekDay,
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          day, // Dynamic date
+                          day,
                           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          month, // Dynamic month
+                          month,
                           style: TextStyle(fontSize: 16, color: Colors.black54),
                         ),
                       ],
                     ),
                   ),
                   SizedBox(width: 16),
-                  // Content Column
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          entry.type, // Dynamic title
+                          entry.type,
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                         ),
                         SizedBox(height: 4),
@@ -72,7 +70,6 @@ class TimelinePage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Delete Button
                   IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
                     onPressed: () {

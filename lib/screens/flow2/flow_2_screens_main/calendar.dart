@@ -1,5 +1,6 @@
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
+import 'package:calender_app/screens/flow2/flow_2_screens_main/today.dart';
 import 'package:calender_app/widgets/cycle_info_card.dart';
 import 'package:calender_app/widgets/date_format.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ class CustomCalendar extends StatelessWidget {
 
                           // Check if the normalizedDate falls within the cycle's start and end date
                           if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
-                              normalizedDate.isBefore(endDate.add(Duration(days: 1)))) {
+                              normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
                             return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
                           }
                         }
@@ -193,7 +194,12 @@ class CustomCalendar extends StatelessWidget {
                     buildCycleInfoCard(
                       icon: Icons.replay_5,
                       title: 'Cycle Length: ${cycleProvider.cycleLength} days',
-                      subtitle: 'High chance of getting periods',
+                      subtitle: getPregnancyChanceText(
+                          context,
+                          cycleProvider.lastPeriodStart,
+                          cycleProvider.periodLength,
+                          cycleProvider.daysElapsed,
+                          cycleProvider.cycleLength),
                       progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
                       progressLabelEnd: formatDate(
                         cycleProvider.lastPeriodStart.add(

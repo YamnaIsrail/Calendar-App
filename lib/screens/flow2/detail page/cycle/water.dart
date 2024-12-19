@@ -45,12 +45,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         body: ListView(
-
           scrollDirection: Axis.vertical,
           padding: const EdgeInsets.all(16.0),
-
           children: [
-            // Notifications Toggle
             CardContain(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

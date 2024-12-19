@@ -21,13 +21,13 @@ class QuestionScreen3 extends StatefulWidget {
 }
 
 class _QuestionScreen3State extends State<QuestionScreen3> {
-  int selectedYear = 2020;
+  int selectedYear = 2024;
   int selectedMonthIndex = 0;
   int selectedDate = 1;
 
   @override
   Widget build(BuildContext context) {
-    List<String> years = List.generate(6, (index) => (2020 + index).toString());
+    List<String> years = List.generate(2, (index) => (2024 + index).toString());
     List<String> dates = List.generate(31, (index) => (index + 1).toString());
     List<String> months = [
       "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -73,7 +73,7 @@ class _QuestionScreen3State extends State<QuestionScreen3> {
                       unselectedColor: Colors.grey,
                       onSelectedItemChanged: (index) {
                         setState(() {
-                          selectedYear = 2020 + index;
+                          selectedYear = 2024 + index;
                         });
                       },
                     ),

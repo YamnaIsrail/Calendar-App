@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,8 @@ import '../../widgets/wheel.dart';
 import '../homeScreen.dart';
 import 'ques_screen.dart';
 
+import 'package:flutter/services.dart'; // For exit(0)
+
 class QuestionScreen1 extends StatefulWidget {
   @override
   _QuestionScreen1State createState() => _QuestionScreen1State();
@@ -20,77 +24,82 @@ class _QuestionScreen1State extends State<QuestionScreen1> {
   Widget build(BuildContext context) {
     List<String> dates = List.generate(9, (index) => (index + 3).toString());
 
-    return bgContainer(
-      child: Scaffold(
-
-        backgroundColor: Colors.transparent,
-        appBar: QuestionAppBar(
-          currentPage: 1,
-          totalPages: 3,
-          onBack: () {
-            Navigator.pop(context);
+    return WillPopScope(
+          onWillPop: () async {
+            SystemNavigator.pop();
+            return false;
           },
-          onCancel: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-                  (route) => false,
-            );
-          },
-        ),
-        body: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15),
-          child: QuestionScreen(
-              statement: "How many days does your period usually last?",
-              caption: "Bleeding usually lasts between 4-7 days.",
-              wheel: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Align(
-                      alignment: Alignment(0, -0.5),
-                      child: Container(
-                        color: Color(0xFFAFD1F3).withOpacity(0.3),
-                        height: 40,
-                        width: double.infinity,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Wheel(
-                        items: dates,
-                        selectedColor: Colors.black,
-                        unselectedColor: Colors.grey,
-                        onSelectedItemChanged: (index) {
-                          setState(() {
-                            globals.selectedDays = index + 3; // Use the global variable
-                          });
-                        },
-                      ),
-                      Text(
-                        "Days",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              onNextPressed: () {
-              // Save the period length and cycle days using globals
-              Provider.of<CycleProvider>(context, listen: false).updatePeriodLength(globals.selectedDays);
-              print("Selected Days: ${globals.selectedDays}");
-
-              // Navigate to the next screen
-              Navigator.push(
+      child: bgContainer(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: QuestionAppBar(
+            currentPage: 1,
+            totalPages: 3,
+            onBack: () {
+              exit(0);
+            },
+            onCancel: () {
+              Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => QuestionScreen2(selectedDays: globals.selectedDays)),
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+                    (route) => false,
               );
             },
-                 ),
+          ),
+          body: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 15),
+            child: QuestionScreen(
+                statement: "How many days does your period usually last?",
+                caption: "Bleeding usually lasts between 4-7 days.",
+                wheel: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Align(
+                        alignment: Alignment(0, -0.5),
+                        child: Container(
+                          color: Color(0xFFAFD1F3).withOpacity(0.3),
+                          height: 40,
+                          width: double.infinity,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Wheel(
+                          items: dates,
+                          selectedColor: Colors.black,
+                          unselectedColor: Colors.grey,
+                          onSelectedItemChanged: (index) {
+                            setState(() {
+                              globals.selectedDays = index + 3; // Use the global variable
+                            });
+                          },
+                        ),
+                        Text(
+                          "Days",
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                onNextPressed: () {
+                // Save the period length and cycle days using globals
+                Provider.of<CycleProvider>(context, listen: false).updatePeriodLength(globals.selectedDays);
+                print("Selected Days: ${globals.selectedDays}");
+
+                // Navigate to the next screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => QuestionScreen2(selectedDays: globals.selectedDays)),
+                );
+              },
+                   ),
+          ),
         ),
       ),
     );

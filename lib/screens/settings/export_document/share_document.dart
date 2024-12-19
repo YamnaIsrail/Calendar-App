@@ -32,8 +32,12 @@ class ExportCyclePage extends StatelessWidget {
                   Text("Cycle Length: ${cycleProvider.cycleLength} days"),
                   Text("Period Length: ${cycleProvider.periodLength} days"),
                   Text("Luteal Phase Length: ${cycleProvider.lutealPhaseLength} days"),
-                  Text("Total Cycles Logged: ${cycleProvider.totalCyclesLogged}"),
+                  Text("Total Cycles Logged: ${cycleProvider.logCycle()}"),
                   Text("Days Until Next Period: ${cycleProvider.getDaysUntilNextPeriod()}"),
+                  Text("Past Periods:"),
+                  ...cycleProvider.pastPeriods.map((period) {
+                    return Text("Start: ${period['startDate']}, End: ${period['endDate']}");
+                  }).toList(),
                   Spacer(),
                   CustomButton(
                     onPressed: () {

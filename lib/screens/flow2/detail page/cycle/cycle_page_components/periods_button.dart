@@ -68,7 +68,7 @@ class PeriodButtons extends StatelessWidget {
         if (pickedEndDate.isAfter(startDate) || pickedEndDate.isAtSameMomentAs(startDate)) {
           provider.addPastPeriod(startDate, pickedEndDate);
 
-          final periodLength = pickedEndDate.difference(startDate).inDays + 1;
+          final periodLength = pickedEndDate.difference(startDate).inDays+1;
           provider.updatePeriodLength(periodLength); // Update the period length
           print("Period updated: Start: $startDate, End: $pickedEndDate, Period Length: $periodLength days");
         } else {
@@ -80,28 +80,6 @@ class PeriodButtons extends StatelessWidget {
     }
   }
 
-  // void _selectEndDate(BuildContext context) async {
-  //   final provider = Provider.of<CycleProvider>(context, listen: false);
-  //
-  //   final DateTime? pickedEndDate = await _pickDate(context, isStart: false);
-  //
-  //   if (pickedEndDate != null) {
-  //     final startDate = provider.getLastPeriodStartForEnd();
-  //     if (startDate != null) {
-  //       if (pickedEndDate.isAfter(startDate) || pickedEndDate.isAtSameMomentAs(startDate)) {
-  //        provider.addPastPeriod(startDate, pickedEndDate);
-  //
-  //         final periodLength = pickedEndDate.difference(startDate).inDays+1;
-  //         provider.updatePeriodLength(periodLength); // Update the period length
-  //         print("Period updated: Start: $startDate, End: $pickedEndDate, Period Length: $periodLength days");
-  //       } else {
-  //         _showSnackbar(context, "End date cannot be before start date");
-  //       }
-  //     } else {
-  //       _showSnackbar(context, "Please select a valid start date first");
-  //     }
-  //   }
-  // }
 
   Future<DateTime?> _pickDate(BuildContext context, {required bool isStart}) async {
     final provider = Provider.of<CycleProvider>(context, listen: false);
@@ -162,7 +140,7 @@ class PeriodButtons extends StatelessWidget {
               DateTime endDate = DateTime.parse(period['endDate']!);
 
               return ListTile(
-                title: Text("Start: ${DateFormat('yyyy-MM-dd').format(startDate)}"),
+                title: Text("Start: ${DateFormat('yyyy-MM-dd').format(startDate)}", style: TextStyle(fontSize: 12, color: Colors.black),),
                 trailing: Text("End: ${DateFormat('yyyy-MM-dd').format(endDate)}"),
                 onTap: () {
                   Navigator.pop(context, startDate);  // Return the selected start date

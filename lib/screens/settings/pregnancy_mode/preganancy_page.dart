@@ -1,11 +1,7 @@
 import 'package:calender_app/provider/preg_provider.dart';
-import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
-
 import 'congratualtions_screen.dart';
-
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class PregnancyScreen extends StatelessWidget {
@@ -91,6 +87,22 @@ class PregnancyScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _showDatePicker(BuildContext context, PregnancyModeProvider pregnancyModeProvider) async {
+    DateTime? newDate = await showDatePicker(
+      context: context,
+      initialDate: pregnancyModeProvider.gestationStart ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (newDate != null) {
+      // Update the gestation start date in the provider
+      pregnancyModeProvider.gestationStart = newDate;
+      pregnancyModeProvider.calculateGestationWeeksAndDays;
+      pregnancyModeProvider.notifyListeners();
+    }
+  }
 }
 
 class PregnancyOptionTile extends StatelessWidget {
@@ -136,19 +148,7 @@ class PregnancyOptionTile extends StatelessWidget {
       ),
     );
   }
-}
-void _showDatePicker(BuildContext context, PregnancyModeProvider pregnancyModeProvider) async {
-  DateTime? newDate = await showDatePicker(
-    context: context,
-    initialDate: pregnancyModeProvider.gestationStart ?? DateTime.now(),
-    firstDate: DateTime(2000),
-    lastDate: DateTime(2100),
-  );
 
-  if (newDate != null) {
-    // Update the gestation start date in the provider
-    pregnancyModeProvider._gestationStart = newDate;
-    pregnancyModeProvider._calculateGestationWeeksAndDays();  // Recalculate gestation weeks and days
-    pregnancyModeProvider.notifyListeners();
-  }
+
+
 }

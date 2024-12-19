@@ -88,11 +88,14 @@ class CycleProvider with ChangeNotifier {
 
   int _totalCyclesLogged = 0;
   int get totalCyclesLogged => _totalCyclesLogged;
+
+
   void addPastPeriod(DateTime startDate, DateTime endDate) {
     String startDateStr = startDate.toIso8601String();
+    endDate = endDate.add(Duration(days: 1)); // Adjust the end date to include the last day
+
     String endDateStr = endDate.toIso8601String();
 
-    // Check if the period with the same start date already exists
     int existingPeriodIndex = _pastPeriods.indexWhere((period) =>
     period['startDate'] == startDateStr);
 
@@ -101,7 +104,6 @@ class CycleProvider with ChangeNotifier {
       _pastPeriods[existingPeriodIndex]['endDate'] = endDateStr;
       print("Period updated: Start: $startDateStr, End: $endDateStr");
     } else {
-      // Add a new period if none exists
       _pastPeriods.add({'startDate': startDateStr, 'endDate': endDateStr});
       print("New period added: Start: $startDateStr, End: $endDateStr");
     }
@@ -113,6 +115,7 @@ class CycleProvider with ChangeNotifier {
 
   void removePastPeriod(String startDate) {
     pastPeriods.removeWhere((period) => period['startDate'] == startDate);
+    _saveToHive();
     notifyListeners();
   }
 
@@ -260,28 +263,9 @@ class CycleProvider with ChangeNotifier {
     }
   }
 
-  void logCycle(String cycleStartDate) {
-    // Create a new period map with start and end dates
-    String formattedStartDate = cycleStartDate;
-    String formattedEndDate = DateTime.parse(formattedStartDate).add(Duration(days: _periodLength)).toIso8601String();
-    Map<String, String> newCyclePeriod = {
-      'startDate': formattedStartDate,
-      'endDate': formattedEndDate,
-    };
-
-    // Only add the new period if it doesn't already exist
-    if (!_pastPeriods.any((period) =>
-    period['startDate'] == newCyclePeriod['startDate'] && period['endDate'] == newCyclePeriod['endDate'])) {
-      _pastPeriods.add(newCyclePeriod);
-      _totalCyclesLogged++;
-
-      // Sync the changes with Hive and Firestore
-      _saveToHive();  // Save to Hive
-      saveCycleDataToFirestore();  // Save to Firestore
-
-      // Notify listeners to update the UI
-      notifyListeners();
-    }
+  int logCycle() {
+    _totalCyclesLogged = _pastPeriods.where((period) => period.containsKey('endDate')).length;
+  return _totalCyclesLogged;
   }
 
   void initialize(BuildContext context) {
@@ -301,7 +285,7 @@ class CycleProvider with ChangeNotifier {
 
   // Calculate days until the next period
   int getDaysUntilNextPeriod() {
-    return getNextPeriodDate().difference(DateTime.now()).inDays+1;
+    return getNextPeriodDate().difference(DateTime.now()).inDays;
   }
 
   // Initialize and calculate all dynamic cycle data
@@ -401,7 +385,7 @@ class CycleProvider with ChangeNotifier {
     _cycleLength = cycleLength;
     _periodLength = periodLength;
     // Log the cycle to past cycles list
-    logCycle(_lastPeriodStart as String);
+    logCycle();
 
     _initializeCycleData();
     notifyListeners();

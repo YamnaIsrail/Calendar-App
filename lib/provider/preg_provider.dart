@@ -28,7 +28,7 @@
       if (_isPregnancyMode) {
         // If pregnancy mode is enabled, initialize gestation logic
         _gestationStart = cycleProvider.lastPeriodStart;
-        _calculateGestationWeeksAndDays();
+        calculateGestationWeeksAndDays();
       } else {
         // Clear any pregnancy-related states
         _gestationStart = null;
@@ -57,7 +57,7 @@
     }
 
     /// Calculates gestational weeks and days since the gestation start date
-    void _calculateGestationWeeksAndDays() {
+    void calculateGestationWeeksAndDays() {
       if (_gestationStart == null) return;
 
       final now = DateTime.now();
@@ -72,6 +72,11 @@
       notifyListeners();
     }
 
+    set gestationStart(DateTime? newStart) {
+      _gestationStart = newStart;
+      notifyListeners(); // Notify listeners when the gestation start is updated
+    }
+
     /// Fetch the last period start from Firebase if available and sync with the provider.
     Future<void> syncAndInitializeStart(String userId) async {
       try {
@@ -84,7 +89,7 @@
           final data = snapshot.data()!;
           if (data['lastPeriodStart'] != null) {
             _gestationStart = DateTime.parse(data['lastPeriodStart']);
-            _calculateGestationWeeksAndDays();
+            calculateGestationWeeksAndDays();
             notifyListeners();
           }
         }
