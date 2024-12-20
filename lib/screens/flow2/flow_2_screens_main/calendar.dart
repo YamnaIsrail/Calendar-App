@@ -95,11 +95,11 @@ class CustomCalendar extends StatelessWidget {
                         }
 
 
-                        if (cycleProvider.periodDays.contains(normalizedDate)) {
-                          return _buildCalendarCell(date: date, color: Colors.red);
-                        }
+                        // if (cycleProvider.periodDays.contains(normalizedDate)) {
+                        //   return _buildCalendarCell(date: date, color: Colors.red);
+                        // }else
 
-                        else if (cycleProvider.predictedDays.contains(normalizedDate)) {
+                         if (cycleProvider.predictedDays.contains(normalizedDate)) {
                           return _buildCalendarCell(
                             date: date,
                             border: Border.all(color: Colors.blue, width: 2),

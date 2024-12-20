@@ -40,6 +40,15 @@ class TimelineProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+  Future<void> removeEntry(String label) async {
+    final index = _entries.indexWhere((entry) => entry.details['You feel'] == label || entry.details['You Feel'] == label);
+    if (index != -1) {
+      await _timelineBox.deleteAt(index);
+      _entries.removeAt(index);
+      notifyListeners();
+    }
+  }
+
 }
 
 // class TimelineProvider extends ChangeNotifier {

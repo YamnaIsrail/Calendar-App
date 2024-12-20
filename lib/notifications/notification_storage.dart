@@ -5,10 +5,7 @@ class NotificationStorage {
   static late Box<NotificationModel> notificationBox;
 
   /// Initialize Hive and open the notifications box
-  static Future<void> init() async {
-    notificationBox = await Hive.openBox<NotificationModel>('notifications');
 
-  }
 
   /// Save or Update a notification using unique id as the key
   static Future<void> saveNotification(NotificationModel notification) async {

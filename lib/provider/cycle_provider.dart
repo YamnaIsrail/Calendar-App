@@ -111,12 +111,27 @@ class CycleProvider with ChangeNotifier {
     _saveToHive(); // Sync with Hive storage
     notifyListeners(); // Notify listeners to update UI
   }
-
-
   void removePastPeriod(String startDate) {
-    pastPeriods.removeWhere((period) => period['startDate'] == startDate);
-    _saveToHive();
-    notifyListeners();
+    // Remove the period by start date
+    _pastPeriods.removeWhere((period) => period['startDate'] == startDate);
+
+    // Print the updated list of past periods
+    print("Updated Past Periods List: ");
+    _pastPeriods.forEach((period) {
+      print("Start Date: ${period['startDate']}, End Date: ${period['endDate']}");
+    });
+
+    // After removal, calculate the latest date from remaining periods
+    if (_pastPeriods.isNotEmpty) {
+      // Find the latest start date from the remaining periods
+      updateLastPeriodStart(_calculateLatestDate());
+    }
+
+    // Print the new last period start date
+    print("New Last Period Start Date: $_lastPeriodStart");
+
+    _saveToHive(); // Sync with Hive storage
+    notifyListeners(); // Notify listeners to update UI
   }
 
   void addPastPeriodsFromFirestore(List<Map<String, String>> newPeriods) {

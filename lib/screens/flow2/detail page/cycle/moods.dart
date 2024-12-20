@@ -10,50 +10,52 @@ class Moods extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final recentMoods = context.watch<MoodsProvider>().recentMoods;
-
-    return Scaffold(
-      appBar: AppBar(title: Text('Moods')),
-      body: Column(
-        children: [
-          // Recent moods section
-          if (recentMoods.isNotEmpty)
-            Container(
-              height: 80,
-              padding: EdgeInsets.all(8),
-              color: Colors.grey[200],
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: recentMoods.length,
-                itemBuilder: (context, index) {
-                  final item = recentMoods[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(item['iconPath']!, height: 30, width: 30),
-                        Text(item['label']!, style: TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                  );
-                },
+    return Consumer<MoodsProvider>(
+      builder: (context, moodsProvider, child) {
+        final recentMoods = moodsProvider.recentMoods;
+        return Scaffold(
+          appBar: AppBar(title: Text('Moods')),
+          body: Column(
+            children: [
+              if (recentMoods.isNotEmpty)
+                Container(
+                  height: 80,
+                  padding: EdgeInsets.all(8),
+                  color: Colors.grey[200],
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: recentMoods.length,
+                    itemBuilder: (context, index) {
+                      final item = recentMoods[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgPicture.asset(item['iconPath']!, height: 30, width: 30),
+                            Text(item['label']!, style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: CategoryGrid(
+                    folderName: 'emoji',
+                    onItemSelected: (iconPath, label) {
+                      moodsProvider.addMood(context, iconPath, label);
+                    },
+                    isSelected: (label) => moodsProvider.isSelected(label),
+                  ),
+                ),
               ),
-            ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: CategoryGrid(
-                folderName: 'emoji',
-                onItemSelected: (iconPath, label) {
-                  context.read<MoodsProvider>().addMood(context,iconPath, label);
-                },
-                isSelected: (label) => context.watch<MoodsProvider>().isSelected(label),
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

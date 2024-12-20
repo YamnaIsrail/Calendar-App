@@ -27,10 +27,12 @@ Future<List<CategoryItem>> loadCategoryItems(String folderName) async {
 
   return categoryItems;
 }
-class CategoryGrid extends StatelessWidget {
+
+
+class CategoryGrid extends StatefulWidget {
   final String folderName;
   final int? itemCount;
-   final Function(String, String)? onItemSelected;
+  final Function(String, String)? onItemSelected;
   final bool Function(String)? isSelected;
 
   const CategoryGrid({
@@ -42,64 +44,77 @@ class CategoryGrid extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _CategoryGridState createState() => _CategoryGridState();
+}
+
+class _CategoryGridState extends State<CategoryGrid> {
+  List<CategoryItem> categoryItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategoryItems();
+  }
+
+  Future<void> _loadCategoryItems() async {
+    final items = await loadCategoryItems(widget.folderName);
+    setState(() {
+      categoryItems = items;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<CategoryItem>>(
-      future: loadCategoryItems(folderName),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
+    return categoryItems.isEmpty
+        ? const Center(child: CircularProgressIndicator())
+        : GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: widget.itemCount ?? categoryItems.length, // Use itemCount if provided
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemBuilder: (context, index) {
+        final item = categoryItems[index];
+        final isSelectedItem = widget.isSelected?.call(item.label) ?? false;
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-
-        var categoryItems = snapshot.data ?? [];
-
-        if (itemCount != null && itemCount! < categoryItems.length) {
-          categoryItems = categoryItems.sublist(0, itemCount!);
-        }
-
-        return GridView.builder(
-          physics: NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: categoryItems.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-          ),
-          itemBuilder: (context, index) {
-            final item = categoryItems[index];
-            final isSelectedItem = isSelected?.call(item.label) ?? false;
-
-            return GestureDetector(
-              onTap: () => onItemSelected?.call(item.iconPath, item.label),
-              child: Container(
-                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: isSelectedItem
-                      ? Border.all(color: Colors.blue, width: 2)
-                      : null,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min, // Ensure it only takes the necessary space
-                  mainAxisAlignment: MainAxisAlignment.center,
-
-                  children: [
-                    item.iconPath.endsWith('.svg')
-                        ? SvgPicture.asset(item.iconPath, height: 30, width: 30)
-                        : Image.asset(item.iconPath, height: 30, width: 30),
-                      Text(
-                        item.label,
-                        style: TextStyle(fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                  ],
-                )
-              ),
-            );
+        return GestureDetector(
+          onTap: () {
+            widget.onItemSelected?.call(item.iconPath, item.label);
+            setState(() {
+              // Update the UI locally by marking the selected mood
+            });
           },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (isSelectedItem)
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.blue.withOpacity(0.2),
+                    ),
+                  item.iconPath.endsWith('.svg')
+                      ? SvgPicture.asset(item.iconPath, height: 40, width: 40)
+                      : Image.asset(item.iconPath, height: 40, width: 40),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                item.label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isSelectedItem ? Colors.blue : Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         );
       },
     );

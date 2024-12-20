@@ -46,14 +46,14 @@ void main() async {
   await NotificationService.init();
   tz.initializeTimeZones();
 
-  await Hive.initFlutter();
   Hive.registerAdapter(NoteAdapter());
   await Hive.openBox<Note>('notesBox');
 
-  await NotificationStorage.init();
+  // await NotificationStorage.init();
   var box = await Hive.openBox('myBox');
   Hive.registerAdapter(NotificationModelAdapter());
-  await NotificationStorage.init();
+
+  await Hive.openBox<NotificationModel>('notifications');
 
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');

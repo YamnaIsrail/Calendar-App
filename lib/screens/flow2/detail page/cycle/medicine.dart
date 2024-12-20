@@ -385,24 +385,38 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
           decoration: InputDecoration(hintText: "Enter pill name"),
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text("Cancel"),
+          Row(
+            children: [
+              Expanded(
+                child: CustomButton(
+                  backgroundColor: secondaryColor,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                    textColor: Colors.black,
+                  text: "Cancel"
+                ),
+              ),
+              SizedBox(width: 5,),
+              Expanded(
+                child: CustomButton(
+                    backgroundColor: primaryColor,
+                    onPressed: () {
+                      if (customPillController.text.isNotEmpty) {
+                        setState(() {
+                          selectedMedicines.add(customPillController.text);
+                        });
+                        _saveMedicines(); // Save the updated list
+                      }
+                      Navigator.pop(context);
+                    },
+                    text: "Add"),
+              ),
+
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              if (customPillController.text.isNotEmpty) {
-                setState(() {
-                  selectedMedicines.add(customPillController.text);
-                });
-                _saveMedicines(); // Save the updated list
-              }
-              Navigator.pop(context);
-            },
-            child: Text("Add"),
-          ),
+
+
         ],
       ),
     );
@@ -483,15 +497,15 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.notifications,
-                                color: isNotificationEnabled(medicine)
-                                    ? Colors.green
-                                    : Colors.grey,
-                              ),
-                              onPressed: () => toggleNotificationStatus(medicine),
-                            ),
+                            // IconButton(
+                            //   icon: Icon(
+                            //     Icons.notifications,
+                            //     color: isNotificationEnabled(medicine)
+                            //         ? Colors.green
+                            //         : Colors.grey,
+                            //   ),
+                            //   onPressed: () => toggleNotificationStatus(medicine),
+                            // ),
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () {

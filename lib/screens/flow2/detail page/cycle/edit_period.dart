@@ -11,6 +11,7 @@ class CalendarViewPage extends StatefulWidget {
   @override
   _CalendarViewPageState createState() => _CalendarViewPageState();
 }
+
 class _CalendarViewPageState extends State<CalendarViewPage> {
   DateTime? _selectedDay;
   Set<DateTime> _markedPeriodDays = {};

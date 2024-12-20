@@ -13,7 +13,12 @@ class SymptomsProvider with ChangeNotifier {
   bool isSelected(String label) => _selectedSymptoms.contains(label);
 
   void addSymptom(BuildContext context, String iconPath, String label) {
-    if (!_recentSymptoms.any((item) => item['label'] == label)) {
+    if (_selectedSymptoms.contains(label)) {
+      _recentSymptoms.removeWhere((item) => item['label'] == label);
+      _selectedSymptoms.remove(label);
+      final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+      timelineProvider.removeEntry(label); // Remove from timeline
+    } else {
       _recentSymptoms.add({'iconPath': iconPath, 'label': label});
       _selectedSymptoms.add(label);
       final symptomEntry = TimelineEntry(
@@ -21,13 +26,12 @@ class SymptomsProvider with ChangeNotifier {
         type: 'Symptom',
         details: {'You feel': label},
       );
-      // Correctly access the provider via context
       final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-      timelineProvider.addEntry(symptomEntry);
-
-      notifyListeners();
+      timelineProvider.addEntry(symptomEntry); // Add to timeline
     }
+    notifyListeners();
   }
+
 }
 
 class MoodsProvider with ChangeNotifier {
@@ -37,22 +41,43 @@ class MoodsProvider with ChangeNotifier {
   List<Map<String, String>> get recentMoods => _recentMoods;
 
   bool isSelected(String label) => _selectedMoods.contains(label);
-
   void addMood(BuildContext context, String iconPath, String label) {
-    if (!_recentMoods.any((item) => item['label'] == label)) {
+    if (_selectedMoods.contains(label)) {
+      _recentMoods.removeWhere((item) => item['label'] == label);
+      _selectedMoods.remove(label);
+      final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+      timelineProvider.removeEntry(label); // Remove from timeline
+    } else {
       _recentMoods.add({'iconPath': iconPath, 'label': label});
       _selectedMoods.add(label);
-      // Map the mood to a TimelineEntry and send to TimelineProvider
       final moodEntry = TimelineEntry(
-        id: DateTime.now().millisecondsSinceEpoch, // Generate a unique ID
+        id: DateTime.now().millisecondsSinceEpoch,
         type: 'Mood',
         details: {'You Feel': label},
       );
-      // Correctly access the provider via context
-     final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-       timelineProvider.addEntry(moodEntry);
-
-      notifyListeners();
+      final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+      timelineProvider.addEntry(moodEntry); // Add to timeline
     }
+    notifyListeners();
   }
+
+  // void addMood(BuildContext context, String iconPath, String label) {
+  //   if (!_recentMoods.any((item) => item['label'] == label)) {
+  //     _recentMoods.add({'iconPath': iconPath, 'label': label});
+  //     _selectedMoods.add(label);
+  //     // Map the mood to a TimelineEntry and send to TimelineProvider
+  //     final moodEntry = TimelineEntry(
+  //       id: DateTime.now().millisecondsSinceEpoch, // Generate a unique ID
+  //       type: 'Mood',
+  //       details: {'You Feel': label},
+  //     );
+  //     // Correctly access the provider via context
+  //    final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+  //      timelineProvider.addEntry(moodEntry);
+  //
+  //     notifyListeners();
+  //   }
+  // }
+
+
 }
