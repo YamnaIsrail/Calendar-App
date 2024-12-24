@@ -311,20 +311,14 @@ class DialogHelper {
                   ListTile(
                     onTap: () async {
                       Navigator.of(context).pop();
-
-                      // Check if user is already signed in
                       if (FirebaseAuth.instance.currentUser != null) {
-                        // User already signed in, proceed with data retrieval
-                        await Provider.of<CycleProvider>(context, listen: false)
-                            .retrieveCycleDataFromFirestore(context);
+                         await retrieveCycleDataFromFirestore(context);
                       } else {
                         // User is not signed in, sign in through Google
                         bool success = await GoogleSignInService()
                             .signInWithGoogle();
                         if (success) {
-                          await Provider.of<CycleProvider>(
-                              context, listen: false)
-                              .retrieveCycleDataFromFirestore(context);
+                          await retrieveCycleDataFromFirestore(context);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(
@@ -372,69 +366,6 @@ class DialogHelper {
       },
     );
   }
-
-
-//   static void showDataLostPopup(BuildContext context, VoidCallback onRecover) {
-//     showDialog(
-//       context: context,
-//       builder: (BuildContext context) {
-//         return AlertDialog(
-//           title: Text("Data Lost?"),
-//           content: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               Text(
-//                 "We've upgraded our backup system to make it more secure and convenient."
-//                 "\n If you find data lost, please log in to the previous backup account again, we will help to retrieve your data.",
-//                 textAlign: TextAlign.center,
-//               ),
-//               SizedBox(height: 10),
-//               Column(
-//                 children: [
-//                   ListTile(
-//                     onTap: () {
-//                       Navigator.of(context).pop();
-//                       onRecover();
-//                     },
-//                     leading: Icon(Icons.g_mobiledata_outlined),
-//                     title: Text('Google Account'),
-//                     textColor: primaryColor,
-//                   ),
-//                   ListTile(
-//                     onTap: () {
-//                       Navigator.of(context).pop();
-//                       onRecover();
-//                     },
-//                     leading: Icon(Icons.mail),
-//                     title: Text('Email Attachment'),
-//                     textColor: primaryColor,
-//                   ),
-//                   ListTile(
-//                     onTap: () {
-//                       Navigator.of(context).pop();
-//                       onRecover();
-//                     },
-//                     leading: Icon(Icons.draw),
-//                     title: Text("Dropbox"),
-//                     textColor: primaryColor,
-//                   ),
-//                   ListTile(
-//                     onTap: () {
-//                       Navigator.of(context).pop();
-//                       onRecover();
-//                     },
-//                     leading: Icon(Icons.cloud_download),
-//                     title: Text('Cloud Storage'),
-//                     textColor: primaryColor,
-//                   ),
-//                 ],
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//     );
-//   }
 
   static void showRenamePopup(BuildContext context) {
     TextEditingController _nameController = TextEditingController();
@@ -1152,3 +1083,154 @@ class ShowTransferDialog {
     );
   }
 }
+
+  Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
+    try {
+      String? userId = await SessionManager.getUserId();
+
+      // Check if user is logged in
+      if (userId == null) {
+        // Open login dialog instead of showing a snackbar
+        showLoginDialog(context);
+        return;
+      }
+
+      var data = await FirebaseFirestore.instance
+          .collection('cycles')
+          .doc(userId)
+          .get();
+
+      if (data.exists) {
+        // Retrieve data from Firestore
+        int? fetchedCycleLength = data['cycleLength'];
+        int? fetchedPeriodLength = data['periodLength'];
+        DateTime? fetchedLastPeriodStart =
+        data['cycleStartDate'] != null ? DateTime.parse(data['cycleStartDate']) : null;
+
+        List<String> restoredPastPeriods = [];
+        if (data['pastPeriods'] != null) {
+          List<String> pastPeriodsFromFirestore = List<String>.from(data['pastPeriods'] ?? []);
+          restoredPastPeriods.addAll(pastPeriodsFromFirestore);
+        }
+
+        // Update the provider with the fetched periods
+        final provider = Provider.of<CycleProvider>(context, listen: false);
+        provider.addPastPeriodsFromFirestore(restoredPastPeriods.cast<Map<String, String>>());
+
+        // Show popup to ask the user if they want to update the cycle details
+        showCycleUpdateDialog(context, provider, fetchedCycleLength, fetchedPeriodLength, fetchedLastPeriodStart);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("No cycle data found for your account.")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("An error occurred while fetching data.")));
+    }
+  }
+
+  void showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Login Required"),
+          content: Text("Please log in to access your cycle data."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                // Redirect user to login screen or trigger login flow
+              },
+              child: Text("Log In"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showCycleUpdateDialog(BuildContext context, CycleProvider provider, int? fetchedCycleLength, int? fetchedPeriodLength, DateTime? fetchedLastPeriodStart) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        bool updateCycleLength = false;
+        bool updatePeriodLength = false;
+        bool updateLastPeriodStart = false;
+
+        return AlertDialog(
+          title: Text("Update Cycle Details"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (fetchedCycleLength != null)
+                Row(
+                  children: [
+                    Expanded(child: Text("Update Cycle Length?")),
+                    Switch(
+                      value: updateCycleLength,
+                      onChanged: (value) {
+                        updateCycleLength = value;
+                      },
+                    ),
+                  ],
+                ),
+              if (fetchedPeriodLength != null)
+                Row(
+                  children: [
+                    Expanded(child: Text("Update Period Length?")),
+                    Switch(
+                      value: updatePeriodLength,
+                      onChanged: (value) {
+                        updatePeriodLength = value;
+                      },
+                    ),
+                  ],
+                ),
+              if (fetchedLastPeriodStart != null)
+                Row(
+                  children: [
+                    Expanded(child: Text("Update Last Period Start?")),
+                    Switch(
+                      value: updateLastPeriodStart,
+                      onChanged: (value) {
+                        updateLastPeriodStart = value;
+                      },
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            CustomButton(
+                backgroundColor: primaryColor,
+                onPressed: () {
+                  if (updateCycleLength && fetchedCycleLength != null) {
+                    provider.updateCycleLength(fetchedCycleLength);
+                  }
+                  if (updatePeriodLength && fetchedPeriodLength != null) {
+                    provider.updatePeriodLength(fetchedPeriodLength);
+                  }
+                  if (updateLastPeriodStart && fetchedLastPeriodStart != null) {
+                    provider.updateLastPeriodStart(fetchedLastPeriodStart);
+                  }
+
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Cycle data updated successfully!")),
+                  );
+                },
+                text: "Submit"),
+          ],
+        );
+      },
+    );
+  }
+

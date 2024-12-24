@@ -27,7 +27,7 @@ class SymptomsProvider with ChangeNotifier {
         details: {'You feel': label},
       );
       final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-      timelineProvider.addEntry(symptomEntry); // Add to timeline
+      timelineProvider.addEntry(symptomEntry, context); // Add to timeline
     }
     notifyListeners();
   }
@@ -56,7 +56,7 @@ class MoodsProvider with ChangeNotifier {
         details: {'You Feel': label},
       );
       final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-      timelineProvider.addEntry(moodEntry); // Add to timeline
+      timelineProvider.addEntry(moodEntry, context); // Add to timeline
     }
     notifyListeners();
   }

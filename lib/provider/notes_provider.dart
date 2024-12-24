@@ -48,7 +48,7 @@ class NoteProvider extends ChangeNotifier {
 
     // Correctly access the provider via context
     final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-    timelineProvider.addEntry(noteEntry);
+    timelineProvider.addEntry(noteEntry,context);
 
     notifyListeners();
   }

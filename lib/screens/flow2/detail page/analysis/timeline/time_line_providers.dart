@@ -8,6 +8,8 @@ class TimelineProvider extends ChangeNotifier {
   bool _isLoading = true;
 
   bool get isLoading => _isLoading;
+  bool _hasPrompted = false; // Flag to check if the user has been prompted already
+
 
   TimelineProvider() {
     _initialize();
@@ -26,11 +28,30 @@ class TimelineProvider extends ChangeNotifier {
 
   List<TimelineEntry> get entries => List.unmodifiable(_entries);
 
-  Future<void> addEntry(TimelineEntry entry) async {
+  Future<void> addEntry(TimelineEntry entry, BuildContext context) async {
     _entries.add(entry);
     await _timelineBox.add(entry);
     notifyListeners();
-  }
+     if (!_hasPrompted) {
+      _hasPrompted = true;
+
+       showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Check Your Entries!'),
+          content: Text('You can check your entries in the Analysis > Timeline section.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Got it'),
+            ),
+          ],
+        ),
+      );
+    }
+}
 
   void deleteEntry(int id) {
     final index = _entries.indexWhere((entry) => entry.id == id);

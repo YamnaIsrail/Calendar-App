@@ -105,12 +105,14 @@ class CycleProvider with ChangeNotifier {
       print("Period updated: Start: $startDateStr, End: $endDateStr");
     } else {
       _pastPeriods.add({'startDate': startDateStr, 'endDate': endDateStr});
+      updateLastPeriodStart(startDate);
       print("New period added: Start: $startDateStr, End: $endDateStr");
     }
 
     _saveToHive(); // Sync with Hive storage
     notifyListeners(); // Notify listeners to update UI
   }
+
   void removePastPeriod(String startDate) {
     // Remove the period by start date
     _pastPeriods.removeWhere((period) => period['startDate'] == startDate);

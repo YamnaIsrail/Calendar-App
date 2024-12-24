@@ -96,7 +96,7 @@ class _CategoryGridState extends State<CategoryGrid> {
                 children: [
                   if (isSelectedItem)
                     CircleAvatar(
-                      radius: 30,
+                      radius: 28,
                       backgroundColor: Colors.blue.withOpacity(0.2),
                     ),
                   item.iconPath.endsWith('.svg')

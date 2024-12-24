@@ -46,7 +46,7 @@ class MyCyclesScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => CalendarViewPage()),
+                              builder: (context) => CalendarScreen()),
                         );
                       },
                       backgroundColor: primaryColor,

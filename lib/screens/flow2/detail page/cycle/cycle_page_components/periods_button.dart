@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-//Corrected version
 
+
+//Corrected version
 class PeriodButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -68,7 +69,7 @@ class PeriodButtons extends StatelessWidget {
         if (pickedEndDate.isAfter(startDate) || pickedEndDate.isAtSameMomentAs(startDate)) {
           provider.addPastPeriod(startDate, pickedEndDate);
 
-          final periodLength = pickedEndDate.difference(startDate).inDays+1;
+          final periodLength = pickedEndDate.difference(startDate).inDays;
           provider.updatePeriodLength(periodLength); // Update the period length
           print("Period updated: Start: $startDate, End: $pickedEndDate, Period Length: $periodLength days");
         } else {
@@ -160,108 +161,6 @@ class PeriodButtons extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
-  }
-}
-
-
-class CustomDatePicker extends StatelessWidget {
-  final DateTime? initialDate;
-  final Function(DateTime) onDateSelected;
-
-  CustomDatePicker({
-    required this.initialDate,
-    required this.onDateSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        DateTime? pickedDate = await _showStyledDatePicker(context);
-        if (pickedDate != null) {
-          onDateSelected(pickedDate);
-        }
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          initialDate != null
-              ? DateFormat.yMd().format(initialDate!)
-              : 'Select Date',
-          style: TextStyle(fontSize: 16),
-        ),
-      ),
-    );
-  }
-
-  Future<DateTime?> _showStyledDatePicker(BuildContext context) async {
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: initialDate ?? DateTime.now(),
-      firstDate: DateTime.utc(2020, 1, 1),
-      lastDate: DateTime.utc(2025, 12, 31),
-      builder: (BuildContext context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            primaryColor: Colors.blue,
-            hintColor: Colors.blue,
-            buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
-            // Customize the date picker styles
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.blue, // Color of the selected date text
-              ),
-            ),
-            dialogBackgroundColor: Colors.white,
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (selectedDate != null) {
-      // Apply custom date styling logic
-      _highlightSpecialDates(context, selectedDate);
-      return selectedDate;
-    }
-    return null;
-  }
-
-  // Custom logic to highlight specific dates (e.g., cycle, fertile, etc.)
-  void _highlightSpecialDates(BuildContext context, DateTime selectedDate) {
-    // Here, we can add the logic to highlight the specific dates based on
-    // pregnancy, cycle, or predicted days similar to your TableCalendar setup.
-    // This can involve adding custom markers, colors, or decorations.
-
-    final cycleProvider = Provider.of<CycleProvider>(context, listen: false);
-    final pregnancyProvider = Provider.of<PregnancyModeProvider>(context, listen: false);
-
-    if (pregnancyProvider.isPregnancyMode) {
-      // Pregnancy mode styling
-      if (pregnancyProvider.gestationStart != null) {
-        final pregnancyStartDays = selectedDate.difference(pregnancyProvider.gestationStart!).inDays;
-        if (pregnancyStartDays == 0) {
-          // Customize color or styling for pregnancy start date
-        }
-      }
-    } else {
-      // Cycle mode styling (past periods, fertile days, predicted days)
-      for (var period in cycleProvider.pastPeriods) {
-        final startDate = DateTime.parse(period['startDate']!);
-        final endDate = DateTime.parse(period['endDate']!);
-
-        if (selectedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
-            selectedDate.isBefore(endDate.add(Duration(days: 1)))) {
-          // Customize styling for dates within the cycle period
-        }
-      }
-
-      // Additional logic for other cycle days like periodDays, predictedDays, etc.
-    }
   }
 }
 

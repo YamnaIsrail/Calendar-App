@@ -7,18 +7,208 @@ import 'package:intl/intl.dart'; // Import intl package for DateFormat
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart'; // Import table_calendar package
 
-class CalendarViewPage extends StatefulWidget {
+class CalendarScreen extends StatefulWidget {
   @override
-  _CalendarViewPageState createState() => _CalendarViewPageState();
+  _CalendarScreenState createState() => _CalendarScreenState();
 }
-
-class _CalendarViewPageState extends State<CalendarViewPage> {
-  DateTime? _selectedDay;
-  Set<DateTime> _markedPeriodDays = {};
+class _CalendarScreenState extends State<CalendarScreen> {
+  DateTime _focusedDay = DateTime.now(); // Track focused day
 
   @override
   Widget build(BuildContext context) {
-    final cycleProvider = context.watch<CycleProvider>();
+    final cycleProvider = Provider.of<CycleProvider>(context);
+
+    // void _onDateClicked(BuildContext context, DateTime clickedDate) {
+    //   final periodProvider = Provider.of<CycleProvider>(context, listen: false);
+    //   bool dateFound = false;
+    //
+    //   // Check existing periods
+    //   for (var period in periodProvider.pastPeriods) {
+    //     final startDate = DateTime.tryParse(period['startDate']!);
+    //     final endDate = DateTime.tryParse(period['endDate']!);
+    //
+    //     // Ensure that startDate and endDate are valid
+    //     if (startDate != null && endDate != null) {
+    //       // If the clicked date is within the existing period
+    //       if (!clickedDate.isBefore(startDate) && !clickedDate.isAfter(endDate)) {
+    //         dateFound = true;
+    //
+    //         // If the clicked date is at the start or end of the period
+    //         if (clickedDate.isAtSameMomentAs(startDate)) {
+    //           periodProvider.removePastPeriod(startDate.toIso8601String());
+    //         } else if (clickedDate.isAtSameMomentAs(endDate)) {
+    //           periodProvider.removePastPeriod(startDate.toIso8601String());
+    //         } else {
+    //           // Update the period end date
+    //           DateTime newEndDate = clickedDate;
+    //
+    //           // Update period length
+    //           int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
+    //           periodProvider.updatePeriodLength(periodLength);
+    //
+    //           // Remove the old period and add the updated period
+    //           periodProvider.removePastPeriod(startDate.toIso8601String());
+    //           periodProvider.addPastPeriod(startDate, newEndDate);
+    //         }
+    //         break;
+    //       } else if (clickedDate.isAfter(endDate)) {
+    //         // If the clicked date is after the current period, check the difference
+    //         if (clickedDate.difference(endDate).inDays <= 5) {
+    //           // Extend the existing period
+    //           DateTime newEndDate = clickedDate.subtract(Duration(days: 1));
+    //           //
+    //           // Update period length
+    //           int periodLength = newEndDate.difference(startDate).inDays + 2; // +1 to include both start and end date
+    //           periodProvider.updatePeriodLength(periodLength);
+    //
+    //           // Remove the old period and add the new extended period
+    //           periodProvider.removePastPeriod(startDate.toIso8601String());
+    //           periodProvider.addPastPeriod(startDate, newEndDate);
+    //           dateFound = true;
+    //           break;
+    //         }
+    //       }
+    //     }
+    //   }
+    //
+    //   // If no matching period is found, treat it as a new period
+    //   if (!dateFound) {
+    //     DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength - 1));
+    //
+    //     // Update the period length in the provider
+    //     periodProvider.updatePeriodLength(periodProvider.periodLength);
+    //     periodProvider.addPastPeriod(clickedDate, newEndDate);
+    //   }
+    //
+    //   // Update the focused day to the clicked date
+    //   setState(() {
+    //     _focusedDay = clickedDate;
+    //   });
+    // }
+    //
+    void _onDateClicked(BuildContext context, DateTime clickedDate) {
+      final periodProvider = Provider.of<CycleProvider>(context, listen: false);
+      bool dateFound = false;
+
+      // Check existing periods
+      for (var period in periodProvider.pastPeriods) {
+        final startDate = DateTime.tryParse(period['startDate']!);
+        final endDate = DateTime.tryParse(period['endDate']!);
+
+        // Ensure that startDate and endDate are valid
+        if (startDate != null && endDate != null) {
+          // If the clicked date is within the existing period (inclusive)
+          if (!clickedDate.isBefore(startDate) && !clickedDate.isAfter(endDate)) {
+            dateFound = true;
+
+            // If the clicked date is at the start or end of the period
+            if (clickedDate.isAtSameMomentAs(startDate)) {
+              // If clicked date is same as start date, no change needed, exit
+              return;
+            } else if (clickedDate.isAtSameMomentAs(endDate)) {
+              // If clicked date is same as end date, no change needed, exit
+              return;
+            } else {
+              // If clicked date is in between the start and end, update the end date
+              DateTime newEndDate = clickedDate;
+
+              // Update the period length
+              int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
+              periodProvider.updatePeriodLength(periodLength);
+
+              // Remove the old period and add the updated period
+              periodProvider.removePastPeriod(startDate.toIso8601String());
+              periodProvider.addPastPeriod(startDate, newEndDate);
+            }
+            break;
+          }
+        }
+      }
+
+      // If no matching period is found, treat it as a new period
+      if (!dateFound) {
+        DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength - 1));
+
+        // Update the period length in the provider
+        periodProvider.updatePeriodLength(periodProvider.periodLength);
+        periodProvider.addPastPeriod(clickedDate, newEndDate);
+      }
+
+      // Update the focused day to the clicked date
+      setState(() {
+        _focusedDay = clickedDate;
+      });
+    }
+
+    // void _onDateClicked(BuildContext context, DateTime clickedDate) {
+    //   final periodProvider = Provider.of<CycleProvider>(context, listen: false);
+    //   bool dateFound = false;
+    //
+    //   // Calculate the period length (number of days between start and clicked date)
+    //   for (var period in periodProvider.pastPeriods) {
+    //     final startDate = DateTime.tryParse(period['startDate']!);
+    //     final endDate = DateTime.tryParse(period['endDate']!);
+    //
+    //     // Ensure that startDate and endDate are valid
+    //     if (startDate != null && endDate != null) {
+    //       // Ensure the clicked date is within the period, inclusive of start and end dates
+    //       if (!clickedDate.isBefore(startDate) && !clickedDate.isAfter(endDate)) {
+    //         dateFound = true;
+    //
+    //         // If the clicked date is at the start or end of the period
+    //         if (clickedDate.isAtSameMomentAs(startDate)) {
+    //           periodProvider.removePastPeriod(startDate.toIso8601String());
+    //         } else if (clickedDate.isAtSameMomentAs(endDate)) {
+    //           periodProvider.removePastPeriod(startDate.toIso8601String());
+    //         } else {
+    //           // Calculate the updated period end date
+    //           DateTime newEndDate = clickedDate.subtract(Duration(days: 1));
+    //
+    //           // Update period length based on the selected range (inclusive of both dates)
+    //           int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
+    //
+    //           // Update the period length in the provider
+    //           periodProvider.updatePeriodLength(periodLength);
+    //
+    //           // Remove the old period and add the updated period
+    //           periodProvider.removePastPeriod(startDate.toIso8601String());
+    //           periodProvider.addPastPeriod(startDate, newEndDate);
+    //         }
+    //         break;
+    //       } else if (clickedDate.isAfter(endDate)) {
+    //         // If the clicked date is after the current period, extend the period
+    //         DateTime newEndDate = clickedDate;
+    //
+    //         // Update period length based on the selected range (inclusive of both dates)
+    //         int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
+    //
+    //         // Update the period length in the provider
+    //         periodProvider.updatePeriodLength(periodLength);
+    //
+    //         // Remove the old period and add the new extended period
+    //         periodProvider.removePastPeriod(startDate.toIso8601String());
+    //         periodProvider.addPastPeriod(startDate, newEndDate);
+    //         dateFound = true;
+    //         break;
+    //       }
+    //     }
+    //   }
+    //
+    //   // If no matching period is found, add a new period
+    //   if (!dateFound) {
+    //     DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength - 1));
+    //
+    //     // Update the period length in the provider
+    //     periodProvider.updatePeriodLength(periodProvider.periodLength);
+    //
+    //     periodProvider.addPastPeriod(clickedDate, newEndDate);
+    //   }
+    //
+    //   // Update the focused day to the clicked date
+    //   setState(() {
+    //     _focusedDay = clickedDate;
+    //   });
+    // }
 
     return bgContainer(
       child: Scaffold(
@@ -36,108 +226,74 @@ class _CalendarViewPageState extends State<CalendarViewPage> {
             ),
           ),
         ),
-        body: ListView(
-          children: [
-            // Calendar to select period days
-            Card(
-              margin: EdgeInsets.all(10),
-              child: TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2025, 12, 31),
-                focusedDay: _selectedDay ?? DateTime.now(),
-                calendarBuilders: CalendarBuilders(
-                  defaultBuilder: (context, date, _) {
-                    final normalizedDate = DateTime(date.year, date.month, date.day);
-                    if (_markedPeriodDays.contains(normalizedDate)) {
-                      return _buildCalendarCell(
-                        date: date,
-                        color: Colors.red[100],
-                        textColor: Colors.red,
-                      );
+        body: Container(
+          height: 500,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 5,
+              ),
+            ],
+          ),
+          child: TableCalendar(
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _focusedDay, // Set the focused day to the state variable
+            onDaySelected: (selectedDay, focusedDay) {
+              _onDateClicked(context, selectedDay);
+            },
+            calendarBuilders: CalendarBuilders(
+              defaultBuilder: (context, date, _) {
+                for (var period in cycleProvider.pastPeriods) {
+                  // Ensure that startDate and endDate are not null before parsing
+                  if (period['startDate'] != null && period['endDate'] != null) {
+                    final startDate = DateTime.tryParse(period['startDate']!);
+                    final endDate = DateTime.tryParse(period['endDate']!);
+
+                    // Check if the dates were parsed successfully
+                    if (startDate != null && endDate != null) {
+                      // Adjust comparison to ensure both start and end dates are inclusive
+                      if (!date.isBefore(startDate) && !date.isAfter(endDate)) {
+                        return _buildCalendarCell(date: date, color: Colors.red);
+                      }
                     }
-                    return null; // Use default style for unmarked days
-                  },
-                ),
-                calendarStyle: CalendarStyle(
-                  defaultTextStyle: TextStyle(color: Colors.black),
-                  weekendTextStyle: TextStyle(color: Colors.red),
-                ),
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    final normalizedDate = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-                    if (_markedPeriodDays.contains(normalizedDate)) {
-                      _markedPeriodDays.remove(normalizedDate); // Unmark if already marked
-                    } else {
-                      _markedPeriodDays.add(normalizedDate); // Mark as period day
-                    }
-                  });
-                },
-              ),
-            ),
+                  }
+                }
 
-            SizedBox(height: 20),
-
-            // Save and Delete Buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-              child: CustomButton(
-                text: "Save",
-                onPressed: () {
-                  cycleProvider.updateCycleData(
-                    lastPeriodStart: _markedPeriodDays.isNotEmpty
-                        ? _markedPeriodDays.first
-                        : DateTime.now(),
-                    cycleLength: 28,
-                    periodLength: _markedPeriodDays.length,
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Period days updated!"),
-                  ));
-                },
-                backgroundColor: primaryColor,
-              ),
+                return null;
+              },
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: CustomButton(
-                text: "Clear",
-                textColor: Colors.black,
-                onPressed: () {
-                  setState(() {
-                    _markedPeriodDays.clear(); // Clear all markings
-                  });
-                },
-                backgroundColor: secondaryColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Helper to build styled calendar cells
-  Widget _buildCalendarCell({required DateTime date, Color? color, Color? textColor, Border? border}) {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: color ?? Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: border ?? Border.all(color: Colors.transparent),
-        ),
-        child: Center(
-          child: Text(
-            date.day.toString(),
-            style: TextStyle(color: textColor ?? Colors.black),
           ),
         ),
       ),
     );
   }
+
+  Widget _buildCalendarCell({
+    required DateTime date,
+    Color? color,
+    Border? border,
+  }) {
+    return Container(
+      margin: EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: color,
+        border: border,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          date.day.toString(),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
 }
+
+

@@ -1,5 +1,6 @@
 import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
@@ -31,6 +32,7 @@ class CycleTrackerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
+    final pregnancyProvider = Provider.of<PregnancyModeProvider>(context);
 
     return bgContainer(
       child: Scaffold(
@@ -57,7 +59,8 @@ class CycleTrackerScreen extends StatelessWidget {
                 FlowSection(),
                 const SizedBox(height: 20),
 
-                CycleInfoCard(
+                if (!pregnancyProvider.isPregnancyMode) // Check if pregnancy mode is off
+                 CycleInfoCard(
                   title: "My Cycles",
                   subtitle: "${cycleProvider.logCycle()} cycles logged", // Dynamic subtitle
                   progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
@@ -71,7 +74,10 @@ class CycleTrackerScreen extends StatelessWidget {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                if (!pregnancyProvider.isPregnancyMode) // Check if pregnancy mode is off
+                  const SizedBox(height: 20),
+
+
                 NoteSection(),
 
                 const SizedBox(height: 20),
@@ -82,7 +88,7 @@ class CycleTrackerScreen extends StatelessWidget {
                 ),
                 CategorySection(
                   title: "Symptoms",
-                  folderName: "symptoms",
+                  folderName: "head",
                   targetPage: Symptoms(),
                 ),
                 CategorySection(

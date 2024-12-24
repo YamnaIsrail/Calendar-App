@@ -73,7 +73,9 @@ class TimelinePage extends StatelessWidget {
                   IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
                     onPressed: () {
-                      _confirmDelete(context, timelineProvider, entry.id);
+                      timelineProvider.deleteEntry(entry.id); // Delete the entry
+
+                      // _confirmDelete(context, timelineProvider, entry.id);
                     },
                   ),
                 ],

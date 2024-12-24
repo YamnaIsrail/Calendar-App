@@ -1,4 +1,5 @@
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/flow2/flow_2_screens_main/today.dart';
 import 'package:calender_app/widgets/cycle_info_card.dart';
@@ -12,6 +13,8 @@ class CustomCalendar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
     final pregnancyProvider = Provider.of<PregnancyModeProvider>(context);
+    final intercourseProvider = Provider.of<IntercourseProvider>(context);
+
     final now = DateTime.now();
 
     String _getGreeting() {
@@ -199,7 +202,10 @@ class CustomCalendar extends StatelessWidget {
                           cycleProvider.lastPeriodStart,
                           cycleProvider.periodLength,
                           cycleProvider.daysElapsed,
-                          cycleProvider.cycleLength),
+                          cycleProvider.cycleLength,
+                          intercourseProvider
+
+                      ),
                       progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
                       progressLabelEnd: formatDate(
                         cycleProvider.lastPeriodStart.add(
@@ -325,6 +331,19 @@ class CustomC1alendar extends StatelessWidget {
                   calendarBuilders: CalendarBuilders(
                     defaultBuilder: (context, date, _) {
                       final normalizedDate = DateTime(date.year, date.month, date.day);
+                      //all past periods lists start and end dates stored in string
+                      for (var period in cycleProvider.pastPeriods) {
+                        final startDate = DateTime.parse(period['startDate']!);  // Parse the start date
+                        final endDate = DateTime.parse(period['endDate']!);  // Parse the end date
+
+                        // Check if the normalizedDate falls within the cycle's start and end date
+                        if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+                            normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
+                          return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
+                        }
+                      }
+
+                      // last period's start date that is stored in datetime format
                       if (cycleProvider.periodDays.contains(normalizedDate)) {
                         return _buildCalendarCell(date: date, color: Colors.red);
                       } else if (cycleProvider.predictedDays.contains(normalizedDate)) {
