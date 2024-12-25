@@ -55,7 +55,8 @@ class IntercourseAnalysis extends StatelessWidget {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 10),
-                    _buildChart( intercourseProvider),
+                    _buildChart(intercourseProvider, cycleProvider.cycleLength,
+                        cycleProvider.cycleDay, cycleProvider.periodLength),
                     Divider(height: 30),
                   ],
                 ),
@@ -92,102 +93,24 @@ class IntercourseAnalysis extends StatelessWidget {
       ),
     );
   }
-  // Widget _buildChart(BuildContext context, IntercourseProvider intercourseProvider, CycleProvider cycleProvider) {
-  //   int periodDaysLength = cycleProvider.periodDays.length;
-  //
-  //   // Create an array to store the chances for each day
-  //   List<String> chances = List.generate(periodDaysLength, (index) {
-  //     DateTime day = cycleProvider.periodDays[index];
-  //
-  //     // Calculate pregnancy chance for this day using the intercourse data
-  //     double pregnancyChance = intercourseProvider.calculatePregnancyChance(cycleProvider, day);
-  //
-  //     // Classify the chance into low, medium, or high
-  //     if (pregnancyChance >= 60.0) {
-  //       return 'High'; // High chance
-  //     } else if (pregnancyChance >= 30.0) {
-  //       return 'Medium'; // Medium chance
-  //     } else {
-  //       return 'Low'; // Low chance
-  //     }
-  //   });
-  //
-  //   // Now that we have the dynamic values for each day, let's display the chart
-  //   return SingleChildScrollView(
-  //     scrollDirection: Axis.horizontal,
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       crossAxisAlignment: CrossAxisAlignment.center,
-  //       children: [
-  //         Text("Chances of Getting Pregnant"),
-  //         Row(
-  //           children: [
-  //             Text('LOW', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  //             ...List.generate(periodDaysLength, (index) {
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //                 child: chances[index] == 'Low'
-  //                     ? Icon(Icons.circle, color: Colors.red) // Example visual indicator for low chance
-  //                     : Container(),
-  //               );
-  //             }),
-  //           ],
-  //         ),
-  //         SizedBox(height: 5),
-  //         Row(
-  //           children: [
-  //             Text('MEDIUM', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  //             ...List.generate(periodDaysLength, (index) {
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //                 child: chances[index] == 'Medium'
-  //                     ? Icon(Icons.circle, color: Colors.orange) // Example visual indicator for medium chance
-  //                     : Container(),
-  //               );
-  //             }),
-  //           ],
-  //         ),
-  //         SizedBox(height: 5),
-  //         Row(
-  //           children: [
-  //             Text('HIGH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  //             ...List.generate(periodDaysLength, (index) {
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //                 child: chances[index] == 'High'
-  //                     ? Icon(Icons.circle, color: Colors.green) // Example visual indicator for high chance
-  //                     : Container(),
-  //               );
-  //             }),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  // Chart widget with dynamic values
-  Widget _buildChart(IntercourseProvider provider) {
-    // Calculate dynamic probabilities or values for Low, Medium, and High columns
-    final lowValues = _calculateDynamicValues(provider, "low");
-    final mediumValues = _calculateDynamicValues(provider, "medium");
-    final highValues = _calculateDynamicValues(provider, "high");
+  Widget _buildChart(IntercourseProvider provider, int cycleLength, int currentCycleDay, int periodLength) {
+    final lowValues = _calculateDynamicValues(provider, "low", cycleLength, currentCycleDay, periodLength);
+    final mediumValues = _calculateDynamicValues(provider, "medium", cycleLength, currentCycleDay, periodLength);
+    final highValues = _calculateDynamicValues(provider, "high", cycleLength, currentCycleDay, periodLength);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Row with labels
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Text('Orgasm Selection', style: TextStyle(fontWeight: FontWeight.bold)),
             Text('Condom Option', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('Cycle Data', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('Times Clicked', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Cycle Phase', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Frequency', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         Divider(height: 30),
-
-        // Data Rows for Low, Medium, and High
         _buildDataRow('Low', lowValues),
         _buildDataRow('Medium', mediumValues),
         _buildDataRow('High', highValues),
@@ -195,26 +118,19 @@ class IntercourseAnalysis extends StatelessWidget {
     );
   }
 
-  // Method to calculate dynamic values based on the provider and chart level (low/medium/high)
-  List<String> _calculateDynamicValues(IntercourseProvider provider, String level) {
-    // You can apply different logic for each level (low, medium, high) based on the data.
-    // Example logic (you can adjust based on your needs):
-
+  List<String> _calculateDynamicValues(IntercourseProvider provider, String level, int cycleLength, int currentCycleDay, int periodLength) {
     double orgasmSelection = provider.femaleOrgasm == 'Happened' ? 1 : 0;
-    double condomOption = provider.condomOption == 'Protected' ? 1 : 0;
-    double cycleData = 0.5;  // Assuming cycle data is a value between 0 and 1
+    double condomOption = provider.condomOption == 'Protected' ? 0.2 : 1.0; // Protection lowers risk significantly
+    double cyclePhaseFactor = _getCyclePhaseFactor(cycleLength, currentCycleDay, periodLength);
     int timesClicked = provider.times;
 
-    // Logic to calculate values based on levels
-    double factor = (level == "low") ? 0.5 : (level == "medium") ? 1 : 1.5;
+    double factor = (level == "low") ? 0.5 : (level == "medium") ? 1.0 : 1.5;
 
-    // Example calculation
     double orgasmValue = orgasmSelection * factor;
     double condomValue = condomOption * factor;
-    double cycleValue = cycleData * factor;
-    double timesClickedValue = (timesClicked / 10) * factor;
+    double cycleValue = cyclePhaseFactor * factor;
+    double timesClickedValue = (timesClicked * 0.1) * factor; // Normalize frequency impact
 
-    // Return values as strings to be displayed
     return [
       orgasmValue.toStringAsFixed(2),
       condomValue.toStringAsFixed(2),
@@ -223,16 +139,93 @@ class IntercourseAnalysis extends StatelessWidget {
     ];
   }
 
-  // Method to build a single data row (Low, Medium, High)
+  double _getCyclePhaseFactor(int cycleLength, int currentCycleDay, int periodLength) {
+    int ovulationStart = (cycleLength * 0.14).round() - 2; // Allow for variability
+    int ovulationEnd = ovulationStart + 4;
+
+    if (currentCycleDay <= periodLength) return 0.2; // Low during period
+    if (currentCycleDay == ovulationStart - 1) return 1.2; // High just before ovulation
+    if (currentCycleDay >= ovulationStart && currentCycleDay <= ovulationEnd) return 1.0; // High during fertile window
+    if (currentCycleDay > periodLength && currentCycleDay < ovulationStart) return 0.6; // Medium approaching fertile window
+    return 0.3; // Low after ovulation
+  }
+
   Widget _buildDataRow(String rowLabel, List<String> values) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Text(rowLabel, style: TextStyle(fontWeight: FontWeight.bold)),
-        for (var value in values) _buildCircle(value),
+        for (var value in values)
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: _getColorForValue(double.parse(value)),
+            child: Text(
+              value,
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
       ],
     );
   }
+
+  Color _getColorForValue(double value) {
+    if (value >= 0.7) return Colors.green; // High values
+    if (value >= 0.4) return Colors.yellow; // Medium values
+    return Colors.red; // Low values
+  }
+
+  // Widget _buildChart(IntercourseProvider provider) {
+  //   // Calculate dynamic probabilities or values for Low, Medium, and High columns
+  //   final lowValues = _calculateDynamicValues(provider, "low");
+  //   final mediumValues = _calculateDynamicValues(provider, "medium");
+  //   final highValues = _calculateDynamicValues(provider, "high");
+  //
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       // Header Row with labels
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //         children: [
+  //           Text('Orgasm Selection', style: TextStyle(fontWeight: FontWeight.bold)),
+  //           Text('Condom Option', style: TextStyle(fontWeight: FontWeight.bold)),
+  //           Text('Cycle Data', style: TextStyle(fontWeight: FontWeight.bold)),
+  //           Text('Times Clicked', style: TextStyle(fontWeight: FontWeight.bold)),
+  //         ],
+  //       ),
+  //       Divider(height: 30),
+  //
+  //       // Data Rows for Low, Medium, and High
+  //       _buildDataRow('Low', lowValues),
+  //       _buildDataRow('Medium', mediumValues),
+  //       _buildDataRow('High', highValues),
+  //     ],
+  //   );
+  // }
+  //
+  // List<String> _calculateDynamicValues(IntercourseProvider provider, String level) {
+  //   // Use similar logic as in the pregnancy chance calculation to determine chart values
+  //   double orgasmSelection = provider.femaleOrgasm == 'Happened' ? 1 : 0;
+  //   double condomOption = provider.condomOption == 'Protected' ? 1 : 0;
+  //   double cycleData = 0.5;  // Assuming cycle data is a value between 0 and 1
+  //   int timesClicked = provider.times;
+  //
+  //   double factor = (level == "low") ? 0.5 : (level == "medium") ? 1 : 1.5;
+  //
+  //   double orgasmValue = orgasmSelection * factor;
+  //   double condomValue = condomOption * factor;
+  //   double cycleValue = cycleData * factor;
+  //   double timesClickedValue = (timesClicked / 10) * factor;
+  //
+  //   return [
+  //     orgasmValue.toStringAsFixed(2),
+  //     condomValue.toStringAsFixed(2),
+  //     cycleValue.toStringAsFixed(2),
+  //     timesClickedValue.toStringAsFixed(2),
+  //   ];
+  // }
+
+
 
   // Method to display the circles (Red or Green) based on the value
   Widget _buildCircle(String value) {
@@ -250,85 +243,6 @@ class IntercourseAnalysis extends StatelessWidget {
       ),
     );
   }
-
-
-  // Widget _buildChart(BuildContext context, IntercourseProvider intercourseProvider, CycleProvider cycleProvider) {
-  //   int periodDaysLength = cycleProvider.periodDays.length;
-  //
-  //   // Create chances array based on both period and intercourse data
-  //   List<String> chances = List.generate(periodDaysLength, (index) {
-  //     DateTime day = cycleProvider.periodDays[index];
-  //     String pregnancyChance = cycleProvider.getPregnancyChance(index);
-  //
-  //     // Check if intercourse happened during the fertile window (if necessary)
-  //     bool isIntercourseDuringFertileWindow = intercourseProvider.didIntercourseHappenDuringFertileWindow(context);
-  //
-  //     // Modify chance logic to match both period and intercourse info
-  //     if (isIntercourseDuringFertileWindow && pregnancyChance == "High Chance of Pregnancy") {
-  //       return 'High';
-  //     } else if (pregnancyChance == "Medium Chance of Pregnancy") {
-  //       return 'Medium';
-  //     } else {
-  //       return 'Low';
-  //     }
-  //   });
-  //
-  //   return SingleChildScrollView(
-  //     scrollDirection: Axis.horizontal,
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       crossAxisAlignment: CrossAxisAlignment.center,
-  //       children: [
-  //         Text("Chances of Getting Pregnant"),
-  //         Row(
-  //           children: [
-  //             Text('LOW', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  //             ...List.generate(periodDaysLength, (index) {
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //                 child: Checkbox(
-  //                   value: chances[index] == 'Low',
-  //                   onChanged: (value) {},
-  //                 ),
-  //               );
-  //             }),
-  //           ],
-  //         ),
-  //         SizedBox(height: 5),
-  //         Row(
-  //           children: [
-  //             Text('MEDIUM', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  //             ...List.generate(periodDaysLength, (index) {
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //                 child: Checkbox(
-  //                   value: chances[index] == 'Medium',
-  //                   onChanged: (value) {},
-  //                 ),
-  //               );
-  //             }),
-  //           ],
-  //         ),
-  //         SizedBox(height: 5),
-  //         Row(
-  //           children: [
-  //             Text('HIGH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  //             ...List.generate(periodDaysLength, (index) {
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //                 child: Checkbox(
-  //                   value: chances[index] == 'High',
-  //                   onChanged: (value) {},
-  //                 ),
-  //               );
-  //             }),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
 
 
   Widget _buildActivityStats(IntercourseProvider intercourseProvider) {

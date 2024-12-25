@@ -1,5 +1,6 @@
 
 import 'package:calender_app/provider/moods_symptoms_provider.dart';
+import 'package:calender_app/screens/flow2/detail%20page/cycle/intercourse.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -77,6 +78,14 @@ class CategorySection extends StatelessWidget {
               moodsProvider.addMood(context, iconPath, label);
             } else if (title == "Symptoms") {
               symptomsProvider.addSymptom(context, iconPath, label);
+            }else if (title == "Intercourse") {
+              // Navigate to IntercourseScreen with selected data
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => IntercourseScreen(),
+                ),
+              );
             }
           },
           isSelected: (label) {

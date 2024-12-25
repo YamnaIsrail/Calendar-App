@@ -100,27 +100,27 @@ class IntercourseProvider with ChangeNotifier {
   }
 
   // Method to calculate pregnancy chance for each cycle day
-  double calculatePregnancyChance(CycleProvider cycleProvider, DateTime intercourseDate) {
-    DateTime lastPeriodDate = cycleProvider.lastPeriodStart;
-    int cycleLength = cycleProvider.cycleLength;
-
-    // Ovulation window (typically days 10-15 of the cycle)
-    int ovulationStart = cycleLength ~/ 2 - 1;
-    int ovulationEnd = ovulationStart + 4;
-
-    // Check if intercourse happened during the fertile window
-    if (intercourseDate.isAfter(lastPeriodDate.add(Duration(days: ovulationStart))) &&
-        intercourseDate.isBefore(lastPeriodDate.add(Duration(days: ovulationEnd)))) {
-      // Higher chance if intercourse is during ovulation window
-      return 80.0; // 80% chance
-    } else if (intercourseDate.isBefore(lastPeriodDate)) {
-      // Intercourse before the period, less chance
-      return 20.0; // 20% chance
-    } else {
-      // Outside of fertile window but after ovulation, low chance
-      return 10.0; // 10% chance
-    }
-  }
+  // double calculatePregnancyChance(CycleProvider cycleProvider, DateTime intercourseDate) {
+  //   DateTime lastPeriodDate = cycleProvider.lastPeriodStart;
+  //   int cycleLength = cycleProvider.cycleLength;
+  //
+  //   // Ovulation window (typically days 10-15 of the cycle)
+  //   int ovulationStart = cycleLength ~/ 2 - 1;
+  //   int ovulationEnd = ovulationStart + 4;
+  //
+  //   // Check if intercourse happened during the fertile window
+  //   if (intercourseDate.isAfter(lastPeriodDate.add(Duration(days: ovulationStart))) &&
+  //       intercourseDate.isBefore(lastPeriodDate.add(Duration(days: ovulationEnd)))) {
+  //     // Higher chance if intercourse is during ovulation window
+  //     return 80.0; // 80% chance
+  //   } else if (intercourseDate.isBefore(lastPeriodDate)) {
+  //     // Intercourse before the period, less chance
+  //     return 20.0; // 20% chance
+  //   } else {
+  //     // Outside of fertile window but after ovulation, low chance
+  //     return 10.0; // 10% chance
+  //   }
+  // }
 
 }
 

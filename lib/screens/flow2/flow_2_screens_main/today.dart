@@ -200,7 +200,7 @@ class CycleStatusScreen extends StatelessWidget {
                                 : 'Today - Cycle Day $currentCycleDay',
                             subtitle: isPregnancyMode
                                 ? "Track your pregnancy milestones"
-                                :getPregnancyChanceText(context,
+                                :getpPregnancyChanceText(context,
                                 lastPeriodDate,
                                 periodLength,
                                 currentCycleDay,
@@ -268,27 +268,177 @@ class CycleStatusScreen extends StatelessWidget {
 //     return 'High chance of getting pregnancy';
 //   }
 // }
-String getPregnancyChanceText(BuildContext context, DateTime lastPeriodDate, int periodLength, int currentCycleDay, int cycleLength, IntercourseProvider intercourseProvider) {
-  // Calculate ovulation window (typically days 10-15, based on cycle length)
+
+//Detailed explanation
+String getPregnancyChanceText(
+    BuildContext context,
+    DateTime lastPeriodDate,
+    int periodLength,
+    int currentCycleDay,
+    int cycleLength,
+    IntercourseProvider intercourseProvider,
+    ) {
+  // Calculate ovulation window
   int ovulationStart = cycleLength ~/ 2 - 1;
   int ovulationEnd = ovulationStart + 4;
 
-  // Check if intercourse happened during fertile window
-  bool isIntercourseDuringFertileWindow = intercourseProvider.didIntercourseHappenDuringFertileWindow(context);
+  // Determine the condom protection status
+  bool isProtected = intercourseProvider.condomOption == 'Protected';
+  int numberOfTimes = intercourseProvider.times;
 
-  // Determine pregnancy chance text
-  if (currentCycleDay <= periodLength) {
-    return 'Low chance of getting pregnancy (on period)';
-  } else if (currentCycleDay >= ovulationStart && currentCycleDay <= ovulationEnd) {
-    if (isIntercourseDuringFertileWindow) {
-      return 'High chance of getting pregnancy (ovulation phase with intercourse)';
-    }
-    return 'High chance of getting pregnancy (ovulation phase)';
-  } else if (currentCycleDay >= periodLength + 1 && currentCycleDay < ovulationStart) {
-    return 'Medium chance of getting pregnancy (approaching ovulation)';
-  } else if (currentCycleDay > ovulationEnd && currentCycleDay <= cycleLength) {
-    return 'Low chance of getting pregnancy (luteal phase)';
-  } else {
-    return 'High chance of getting pregnancy (after cycle ends)';
+  if (numberOfTimes == 0) {
+    return 'No intercourse detected during this cycle. No chance of pregnancy.';
   }
+
+  // Calculate pregnancy chances based on the combination of factors
+  if (currentCycleDay <= periodLength) {
+    return 'You are currently on your period. Low chance of pregnancy. Intercourse details: ${isProtected ? 'Protected' : 'Unprotected'}.';
+  } else if (currentCycleDay >= ovulationStart && currentCycleDay <= ovulationEnd) {
+    if (intercourseProvider.femaleOrgasm == 'Happened' && !isProtected) {
+      return 'High chance of pregnancy: Fertile window with unprotected intercourse and orgasm detected.';
+    }
+    return 'You are in your fertile window. ${isProtected ? 'Low chance of pregnancy: Protected intercourse.' : 'High chance of pregnancy: Unprotected intercourse.'}';
+  } else if (currentCycleDay >= periodLength + 1 && currentCycleDay < ovulationStart) {
+    // Consider orgasm status in the approaching fertile window
+    if (intercourseProvider.femaleOrgasm == 'Happened') {
+      return 'Medium chance of pregnancy: Approaching fertile window with orgasm. ${isProtected ? 'Protected intercourse reduces chance.' : 'Unprotected intercourse increases chance.'}';
+    } else {
+      return 'Medium chance of pregnancy: Approaching fertile window without orgasm. ${isProtected ? 'Protected intercourse reduces chance.' : 'Unprotected intercourse increases chance.'}';
+    }
+  } else if (currentCycleDay > ovulationEnd && currentCycleDay <= cycleLength) {
+    return 'Low chance of pregnancy: In the luteal phase. ${isProtected ? 'Protected intercourse reduces chance.' : 'Unprotected intercourse may still result in pregnancy.'}';
+  } else {
+    return 'Cycle has ended. Plan for your next cycle. Intercourse summary: ${numberOfTimes > 0 ? '$numberOfTimes times with ${isProtected ? 'protection' : 'no protection'}.' : 'No intercourse during this cycle.'}';
+  }
+}
+
+//only text explanation
+String gettPregnancyChanceText(
+    BuildContext context,
+    DateTime lastPeriodDate,
+    int periodLength,
+    int currentCycleDay,
+    int cycleLength,
+    IntercourseProvider intercourseProvider,
+    ) {
+  // Calculate ovulation window
+  int ovulationStart = cycleLength ~/ 2 - 1;
+  int ovulationEnd = ovulationStart + 4;
+
+  // Determine the condom protection status
+  bool isProtected = intercourseProvider.condomOption == 'Protected';
+  int numberOfTimes = intercourseProvider.times;
+
+  // No intercourse detected
+  if (numberOfTimes == 0) {
+    return 'No chance of pregnancy.';
+  }
+
+  // Current period check
+  if (currentCycleDay <= periodLength) {
+    return 'Low chance of pregnancy.';
+  }
+
+  // Fertile window check
+  if (currentCycleDay >= ovulationStart && currentCycleDay <= ovulationEnd) {
+    if (intercourseProvider.femaleOrgasm == 'Happened' && !isProtected) {
+      return 'High chance of pregnancy.';
+    }
+    if (numberOfTimes > 1 && !isProtected) {
+      return 'High chance of pregnancy.';
+    }
+    return isProtected ? 'Low chance of pregnancy.' : 'High chance of pregnancy.';
+  }
+
+  // Approaching fertile window
+  if (currentCycleDay >= periodLength + 1 && currentCycleDay < ovulationStart) {
+    return isProtected ? 'Low chance of pregnancy.' : 'Medium chance of pregnancy.';
+  }
+
+  // Luteal phase
+  if (currentCycleDay > ovulationEnd && currentCycleDay <= cycleLength) {
+    return isProtected ? 'Low chance of pregnancy.' : 'Medium chance of pregnancy.';
+  }
+
+  // Cycle has ended
+  return 'No chance of pregnancy.';
+}
+
+
+//with percentage
+String getpPregnancyChanceText(
+    BuildContext context,
+    DateTime lastPeriodDate,
+    int periodLength,
+    int currentCycleDay,
+    int cycleLength,
+    IntercourseProvider intercourseProvider,
+    ) {
+  // Calculate ovulation window
+  int ovulationStart = cycleLength ~/ 2 - 1;
+  int ovulationEnd = ovulationStart + 4;
+
+  // Determine the condom protection status
+  bool isProtected = intercourseProvider.condomOption == 'Protected';
+  int numberOfTimes = intercourseProvider.times;
+
+  double pregnancyChancePercentage = 0.0;
+  String chanceText = '';
+
+  // No intercourse detected
+  if (numberOfTimes == 0) {
+    return 'No chance of pregnancy (0%).';
+  }
+
+  // Current period check
+  if (currentCycleDay <= periodLength) {
+    pregnancyChancePercentage = 5.0; // Low chance
+    chanceText = 'Low chance of pregnancy';
+  }
+  // Fertile window check
+  else if (currentCycleDay >= ovulationStart && currentCycleDay <= ovulationEnd) {
+    if (!isProtected) {
+      if (intercourseProvider.femaleOrgasm == 'Happened') {
+        pregnancyChancePercentage = 90.0; // High chance
+        chanceText = 'High chance of pregnancy';
+      } else {
+        pregnancyChancePercentage = 70.0; // High chance without orgasm
+        chanceText = 'High chance of pregnancy';
+      }
+    } else {
+      // Protected intercourse
+      pregnancyChancePercentage = 20.0; // Low chance
+      chanceText = 'Low chance of pregnancy';
+    }
+  }
+  // Approaching fertile window
+  else if (currentCycleDay >= periodLength + 1 && currentCycleDay < ovulationStart) {
+    if (isProtected) {
+      pregnancyChancePercentage = 10.0; // Low chance
+      chanceText = 'Low chance of pregnancy';
+    } else {
+      // Unprotected
+      pregnancyChancePercentage = 20.0 + (numberOfTimes * 5.0); // Increase by 5% for each unprotected intercourse
+      chanceText = 'Medium chance of pregnancy';
+    }
+  }
+  // Luteal phase
+  else if (currentCycleDay > ovulationEnd && currentCycleDay <= cycleLength) {
+    if (isProtected) {
+      pregnancyChancePercentage = 5.0; // Low chance
+      chanceText = 'Low chance of pregnancy';
+    } else {
+      pregnancyChancePercentage = 30.0; // Medium chance
+      chanceText = 'Medium chance of pregnancy';
+    }
+  }
+  // Cycle has ended
+  else {
+    return 'No chance of pregnancy (0%).';
+  }
+
+  // Cap the percentage at 100%
+  pregnancyChancePercentage = pregnancyChancePercentage.clamp(0.0, 100.0);
+
+  return '$chanceText (${pregnancyChancePercentage.toStringAsFixed(1)}%).';
 }

@@ -18,74 +18,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
 
-    // void _onDateClicked(BuildContext context, DateTime clickedDate) {
-    //   final periodProvider = Provider.of<CycleProvider>(context, listen: false);
-    //   bool dateFound = false;
-    //
-    //   // Check existing periods
-    //   for (var period in periodProvider.pastPeriods) {
-    //     final startDate = DateTime.tryParse(period['startDate']!);
-    //     final endDate = DateTime.tryParse(period['endDate']!);
-    //
-    //     // Ensure that startDate and endDate are valid
-    //     if (startDate != null && endDate != null) {
-    //       // If the clicked date is within the existing period
-    //       if (!clickedDate.isBefore(startDate) && !clickedDate.isAfter(endDate)) {
-    //         dateFound = true;
-    //
-    //         // If the clicked date is at the start or end of the period
-    //         if (clickedDate.isAtSameMomentAs(startDate)) {
-    //           periodProvider.removePastPeriod(startDate.toIso8601String());
-    //         } else if (clickedDate.isAtSameMomentAs(endDate)) {
-    //           periodProvider.removePastPeriod(startDate.toIso8601String());
-    //         } else {
-    //           // Update the period end date
-    //           DateTime newEndDate = clickedDate;
-    //
-    //           // Update period length
-    //           int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
-    //           periodProvider.updatePeriodLength(periodLength);
-    //
-    //           // Remove the old period and add the updated period
-    //           periodProvider.removePastPeriod(startDate.toIso8601String());
-    //           periodProvider.addPastPeriod(startDate, newEndDate);
-    //         }
-    //         break;
-    //       } else if (clickedDate.isAfter(endDate)) {
-    //         // If the clicked date is after the current period, check the difference
-    //         if (clickedDate.difference(endDate).inDays <= 5) {
-    //           // Extend the existing period
-    //           DateTime newEndDate = clickedDate.subtract(Duration(days: 1));
-    //           //
-    //           // Update period length
-    //           int periodLength = newEndDate.difference(startDate).inDays + 2; // +1 to include both start and end date
-    //           periodProvider.updatePeriodLength(periodLength);
-    //
-    //           // Remove the old period and add the new extended period
-    //           periodProvider.removePastPeriod(startDate.toIso8601String());
-    //           periodProvider.addPastPeriod(startDate, newEndDate);
-    //           dateFound = true;
-    //           break;
-    //         }
-    //       }
-    //     }
-    //   }
-    //
-    //   // If no matching period is found, treat it as a new period
-    //   if (!dateFound) {
-    //     DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength - 1));
-    //
-    //     // Update the period length in the provider
-    //     periodProvider.updatePeriodLength(periodProvider.periodLength);
-    //     periodProvider.addPastPeriod(clickedDate, newEndDate);
-    //   }
-    //
-    //   // Update the focused day to the clicked date
-    //   setState(() {
-    //     _focusedDay = clickedDate;
-    //   });
-    // }
-    //
+
     void _onDateClicked(BuildContext context, DateTime clickedDate) {
       final periodProvider = Provider.of<CycleProvider>(context, listen: false);
       bool dateFound = false;
@@ -97,30 +30,41 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         // Ensure that startDate and endDate are valid
         if (startDate != null && endDate != null) {
-          // If the clicked date is within the existing period (inclusive)
+          // If the clicked date is within the existing period
           if (!clickedDate.isBefore(startDate) && !clickedDate.isAfter(endDate)) {
             dateFound = true;
 
             // If the clicked date is at the start or end of the period
             if (clickedDate.isAtSameMomentAs(startDate)) {
-              // If clicked date is same as start date, no change needed, exit
-              return;
+              periodProvider.removePastPeriod(startDate.toIso8601String());
             } else if (clickedDate.isAtSameMomentAs(endDate)) {
-              // If clicked date is same as end date, no change needed, exit
-              return;
+              periodProvider.removePastPeriod(startDate.toIso8601String());
             } else {
-              // If clicked date is in between the start and end, update the end date
+              // Update the period end date
               DateTime newEndDate = clickedDate;
 
-              // Update the period length
+              // Update period length
               int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
               periodProvider.updatePeriodLength(periodLength);
 
               // Remove the old period and add the updated period
-              periodProvider.removePastPeriod(startDate.toIso8601String());
+              //periodProvider.removePastPeriod(startDate.toIso8601String());
               periodProvider.addPastPeriod(startDate, newEndDate);
             }
             break;
+          } else if (clickedDate.isAfter(endDate)) {
+            // If the clicked date is after the current period, check the difference
+            if (clickedDate.difference(endDate).inDays <= 5) {
+              // Extend the existing period
+              DateTime newEndDate = clickedDate.subtract(Duration(days: 1));
+
+              int periodLength = newEndDate.difference(startDate).inDays + 1;
+              periodProvider.updatePeriodLength(periodLength);
+
+              periodProvider.addPastPeriod(startDate, newEndDate);
+              dateFound = true;
+              break;
+            }
           }
         }
       }
@@ -140,75 +84,76 @@ class _CalendarScreenState extends State<CalendarScreen> {
       });
     }
 
-    // void _onDateClicked(BuildContext context, DateTime clickedDate) {
-    //   final periodProvider = Provider.of<CycleProvider>(context, listen: false);
-    //   bool dateFound = false;
-    //
-    //   // Calculate the period length (number of days between start and clicked date)
-    //   for (var period in periodProvider.pastPeriods) {
-    //     final startDate = DateTime.tryParse(period['startDate']!);
-    //     final endDate = DateTime.tryParse(period['endDate']!);
-    //
-    //     // Ensure that startDate and endDate are valid
-    //     if (startDate != null && endDate != null) {
-    //       // Ensure the clicked date is within the period, inclusive of start and end dates
-    //       if (!clickedDate.isBefore(startDate) && !clickedDate.isAfter(endDate)) {
-    //         dateFound = true;
-    //
-    //         // If the clicked date is at the start or end of the period
-    //         if (clickedDate.isAtSameMomentAs(startDate)) {
-    //           periodProvider.removePastPeriod(startDate.toIso8601String());
-    //         } else if (clickedDate.isAtSameMomentAs(endDate)) {
-    //           periodProvider.removePastPeriod(startDate.toIso8601String());
-    //         } else {
-    //           // Calculate the updated period end date
-    //           DateTime newEndDate = clickedDate.subtract(Duration(days: 1));
-    //
-    //           // Update period length based on the selected range (inclusive of both dates)
-    //           int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
-    //
-    //           // Update the period length in the provider
-    //           periodProvider.updatePeriodLength(periodLength);
-    //
-    //           // Remove the old period and add the updated period
-    //           periodProvider.removePastPeriod(startDate.toIso8601String());
-    //           periodProvider.addPastPeriod(startDate, newEndDate);
-    //         }
-    //         break;
-    //       } else if (clickedDate.isAfter(endDate)) {
-    //         // If the clicked date is after the current period, extend the period
-    //         DateTime newEndDate = clickedDate;
-    //
-    //         // Update period length based on the selected range (inclusive of both dates)
-    //         int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
-    //
-    //         // Update the period length in the provider
-    //         periodProvider.updatePeriodLength(periodLength);
-    //
-    //         // Remove the old period and add the new extended period
-    //         periodProvider.removePastPeriod(startDate.toIso8601String());
-    //         periodProvider.addPastPeriod(startDate, newEndDate);
-    //         dateFound = true;
-    //         break;
-    //       }
-    //     }
-    //   }
-    //
-    //   // If no matching period is found, add a new period
-    //   if (!dateFound) {
-    //     DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength - 1));
-    //
-    //     // Update the period length in the provider
-    //     periodProvider.updatePeriodLength(periodProvider.periodLength);
-    //
-    //     periodProvider.addPastPeriod(clickedDate, newEndDate);
-    //   }
-    //
-    //   // Update the focused day to the clicked date
-    //   setState(() {
-    //     _focusedDay = clickedDate;
-    //   });
-    // }
+
+    void _onxDateClicked(BuildContext context, DateTime clickedDate) {
+      final periodProvider = Provider.of<CycleProvider>(context, listen: false);
+      bool dateFound = false;
+
+      // Calculate the period length (number of days between start and clicked date)
+      for (var period in periodProvider.pastPeriods) {
+        final startDate = DateTime.tryParse(period['startDate']!);
+        final endDate = DateTime.tryParse(period['endDate']!);
+
+        // Ensure that startDate and endDate are valid
+        if (startDate != null && endDate != null) {
+          // Ensure the clicked date is within the period, inclusive of start and end dates
+          if (!clickedDate.isBefore(startDate) && !clickedDate.isAfter(endDate)) {
+            dateFound = true;
+
+            // If the clicked date is at the start or end of the period
+            if (clickedDate.isAtSameMomentAs(startDate)) {
+              periodProvider.removePastPeriod(startDate.toIso8601String());
+            } else if (clickedDate.isAtSameMomentAs(endDate)) {
+              periodProvider.removePastPeriod(startDate.toIso8601String());
+            } else {
+              // Calculate the updated period end date
+              DateTime newEndDate = clickedDate.subtract(Duration(days: 1));
+
+              // Update period length based on the selected range (inclusive of both dates)
+              int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
+
+              // Update the period length in the provider
+              periodProvider.updatePeriodLength(periodLength);
+
+              // Remove the old period and add the updated period
+              periodProvider.removePastPeriod(startDate.toIso8601String());
+              periodProvider.addPastPeriod(startDate, newEndDate);
+            }
+            break;
+          } else if (clickedDate.isAfter(endDate)) {
+            // If the clicked date is after the current period, extend the period
+            DateTime newEndDate = clickedDate;
+
+            // Update period length based on the selected range (inclusive of both dates)
+            int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
+
+            // Update the period length in the provider
+            periodProvider.updatePeriodLength(periodLength);
+
+            // Remove the old period and add the new extended period
+            periodProvider.removePastPeriod(startDate.toIso8601String());
+            periodProvider.addPastPeriod(startDate, newEndDate);
+            dateFound = true;
+            break;
+          }
+        }
+      }
+
+      // If no matching period is found, add a new period
+      if (!dateFound) {
+        DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength - 1));
+
+        // Update the period length in the provider
+        periodProvider.updatePeriodLength(periodProvider.periodLength);
+
+        periodProvider.addPastPeriod(clickedDate, newEndDate);
+      }
+
+      // Update the focused day to the clicked date
+      setState(() {
+        _focusedDay = clickedDate;
+      });
+    }
 
     return bgContainer(
       child: Scaffold(
