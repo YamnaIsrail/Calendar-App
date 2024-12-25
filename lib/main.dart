@@ -94,7 +94,7 @@ class _CalenderAppState extends State<CalenderApp> {
   String _selectedLanguage = 'English'; // Default language
   final DynamicTranslation _dynamicTranslation = DynamicTranslation();
   Map<String, String> _localizedStrings = {};
-z
+
   void _loadLanguage() async {
     final languageBox = await Hive.openBox('settingsBox');
     final savedLanguage = languageBox.get('language', defaultValue: 'English');
