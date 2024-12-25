@@ -16,8 +16,8 @@ class SymptomsProvider with ChangeNotifier {
     if (_selectedSymptoms.contains(label)) {
       _recentSymptoms.removeWhere((item) => item['label'] == label);
       _selectedSymptoms.remove(label);
-      final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-      timelineProvider.removeEntry(label); // Remove from timeline
+      // final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+      // timelineProvider.removeEntry(label); // Remove from timeline
     } else {
       _recentSymptoms.add({'iconPath': iconPath, 'label': label});
       _selectedSymptoms.add(label);
@@ -45,8 +45,8 @@ class MoodsProvider with ChangeNotifier {
     if (_selectedMoods.contains(label)) {
       _recentMoods.removeWhere((item) => item['label'] == label);
       _selectedMoods.remove(label);
-      final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
-      timelineProvider.removeEntry(label); // Remove from timeline
+      // final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+      // timelineProvider.removeEntry(label); // Remove from timeline
     } else {
       _recentMoods.add({'iconPath': iconPath, 'label': label});
       _selectedMoods.add(label);

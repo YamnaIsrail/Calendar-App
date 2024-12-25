@@ -155,6 +155,58 @@ class CycleStatusScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
+                                // SizedBox(
+                                //   height: 120,
+                                //   child: ListView(
+                                //     scrollDirection: Axis.horizontal,
+                                //     children: [
+                                //       CyclePhaseCard(
+                                //         icon: Icons.favorite,
+                                //         color: Colors.red[100]!,
+                                //         phase: isPregnancyMode
+                                //             ? "First Trimester"
+                                //             : "Menstrual Phase",
+                                //         date: isPregnancyMode
+                                //             ? pregnancyModeProvider.gestationStart != null
+                                //             ? "Pregnancy start ${formatDate(pregnancyModeProvider.gestationStart!)}"
+                                //             : ""
+                                //             : "Start Date: ${formatDate(cycleProvider.lastPeriodStart)}",
+                                //       ),
+                                //       CyclePhaseCard(
+                                //         icon: Icons.fiber_manual_record,
+                                //         color: Colors.green[100]!,
+                                //         phase: isPregnancyMode
+                                //             ? "Second Trimester"
+                                //             : "Follicular Phase",
+                                //         date: isPregnancyMode
+                                //             ? pregnancyModeProvider.gestationStart != null
+                                //             ? "Due soon"
+                                //             : ""
+                                //             : "Start Date: ${formatDate(cycleProvider.lastPeriodStart.add(Duration(days: cycleProvider.cycleLength - 14)))}",
+                                //       ),
+                                //       CyclePhaseCard(
+                                //         icon: Icons.calendar_today,
+                                //         color: Colors.blue[100]!,
+                                //         phase: "Fertility Window",
+                                //         date: "From: ${formatDate(cycleProvider.getFertilityWindowStart())} To: ${formatDate(cycleProvider.getFertilityWindowEnd())}",
+                                //       ),
+                                //
+                                //       CyclePhaseCard(
+                                //         icon: Icons.egg,
+                                //         color: Colors.orange[100]!,
+                                //         phase: "Ovulation",
+                                //         date: "Date: ${formatDate(cycleProvider.getOvulationDate())}",
+                                //       ),
+                                //
+                                //       CyclePhaseCard(
+                                //         icon: Icons.next_plan,
+                                //         color: Colors.purple[100]!,
+                                //         phase: "Next Period",
+                                //         date: "Date: ${formatDate(cycleProvider.getNextPeriodDate())}",
+                                //       ),
+                                //     ],
+                                //   ),
+                                // ),
                                 SizedBox(
                                   height: 120,
                                   child: ListView(
@@ -172,17 +224,40 @@ class CycleStatusScreen extends StatelessWidget {
                                             : ""
                                             : "Start Date: ${formatDate(cycleProvider.lastPeriodStart)}",
                                       ),
+
                                       CyclePhaseCard(
                                         icon: Icons.fiber_manual_record,
                                         color: Colors.green[100]!,
                                         phase: isPregnancyMode
                                             ? "Second Trimester"
-                                            : "Follicular Phase",
+                                            : "Fertility Window", // This can be removed if not needed
                                         date: isPregnancyMode
                                             ? pregnancyModeProvider.gestationStart != null
-                                            ? "Due soon"
+                                            ? "Due soon" // You can also add the expected due date here
                                             : ""
-                                            : "Start Date: ${formatDate(cycleProvider.lastPeriodStart.add(Duration(days: cycleProvider.cycleLength - 14)))}",
+                                            : "From: ${formatDate(cycleProvider.getFertilityWindowStart())} "
+                                            "To: ${formatDate(cycleProvider.getFertilityWindowEnd())}",
+
+                                        ),
+
+                                      if (!isPregnancyMode)
+                                        CyclePhaseCard(
+                                        icon: Icons.egg,
+                                        color: Colors.orange[100]!,
+                                        phase: "Ovulation",
+                                        date: "Date: ${formatDate(cycleProvider.getOvulationDate())}", // Added Ovulation card
+                                      ),
+                                      CyclePhaseCard(
+                                        icon: Icons.next_plan,
+                                        color: Colors.purple[100]!,
+                                        phase: isPregnancyMode
+                                            ? "Due Date"
+                                            : "Next Period",
+                                        date: isPregnancyMode
+                                            ? pregnancyModeProvider.dueDate != null
+                                            ? "Due Date: ${formatDate(pregnancyModeProvider.dueDate!)}" // Show expected due date
+                                            : ""
+                                            : "Date: ${formatDate(cycleProvider.getNextPeriodDate())}",
                                       ),
                                     ],
                                   ),

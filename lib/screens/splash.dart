@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:calender_app/auth/auth_provider.dart';
-import 'package:calender_app/screens/question/q1.dart';
-import 'package:calender_app/screens/settings/auth/password/login.dart';
+import 'package:calender_app/screens/settings/auth/password/enter_password.dart';
+import 'package:calender_app/screens/settings/auth/password/enter_pin.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
@@ -55,10 +55,20 @@ class _SplashScreenState extends State<SplashScreen> {
       return cycleData != null; // Return true if data exists, otherwise false
     }
 
-    // After initialization, decide navigation based on password/PIN
     if (authProvider.hasPasswordOrPin) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => Login()));
-    } else {
+      if (authProvider.usePassword) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => EnterPasswordScreen()),
+        );
+      }
+      else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => EnterPinScreen()),
+        );
+      }
+     } else {
       bool hasCycleData = await checkIfCycleDataExists();
       if (hasCycleData) {
         // If data exists, navigate to the main screen or the next page

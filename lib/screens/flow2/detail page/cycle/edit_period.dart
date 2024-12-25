@@ -41,10 +41,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
               periodProvider.removePastPeriod(startDate.toIso8601String());
             } else {
               // Update the period end date
-              DateTime newEndDate = clickedDate;
+              DateTime newEndDate = clickedDate.subtract(Duration(days: 1)); // Change made here
 
               // Update period length
-              int periodLength = newEndDate.difference(startDate).inDays + 1; // +1 to include both start and end date
+              int periodLength = newEndDate.difference(startDate).inDays + 2; // +1 to include both start and end date
               periodProvider.updatePeriodLength(periodLength);
 
               // Remove the old period and add the updated period

@@ -354,6 +354,19 @@ class CycleProvider with ChangeNotifier {
     _saveToHive();
   }
 
+// Get the fertility window start and end dates
+  DateTime getFertilityWindowStart() {
+    return lastPeriodStart.add(Duration(days: cycleLength - 14)); // Start of the fertile window
+  }
+
+  DateTime getFertilityWindowEnd() {
+    return lastPeriodStart.add(Duration(days: cycleLength - 6)); // End of the fertile window
+  }
+
+// Get the ovulation date
+  DateTime getOvulationDate() {
+    return lastPeriodStart.add(Duration(days: cycleLength - lutealPhaseLength)); // Ovulation date
+  }
 
   int get cycleDay {
     if (_lastPeriodStart == null) {
