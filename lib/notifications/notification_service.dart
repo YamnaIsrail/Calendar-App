@@ -1,6 +1,11 @@
+import 'dart:convert';
+
+import 'package:calender_app/hive/timeline_entry.dart';
 import 'package:calender_app/notifications/notification_model.dart';
+import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_providers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import '../main.dart';
 import 'notification_storage.dart';
 import 'package:flutter/foundation.dart'; //
 
@@ -11,11 +16,10 @@ class NotificationService {
   // Handle notification taps (foreground and background)
   static Future<void> onDidRecieveNotification(
       NotificationResponse notificationResponse) async {
-    if (notificationResponse.payload != null) {
-      debugPrint('Notification payload: ${notificationResponse.payload}');
-      // Perform action based on notification payload
-    }
+    await flutterLocalNotification.cancel(notificationResponse.id!);
+
   }
+
 
   // Initialize the notification plugin
   static Future<void> init() async {

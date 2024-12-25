@@ -71,33 +71,3 @@ class TimelineProvider extends ChangeNotifier {
   }
 
 }
-
-// class TimelineProvider extends ChangeNotifier {
-//   List<TimelineEntry> _entries = [];
-//   late Box<TimelineEntry> _timelineBox;
-//
-//   Future<void> init() async {
-//     // Open the box for timeline entries
-//     _timelineBox = await Hive.openBox<TimelineEntry>('timeline');
-//     _entries = _timelineBox.values.toList();
-//     notifyListeners();
-//   }
-//
-//   List<TimelineEntry> get entries => List.unmodifiable(_entries);
-//
-//   Future<void> addEntry(TimelineEntry entry) async {
-//     init();
-//     _entries.add(entry);
-//     await _timelineBox.add(entry); // Save the entry to Hive
-//     notifyListeners();
-//   }
-//
-//   void deleteEntry(int id) {
-//     final index = _entries.indexWhere((entry) => entry.id == id);
-//     if (index != -1) {
-//       _timelineBox.deleteAt(index);
-//       _entries.removeAt(index);
-//       notifyListeners();
-//     }
-//   }
-// }
