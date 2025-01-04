@@ -85,6 +85,8 @@ void main() async {
   );
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class CalenderApp extends StatefulWidget {
   @override
   _CalenderAppState createState() => _CalenderAppState();
@@ -166,7 +168,8 @@ class _CalenderAppState extends State<CalenderApp> {
   Widget build(BuildContext context) {
 
     return MaterialApp(
-      title: 'Tracking App',
+    navigatorKey: navigatorKey,
+    title: 'Tracking App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: Colors.blue,

@@ -1,11 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/water_reminders.dart';
-import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/contain.dart';
-import 'package:flutter/material.dart';
-
+import 'package:calender_app/screens/globals.dart';
 import 'cycle_section_dialogs.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -16,7 +16,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = false; // Default notification setting
   String _cupCapacityUnit = "ml"; // Default cup capacity unit
-  int _cupCapacity = 450; // Default cup capacity
+  int _cupCapacity = 250; // Default cup capacity
   int _targetWaterIntake = 3000; // Default target water intake
   int _selectedCupSize = 1; // Default selected cup size
 
@@ -25,6 +25,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     2: 450, // Cup
     3: 750, // Bottle
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationState(); // Load the notification state
+  }
+
+  Future<void> _loadNotificationState() async {
+    var box = Hive.box('settingsBox');
+    setState(() {
+      _notificationsEnabled = box.get('notificationsEnabled', defaultValue: false); // Load saved state
+    });
+  }
+
+  Future<void> _saveNotificationState(bool value) async {
+    var box = Hive.box('settingsBox');
+    await box.put('notificationsEnabled', value); // Save the state
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,27 +78,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Navigate to WaterReminderScreen to set up reminders
                         final result = await Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => WaterReminderScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => WaterReminderScreen(
+                              initialNotificationsEnabled: _notificationsEnabled,
+                            ),
+                          ),
                         );
 
                         // If the user sets up reminders, update the notification state
-                        if (result == true) {
+                        if (result != null) {
                           setState(() {
-                            _notificationsEnabled = true;
+                            _notificationsEnabled = result; // Update state based on return value
                           });
-                          await NotificationService.showInstantNotification(
-                            "Notifications Enabled",
-                            "You will now receive reminders.",
-                          );
+                          await _saveNotificationState(result); // save the new state
                         }
                       } else {
                         setState(() {
                           _notificationsEnabled = false;
                         });
-                        await NotificationService.flutterLocalNotification.cancelAll();
+                        // Cancel all notifications
+                        for (int i = 1; i < 100; i++) { // Assuming a maximum of 99 reminders
+                          await NotificationService.cancelScheduledTask("water_reminder_$i");
+                        }
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("Notifications Disabled")),
                         );
+                        await _saveNotificationState(false); // Save the new state
                       }
                     },
                   ),
@@ -91,10 +114,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // Cup Capacity Unit
             CardContain(
               child: ListTile(
-                title:
-                Text('Cup capacity unit', style: TextStyle(fontSize: 20)),
-                trailing: Text(_cupCapacityUnit,
-                    style: TextStyle(color: blueColor)),
+                title: Text('Cup capacity unit', style: TextStyle(fontSize: 20)),
+                trailing: Text(_cupCapacityUnit, style: TextStyle(color: blueColor)),
                 onTap: () {
                   IntercourseDialogs.showCupCapacityDialogUnit(
                     context,
@@ -114,8 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             CardContain(
               child: ListTile(
                 title: Text('Target', style: TextStyle(fontSize: 20)),
-                trailing: Text("$_targetWaterIntake $_cupCapacityUnit",
-                    style: TextStyle(color: blueColor)),
+                trailing: Text("$_targetWaterIntake $_cupCapacityUnit", style: TextStyle(color: blueColor)),
                 onTap: () {
                   IntercourseDialogs.showTargetDialog(
                     context,
@@ -136,10 +156,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             CardContain(
               child: ListTile(
                 title: Text('Cup capacity', style: TextStyle(fontSize: 20)),
-                trailing: Text("$_cupCapacity $_cupCapacityUnit",
-                    style: TextStyle(color: blueColor)),
+                trailing: Text("$_cupCapacity $_cupCapacityUnit", style: TextStyle(color: blueColor)),
                 subtitle: Text('Select Cup Size', style: TextStyle(fontSize: 10)),
-
               ),
             ),
 
@@ -159,13 +177,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Spacer(),
             CustomButton(
               onPressed: () {
-                final selectedSize =
-                    _cupSizes[_selectedCupSize] ?? _cupCapacity;
+                final selectedSize = _cupSizes[_selectedCupSize] ?? _cupCapacity;
                 debugPrint(
                     "Settings saved: Notifications: $_notificationsEnabled, "
                         "Cup Capacity: $_cupCapacity $_cupCapacityUnit, "
                         "Target Intake: $_targetWaterIntake $_cupCapacityUnit, "
-                        "Selected Cup Size: $_selectedCupSize ($selectedSize $_cupCapacityUnit)");
+                        "Selected Cup Size: $_selectedCupSize ($selectedSize $_cupCapacityUnit)"
+                );
               },
               backgroundColor: primaryColor,
               text: 'Save',

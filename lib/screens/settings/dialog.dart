@@ -540,25 +540,35 @@ class DialogHelper {
 
 //**************************
 // Select Reminder Frequency Dialog
-  static void showReminderFrequencyDialog(BuildContext context,
-      int currentFrequency,
-      Function(int) onFrequencyChanged,) {
-    // Use the current frequency as the initial selection
-    int selectedOption = currentFrequency;
+  static void showReminderFrequencyDialog(
+      BuildContext context,
+      String currentFrequency,
+      Function(int) onFrequencyChanged,
+      ) {
+    int selectedOption = currentFrequency == "Daily" ? 0 : currentFrequency == "Weekly" ? 1 : 2;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Select reminder frequency"),
+          title: Text("Select Reminder Frequency"),
           content: StatefulBuilder(
             builder: (context, setState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Weekly Reminder Option
                   RadioListTile<int>(
-                    title: Text("Weekly data backup reminder"),
+                    title: Text("Daily Data Backup Reminder"),
+                    value: 0,
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<int>(
+                    title: Text("Weekly Data Backup Reminder"),
                     value: 1,
                     groupValue: selectedOption,
                     onChanged: (value) {
@@ -567,9 +577,8 @@ class DialogHelper {
                       });
                     },
                   ),
-                  // Monthly Reminder Option
                   RadioListTile<int>(
-                    title: Text("Monthly data backup reminder"),
+                    title: Text("Monthly Data Backup Reminder"),
                     value: 2,
                     groupValue: selectedOption,
                     onChanged: (value) {
@@ -583,39 +592,12 @@ class DialogHelper {
             },
           ),
           actions: [
-            CustomButton(
-              onPressed: () async {
-                // Update the parent widget with the new frequency selection
-                onFrequencyChanged(
-                    selectedOption); // Pass the selected option to the callback
-
-                // Cancel any existing notifications for the current frequency
-                NotificationService.cancelNotification(currentFrequency
-                    .toString()); // Cancel the existing notification
-
-                final now = DateTime.now();
-                DateTime nextNotificationTime = now;
-
-                // Schedule the new notification based on the selected frequency
-                if (selectedOption == 1) {
-                  nextNotificationTime = now.add(Duration(days: 7)); // Weekly
-                } else if (selectedOption == 2) {
-                  nextNotificationTime = now.add(Duration(days: 30)); // Monthly
-                }
-
-                // Schedule the notification with the new frequency
-                await NotificationService.showScheduleNotification(
-                  title: "Backup Reminder",
-                  body: "Time to back up your data.",
-                  scheduleDate: nextNotificationTime,
-                  id: selectedOption, // Use frequency as id
-                );
-
-                Navigator.of(context)
-                    .pop(); // Close the dialog after scheduling
+            TextButton(
+              onPressed: () {
+                onFrequencyChanged(selectedOption);
+                Navigator.of(context).pop(); // Close the dialog after selection
               },
-              backgroundColor: primaryColor,
-              text: 'Save',
+              child: Text('Save'),
             ),
           ],
         );

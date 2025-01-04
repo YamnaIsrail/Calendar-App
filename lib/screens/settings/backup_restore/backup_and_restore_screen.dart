@@ -21,7 +21,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
   bool isTrackingOthers = false; // State variable for tracking others' cycles
   bool isBackupReminderEnabled = false; // State variable for backup reminder
 
-  int selectedFrequency = 1; // Default to weekly (1 fo
+  String   selectedFrequency = "Daily";
 
   @override
   Widget build(BuildContext context) {
@@ -55,16 +55,14 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   onTap: (){
                     Navigator.push(context, MaterialPageRoute(builder: (context)=>TrackCycleScreen()));
                   },
-            ),
+                ),
 
 //backup reminder
 
                 SettingsOption(
                   icon: Icons.notifications,
                   title: "Backup reminder",
-                  onTap: () {
-
-                    },
+                  onTap: () {},
                   trailing: Switch(
                     value: isBackupReminderEnabled,
                     onChanged: (value) {
@@ -72,25 +70,31 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                         isBackupReminderEnabled = value;
 
                         if (isBackupReminderEnabled) {
-                          // Show the frequency selection dialog
+
+                          List<String> frequencyOptions = ["Daily", "Weekly", "Monthly"];
+
                           DialogHelper.showReminderFrequencyDialog(
                             context,
-                            selectedFrequency,  // Pass the current frequency
-                                (newFrequency) {
+                            selectedFrequency,
+                                (newFrequencyIndex) {
                               setState(() {
-                                selectedFrequency = newFrequency; // Update selectedFrequency
+                                // Assign the string value from the frequencyOptions list
+                                selectedFrequency = frequencyOptions[newFrequencyIndex]; // This should be a String
                               });
-                              },
+
+                              // Schedule the backup reminder notification based on the selected frequency
+                              _scheduleBackupReminder(selectedFrequency); // Ensure this accepts a String
+                            },
                           );
                         } else {
                           // Cancel the backup reminder notification when switch is turned off
-                          NotificationService.cancelNotification(selectedFrequency as String); // Use the selected frequency as the id
+                          NotificationService.cancelScheduledTask("backup_reminder");
                         }
                       });
                     },
                   ),
                 ),
-                  // Sign Out
+                // Sign Out
                 SettingsOption(
                   icon: Icons.logout,
                   title: "Sign Out",
@@ -126,7 +130,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   },
                 ),
 
-                 // Data lost?
+                // Data lost?
                 SettingsOption(
                   icon: Icons.warning,
                   title: "Data lost?",
@@ -140,7 +144,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                 ),
 
 
-                             ],
+              ],
             ),
           ],
         ),
@@ -225,3 +229,27 @@ class UserProfileSection extends StatelessWidget {
 }
 
 
+void _scheduleBackupReminder(String frequency) {
+  DateTime now = DateTime.now();
+  DateTime scheduleDate;
+
+  // Determine the schedule date based on the frequency
+  if (frequency == "Daily") {
+    scheduleDate = DateTime(now.year, now.month, now.day, 9, 0); // Example: 9 AM daily
+  } else if (frequency == "Weekly") {
+    scheduleDate = DateTime(now.year, now.month, now.day + 7, 9, 0); // Example: 9 AM next week
+  } else {
+    // Handle other frequencies as needed
+    return;
+  }
+
+  // Schedule the notification
+  NotificationService.scheduleBackgroundTask(
+    "backup_reminder", // Unique tag for backup reminder
+    {
+      'title': "Backup Reminder",
+      'body': "It's time to back up your data.",
+    },
+    scheduleDate,
+  );
+}

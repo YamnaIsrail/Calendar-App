@@ -18,6 +18,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
   bool isPeriodReminderOn = false;
   bool isFertilityReminderOn = false;
   bool isLutealReminderOn = false;
+  bool _waterReminderEnabled = false; // Water reminder toggle
 
   @override
   void initState() {
@@ -32,19 +33,31 @@ class _ReminderScreenState extends State<ReminderScreen> {
       isPeriodReminderOn = states['isPeriodReminderOn'] ?? false;
       isFertilityReminderOn = states['isFertilityReminderOn'] ?? false;
       isLutealReminderOn = states['isLutealReminderOn'] ?? false;
+      _waterReminderEnabled =
+          states['waterReminderEnabled'] ?? false; // Load water reminder state
     });
   }
+
   Future<void> scheduleNotification({
     required String title,
     required String body,
     required DateTime dateTime,
+    required String tag,
   }) async {
-    await NotificationService.showScheduleNotification(
-      title: title,
-      body: body,
-      scheduleDate: dateTime, id: 2,
+    await NotificationService.scheduleBackgroundTask(
+      tag,
+      {
+        'title': title,
+        'body': body,
+      },
+      dateTime,
     );
   }
+
+  Future<void> cancelNotification(String tag) async {
+    await NotificationService.cancelScheduledTask(tag);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
@@ -53,7 +66,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-              title: Text(
+          title: Text(
             "Reminder",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 27),
           ),
@@ -66,7 +79,6 @@ class _ReminderScreenState extends State<ReminderScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(title: 'Period & Ovulation'),
-
               CustomItem(
                 title: "Next Period Reminder",
                 onChanged: (bool value) {
@@ -83,7 +95,10 @@ class _ReminderScreenState extends State<ReminderScreen> {
                       title: "Period Reminder",
                       body: "Your next period is expected soon!",
                       dateTime: cycleProvider.getNextPeriodDate(),
+                      tag: "period_reminder", // Unique tag for this reminder
                     );
+                  } else {
+                    cancelNotification("period_reminder");
                   }
                 },
                 isSwitched: isPeriodReminderOn,
@@ -104,7 +119,10 @@ class _ReminderScreenState extends State<ReminderScreen> {
                       title: "Fertile Window Reminder",
                       body: "Your fertile window starts today.",
                       dateTime: cycleProvider.fertileDaysRange.first,
+                      tag: "fertility_reminder", // Unique tag for this reminder
                     );
+                  } else {
+                    cancelNotification("fertility_reminder");
                   }
                 },
                 isSwitched: isFertilityReminderOn,
@@ -125,12 +143,14 @@ class _ReminderScreenState extends State<ReminderScreen> {
                       title: "Luteal Phase Reminder",
                       body: "Your luteal phase starts today.",
                       dateTime: cycleProvider.lutealPhaseDays.first,
+                      tag: "luteal_reminder", // Unique tag for this reminder
                     );
+                  } else {
+                    cancelNotification("luteal_reminder");
                   }
                 },
                 isSwitched: isLutealReminderOn,
               ),
-
               const SectionHeader(title: 'Add Medicine'),
               CustomItem(
                 title: "Add Medicine",
@@ -138,27 +158,50 @@ class _ReminderScreenState extends State<ReminderScreen> {
                   if (value) {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => MedicineReminderScreen(selectedMedicines: [],)),
-                    );
+                      MaterialPageRoute(
+                          builder: (_) => MedicineReminderScreen(
+                            selectedMedicines: [],
+                          )),
+                    ).then((result) {
+                      if (result != null && result is bool && result) {
+                        setState(() {
+                          // Update the state if the user successfully added a medicine
+                        });
+                      }
+                    });
                   }
                 },
                 isSwitched: false, // You can add state here as needed
               ),
-
               const SectionHeader(title: 'Life Style'),
-
-
               CustomItem(
                 title: "Drink Water",
                 onChanged: (bool value) {
-                  if (value) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => SettingsScreen()),
-                    );
+                  setState(() {
+                    _waterReminderEnabled = value;
+                  });
+
+                  if (_waterReminderEnabled) {
+                    // Schedule water reminders
+                    for (int i = 1; i <= 10; i++) {
+                      // Example for 10 reminders
+                      scheduleNotification(
+                        title: "Water Reminder",
+                        body: "Time to drink water!",
+                        dateTime: DateTime.now()
+                            .add(Duration(hours: i)), // Example timing
+                        tag:
+                        "water_reminder_$i", // Unique tag for each reminder
+                      );
+                    }
+                  } else {
+                    // Cancel all scheduled notifications for water reminders
+                    for (int i = 1; i <= 10; i++) {
+                      cancelNotification("water_reminder_$i");
+                    }
                   }
                 },
-                isSwitched: false, // You can add state here as needed
+                isSwitched: _waterReminderEnabled,
               ),
             ],
           ),

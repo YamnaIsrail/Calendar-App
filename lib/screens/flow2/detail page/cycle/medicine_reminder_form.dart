@@ -3,6 +3,7 @@ import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
 class MedicineReminderScreen extends StatefulWidget {
   final List<String> selectedMedicines;
@@ -22,7 +23,7 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
   TimeOfDay? reminderTime;
   String interval = "Everyday";
   String duration = "Forever";
-  bool isNotificationEnabled = false;
+  bool isNotificationEnabled = true;
 
   late TextEditingController medicineController;
 
@@ -32,7 +33,27 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
     medicineController = TextEditingController(
       text: widget.editingMedicine ?? "",
     );
+
+    if (widget.editingMedicine != null) {
+      final box = Hive.box<Map>('medicineReminders');
+      final reminder = box.get(widget.editingMedicine);
+
+      if (reminder != null) {
+        setState(() {
+          startDate = DateTime.parse(reminder['startDate']);
+          final timeParts = reminder['reminderTime'].split(':');
+          reminderTime = TimeOfDay(
+            hour: int.parse(timeParts[0]),
+            minute: int.parse(timeParts[1]),
+          );
+          interval = reminder['interval'];
+          duration = reminder['duration'];
+          isNotificationEnabled = reminder['isNotificationEnabled'];
+        });
+      }
+    }
   }
+
 
   @override
   void dispose() {
@@ -68,8 +89,7 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
     }
   }
 
-  void _saveReminder() async {
-    // Validate input
+  Future<void> _saveReminder() async {
     if (medicineController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please enter a medicine name")),
@@ -100,7 +120,6 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       reminderTime!.minute,
     );
 
-    // Check if the schedule date/time is in the past
     if (scheduleDate.isBefore(DateTime.now())) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Scheduled time cannot be in the past")),
@@ -108,33 +127,105 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       return;
     }
 
-    // Schedule notification
-    await NotificationService.showScheduleNotification(
-      title: "Medicine Reminder",
-      body: "It's time to take your medicine: ${medicineController.text}",
-      scheduleDate: scheduleDate, id: 3,
-    );
+    // Create a reminder object
+    final reminder = {
+      'startDate': startDate!.toIso8601String(),
+      'reminderTime': "${reminderTime!.hour}:${reminderTime!.minute}",
+      'interval': interval,
+      'duration': duration,
+      'isNotificationEnabled': isNotificationEnabled,
+    };
 
-    // Update the list or add new medicine
-    setState(() {
-      if (widget.editingMedicine != null) {
-        final index = widget.selectedMedicines.indexOf(widget.editingMedicine!);
-        if (index != -1) {
-          widget.selectedMedicines[index] = medicineController.text;
-        }
-      } else {
-        widget.selectedMedicines.add(medicineController.text);
-      }
-    });
+    // Save to Hive
+    final box = Hive.box<Map>('medicineReminders');
+    box.put(medicineController.text, reminder);
 
-    // Provide feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Reminder saved successfully")),
     );
 
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
 
+  void fetchReminders() {
+    final box = Hive.box<Map>('medicineReminders');
+    final reminders = box.toMap();
+
+    reminders.forEach((key, value) {
+      print("Medicine: $key, Details: $value");
+    });
+  }
+  void deleteReminder(String medicineName) {
+    final box = Hive.box<Map>('medicineReminders');
+    box.delete(medicineName);
+  }
+
+  // Future<void> _saveReminder() async {
+  //   // Validate input
+  //   if (medicineController.text.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Please enter a medicine name")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   if (startDate == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Please select a start date")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   if (reminderTime == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Please select a reminder time")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   // Combine start date and reminder time
+  //   final scheduleDate = DateTime(
+  //     startDate!.year,
+  //     startDate!.month,
+  //     startDate!.day,
+  //     reminderTime!.hour,
+  //     reminderTime!.minute,
+  //   );
+  //
+  //   // Check if the schedule date/time is in the past
+  //   if (scheduleDate.isBefore(DateTime.now())) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Scheduled time cannot be in the past")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   // Schedule notification using the medicine name as the tag
+  //   await NotificationService.scheduleBackgroundTask(
+  //     medicineController.text, // Use the medicine name as the tag
+  //     {
+  //       'title': "Medicine Reminder",
+  //       'body': "It's time to take your medicine: ${medicineController.text}",
+  //     },
+  //     scheduleDate,
+  //   );
+  //
+  //   // Provide feedback
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text("Reminder saved successfully")),
+  //   );
+  //
+  //   // Show instant notification if notifications are enabled
+  //   if (isNotificationEnabled) {
+  //     await NotificationService.showInstantNotification(
+  //       "Notifications Enabled",
+  //       "You will now receive reminders for ${medicineController.text}.",
+  //     );
+  //   }
+  //
+  //   Navigator.pop(context, true); // Return true to indicate success
+  // }
+  //
   @override
   Widget build(BuildContext context) {
     return bgContainer(
@@ -152,7 +243,8 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
           child: ListView(
             children: [
               Container(
-                child: SwitchListTile(
+
+                child:SwitchListTile(
                   title: Text("Notifications"),
                   value: isNotificationEnabled,
                   onChanged: (value) async {
@@ -160,19 +252,16 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
                       isNotificationEnabled = value;
                     });
 
-                    if (isNotificationEnabled) {
-                      await NotificationService.showInstantNotification(
-                        "Notifications Enabled",
-                        "You will now receive reminders.",
-                      );
-                    } else {
-                      await NotificationService.flutterLocalNotification.cancelAll();
+                    if (!isNotificationEnabled) {
+                      // Cancel the notification using the medicine name as the tag
+                      await NotificationService.cancelScheduledTask(medicineController.text);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Notifications Disabled")),
                       );
                     }
                   },
                 ),
+
               ),
 
               TextField(
@@ -241,4 +330,6 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       ),
     );
   }
+
 }
+

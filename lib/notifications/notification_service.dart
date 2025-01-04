@@ -1,49 +1,51 @@
-import 'dart:convert';
 
-import 'package:calender_app/hive/timeline_entry.dart';
-import 'package:calender_app/notifications/notification_model.dart';
-import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_providers.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
-import '../main.dart';
-import 'notification_storage.dart';
-import 'package:flutter/foundation.dart'; //
+import 'package:calender_app/main.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:timezone/data/latest.dart' as tzData;
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin flutterLocalNotification =
   FlutterLocalNotificationsPlugin();
 
-  // Handle notification taps (foreground and background)
-  static Future<void> onDidRecieveNotification(
-      NotificationResponse notificationResponse) async {
-    await flutterLocalNotification.cancel(notificationResponse.id!);
-
-  }
-
-
-  // Initialize the notification plugin
   static Future<void> init() async {
+    tzData.initializeTimeZones();
     const AndroidInitializationSettings initializationSettingsAndroid =
     AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const DarwinInitializationSettings initializationSettingsIos =
-    DarwinInitializationSettings();
-
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
-      iOS: initializationSettingsIos,
     );
 
     await flutterLocalNotification.initialize(
       initializationSettings,
-      onDidReceiveBackgroundNotificationResponse: onDidRecieveNotification,
-      onDidReceiveNotificationResponse: onDidRecieveNotification,
+      onDidReceiveNotificationResponse: onDidReceiveNotification,
     );
+    await Workmanager().initialize(callbackDispatcher);
+  }
 
-    await flutterLocalNotification
-        .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+  static Future<void> onDidReceiveNotification(NotificationResponse response) async {
+    // Check the payload to determine what to do
+    if (response.payload == 'show_dialog') {
+      // Show a dialog when the notification is tapped
+      showDialog(
+        context: navigatorKey.currentContext!,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Notification'),
+            content: Text('This is a popup from the notification!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   static Future<void> showInstantNotification(String title, String body) async {
@@ -54,95 +56,52 @@ class NotificationService {
         importance: Importance.high,
         priority: Priority.high,
       ),
-      iOS: DarwinNotificationDetails(),
     );
     await flutterLocalNotification.show(0, title, body, platformChannels);
   }
 
-  static Future<void> cancelNotification(String id) async {
-    await flutterLocalNotification.cancel(id.hashCode);
+  static Future<void> scheduleBackgroundTask(
+      String tag,
+      Map<String, dynamic> inputData,
+      DateTime scheduleDate,
+      ) async {
+    await Workmanager().registerOneOffTask(
+      tag,
+      "background_notification_task",
+      inputData: inputData,
+      initialDelay: scheduleDate.difference(DateTime.now()),
+    );
   }
 
-  static Future<void> showScheduleNotification({
-    required String title,
-    required String body,
-    required DateTime scheduleDate,
-    required int id,
-    bool repeatDaily = false,
-    bool repeatWeekly = false,
-    bool repeatMonthly = false,
-  }) async {
-    const NotificationDetails platformChannels = NotificationDetails(
-      android: AndroidNotificationDetails(
-        "channelId",
-        "channelName",
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: DarwinNotificationDetails(),
-    );
+  static Future<void> cancelScheduledTask(String tag) async {
+    await Workmanager().cancelByUniqueName(tag);
+  }
+}
 
-    await flutterLocalNotification.cancel(id);
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    if (inputData != null) {
+      String title = inputData['title'] ?? "Default Title";
+      String body = inputData['body'] ?? "Default Body";
 
-    if (repeatDaily) {
-      await flutterLocalNotification.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduleDate, tz.local),
-        platformChannels,
-        androidScheduleMode: AndroidScheduleMode.exact,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+      const NotificationDetails platformChannels = NotificationDetails(
+        android: AndroidNotificationDetails(
+          "channelId",
+          "channelName",
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
       );
-    } else if (repeatWeekly) {
-      await flutterLocalNotification.zonedSchedule(
-        id,
+
+      FlutterLocalNotificationsPlugin flutterLocalNotification =
+      FlutterLocalNotificationsPlugin();
+      await flutterLocalNotification.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
         title,
         body,
-        tz.TZDateTime.from(scheduleDate, tz.local),
         platformChannels,
-        androidScheduleMode: AndroidScheduleMode.exact,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-      );
-    } else if (repeatMonthly) {
-      await flutterLocalNotification.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduleDate, tz.local),
-        platformChannels,
-        androidScheduleMode: AndroidScheduleMode.exact,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.dateAndTime,
-      );
-    } else {
-      await flutterLocalNotification.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduleDate, tz.local),
-        platformChannels,
-        androidScheduleMode: AndroidScheduleMode.exact,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.dateAndTime,
       );
     }
-
-    NotificationStorage.saveNotification(NotificationModel(
-      id: id,
-      title: title,
-      body: body,
-      scheduleTime: scheduleDate,
-    ));
-  }
-
-  static Future<void> cancelAllNotifications() async {
-    await flutterLocalNotification.cancelAll();
-  }
+    return Future.value(true);
+  });
 }
