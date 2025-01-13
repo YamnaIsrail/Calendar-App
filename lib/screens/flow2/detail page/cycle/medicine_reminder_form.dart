@@ -1,9 +1,11 @@
+
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+
 
 class MedicineReminderScreen extends StatefulWidget {
   final List<String> selectedMedicines;
@@ -19,14 +21,15 @@ class MedicineReminderScreen extends StatefulWidget {
 }
 
 class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
-  DateTime? startDate;
   TimeOfDay? reminderTime;
+  DateTime? startDate;
+  List<TimeOfDay?> reminderTimes = [TimeOfDay.now()];
+  int intakePerDay = 1;
   String interval = "Everyday";
   String duration = "Forever";
   bool isNotificationEnabled = true;
 
   late TextEditingController medicineController;
-
   @override
   void initState() {
     super.initState();
@@ -41,11 +44,22 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       if (reminder != null) {
         setState(() {
           startDate = DateTime.parse(reminder['startDate']);
-          final timeParts = reminder['reminderTime'].split(':');
-          reminderTime = TimeOfDay(
-            hour: int.parse(timeParts[0]),
-            minute: int.parse(timeParts[1]),
-          );
+
+          // Ensure reminder['reminderTime'] is not null before splitting
+          if (reminder['reminderTimes'] != null) {
+            reminderTimes = (reminder['reminderTimes'] as List)
+                .map((time) {
+              final timeParts = time.split(':');
+              return TimeOfDay(
+                hour: int.parse(timeParts[0]),
+                minute: int.parse(timeParts[1]),
+              );
+            }).toList();
+          } else {
+            reminderTimes = [TimeOfDay.now()];
+          }
+
+          intakePerDay = reminder['intakePerDay'] ?? 1;
           interval = reminder['interval'];
           duration = reminder['duration'];
           isNotificationEnabled = reminder['isNotificationEnabled'];
@@ -53,6 +67,7 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       }
     }
   }
+
 
 
   @override
@@ -76,20 +91,33 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
     }
   }
 
-  void _pickReminderTime() async {
+  void _pickReminderTime(int index) async {
     final pickedTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: reminderTimes[index] ?? TimeOfDay.now(),
     );
 
     if (pickedTime != null) {
       setState(() {
-        reminderTime = pickedTime;
+        reminderTimes[index] = pickedTime;
       });
     }
   }
-
+  void _updateIntakePerDay(int value) {
+    setState(() {
+      intakePerDay = value;
+      // Ensure the list of times matches the number of intakes per day
+      if (reminderTimes.length > intakePerDay) {
+        reminderTimes = reminderTimes.sublist(0, intakePerDay);
+      } else {
+        while (reminderTimes.length < intakePerDay) {
+          reminderTimes.add(TimeOfDay.now());
+        }
+      }
+    });
+  }
   Future<void> _saveReminder() async {
+    // Validate input
     if (medicineController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please enter a medicine name")),
@@ -97,48 +125,120 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       return;
     }
 
-    if (startDate == null) {
+    if (isNotificationEnabled) {
+      if (startDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please select a start date")),
+        );
+        return;
+      }
+
+      if (reminderTimes.any((time) => time == null)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please select all reminder times")),
+        );
+        return;
+      }
+    }
+
+    // Combine start date and reminder times
+    final initialSchedules = reminderTimes.map((time) {
+      return DateTime(
+        startDate!.year,
+        startDate!.month,
+        startDate!.day,
+        time!.hour,
+        time.minute,
+      );
+    }).toList();
+
+    // Ensure no past time is scheduled
+    if (isNotificationEnabled) {
+      if (initialSchedules.any((date) => date.isBefore(DateTime.now()))) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Scheduled times cannot be in the past")),
+        );
+        return;
+      }
+    }
+
+    // Request notification permission
+    bool isPermissionGranted = await NotificationService.requestNotificationPermission();
+    if (!isPermissionGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select a start date")),
+        SnackBar(content: Text("Notification permission is required")),
       );
       return;
     }
 
-    if (reminderTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select a reminder time")),
-      );
-      return;
-    }
-
-    // Combine start date and reminder time
-    final scheduleDate = DateTime(
-      startDate!.year,
-      startDate!.month,
-      startDate!.day,
-      reminderTime!.hour,
-      reminderTime!.minute,
-    );
-
-    if (scheduleDate.isBefore(DateTime.now())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Scheduled time cannot be in the past")),
-      );
-      return;
-    }
-
-    // Create a reminder object
-    final reminder = {
+    // Prepare reminder data
+    final reminderData = {
       'startDate': startDate!.toIso8601String(),
-      'reminderTime': "${reminderTime!.hour}:${reminderTime!.minute}",
+      'reminderTimes': reminderTimes.map((time) => "${time!.hour}:${time.minute}").toList(),
+      'intakePerDay': intakePerDay,
       'interval': interval,
       'duration': duration,
       'isNotificationEnabled': isNotificationEnabled,
     };
 
-    // Save to Hive
     final box = Hive.box<Map>('medicineReminders');
-    box.put(medicineController.text, reminder);
+    box.put(medicineController.text, reminderData);
+
+    // Schedule notifications if enabled
+    if (isNotificationEnabled) {
+      List<DateTime> schedules = initialSchedules;
+
+      // Calculate interval-based schedules
+      int durationDays = 0;
+      switch (duration) {
+        case "1 Day":
+          durationDays = 1;
+          break;
+        case "7 Days":
+          durationDays = 7;
+          break;
+        case "1 Month":
+          durationDays = 30;
+          break;
+        case "Forever":
+          durationDays = 365 * 10; // Arbitrary long duration for "Forever"
+          break;
+      }
+
+      DateTime currentDate = startDate!;
+      while (currentDate.isBefore(startDate!.add(Duration(days: durationDays)))) {
+        for (var time in reminderTimes) {
+          schedules.add(DateTime(
+            currentDate.year,
+            currentDate.month,
+            currentDate.day,
+            time!.hour,
+            time.minute,
+          ));
+        }
+
+        // Increment currentDate based on the interval
+        currentDate = interval == "Everyday"
+            ? currentDate.add(Duration(days: 1))
+            : currentDate.add(Duration(days: 7));
+      }
+
+      // Schedule each notification
+      for (var time in schedules) {
+        int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+        await NotificationService.scheduleNotification(
+          notificationId,
+          "Medicine Reminder",
+          "Time to take ${medicineController.text}",
+          time,
+        );
+      }
+
+      await NotificationService.showInstantNotification(
+        'Notifications Enabled',
+        'You will now receive notifications for ${medicineController.text}.',
+      );
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Reminder saved successfully")),
@@ -146,6 +246,8 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
 
     Navigator.pop(context, true);
   }
+
+
 
   void fetchReminders() {
     final box = Hive.box<Map>('medicineReminders');
@@ -160,78 +262,12 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
     box.delete(medicineName);
   }
 
-  // Future<void> _saveReminder() async {
-  //   // Validate input
-  //   if (medicineController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Please enter a medicine name")),
-  //     );
-  //     return;
-  //   }
-  //
-  //   if (startDate == null) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Please select a start date")),
-  //     );
-  //     return;
-  //   }
-  //
-  //   if (reminderTime == null) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Please select a reminder time")),
-  //     );
-  //     return;
-  //   }
-  //
-  //   // Combine start date and reminder time
-  //   final scheduleDate = DateTime(
-  //     startDate!.year,
-  //     startDate!.month,
-  //     startDate!.day,
-  //     reminderTime!.hour,
-  //     reminderTime!.minute,
-  //   );
-  //
-  //   // Check if the schedule date/time is in the past
-  //   if (scheduleDate.isBefore(DateTime.now())) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Scheduled time cannot be in the past")),
-  //     );
-  //     return;
-  //   }
-  //
-  //   // Schedule notification using the medicine name as the tag
-  //   await NotificationService.scheduleBackgroundTask(
-  //     medicineController.text, // Use the medicine name as the tag
-  //     {
-  //       'title': "Medicine Reminder",
-  //       'body': "It's time to take your medicine: ${medicineController.text}",
-  //     },
-  //     scheduleDate,
-  //   );
-  //
-  //   // Provide feedback
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(content: Text("Reminder saved successfully")),
-  //   );
-  //
-  //   // Show instant notification if notifications are enabled
-  //   if (isNotificationEnabled) {
-  //     await NotificationService.showInstantNotification(
-  //       "Notifications Enabled",
-  //       "You will now receive reminders for ${medicineController.text}.",
-  //     );
-  //   }
-  //
-  //   Navigator.pop(context, true); // Return true to indicate success
-  // }
-  //
+
   @override
   Widget build(BuildContext context) {
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           title: Text(widget.editingMedicine != null
@@ -242,26 +278,32 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
           padding: EdgeInsets.all(16),
           child: ListView(
             children: [
-              Container(
+              SwitchListTile(
+                title: Text("Notifications"),
+                value: isNotificationEnabled,
+                onChanged: (value) async {
+                  setState(() {
+                    isNotificationEnabled = value;
+                  });
 
-                child:SwitchListTile(
-                  title: Text("Notifications"),
-                  value: isNotificationEnabled,
-                  onChanged: (value) async {
-                    setState(() {
-                      isNotificationEnabled = value;
-                    });
+                  if (!isNotificationEnabled) {
+                    final box = Hive.box<Map>('medicineReminders');
+                    final reminder = box.get(medicineController.text);
 
-                    if (!isNotificationEnabled) {
-                      // Cancel the notification using the medicine name as the tag
-                      await NotificationService.cancelScheduledTask(medicineController.text);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Notifications Disabled")),
-                      );
+                    if (reminder != null && reminder['notificationIds'] != null) {
+                      final notificationIds = reminder['notificationIds'] as List;
+
+                      // Cancel all notifications using the stored notification IDs
+                      for (var notificationId in notificationIds) {
+                        await NotificationService.cancelScheduledTask(notificationId);
+                      }
                     }
-                  },
-                ),
 
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Notifications Disabled")),
+                    );
+                  }
+                },
               ),
 
               TextField(
@@ -282,16 +324,32 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
                 trailing: Icon(Icons.calendar_today),
                 onTap: _pickStartDate,
               ),
-              ListTile(
-                title: Text("Reminder Time"),
-                subtitle: Text(
-                  reminderTime != null
-                      ? reminderTime!.format(context)
-                      : "Select Time",
+              DropdownButtonFormField<int>(
+                value: intakePerDay,
+                onChanged: (value) => _updateIntakePerDay(value!),
+                items: List.generate(
+                  5,
+                      (index) => DropdownMenuItem(
+                    value: index + 1,
+                    child: Text("${index + 1} times per day"),
+                  ),
                 ),
-                trailing: Icon(Icons.access_time),
-                onTap: _pickReminderTime,
+                decoration: InputDecoration(labelText: "Intake Per Day"),
               ),
+              ...List.generate(
+                intakePerDay,
+                    (index) => ListTile(
+                  title: Text("Reminder Time ${index + 1}"),
+                  subtitle: Text(
+                    reminderTimes[index] != null
+                        ? reminderTimes[index]!.format(context)
+                        : "Select Time",
+                  ),
+                  trailing: Icon(Icons.access_time),
+                  onTap: () => _pickReminderTime(index),
+                ),
+              ),
+
               DropdownButtonFormField<String>(
                 value: interval,
                 onChanged: (value) {
@@ -330,6 +388,7 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       ),
     );
   }
+
 
 }
 

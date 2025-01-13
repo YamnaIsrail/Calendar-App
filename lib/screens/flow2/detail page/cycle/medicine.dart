@@ -1,8 +1,10 @@
 import 'package:calender_app/notifications/notification_service.dart';
+import 'package:calender_app/provider/showhide.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import '../../../../widgets/buttons.dart';
 import 'medicine_reminder_form.dart';
 
@@ -43,83 +45,9 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
     box.put('selectedMedicines', selectedMedicines); // Save the list of selected medicines
   }
 
-  void xshowContraceptiveDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.6,
-        maxChildSize: 0.8,
-        minChildSize: 0.4,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Choose Your Contraceptive',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              SizedBox(
-                height: 300,
-                child: ListView.builder(
-                  itemCount: contraceptives.length,
-                  itemBuilder: (context, index) {
-                    final contraceptive = contraceptives[index];
-                    return ListTile(
-                      leading: Icon(
-                        contraceptive['icon'],
-                        size: 40,
-                        color: Color(0xff3049B2),
-                      ),
-                      title: Text(
-                        contraceptive['name'],
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      onTap: () {
-                        setState(() {
-                          if (!selectedMedicines.contains(contraceptive['name'])) {
-                            selectedMedicines.add(contraceptive['name']);
-                          }
-                        });
-                        _saveMedicines(); // Save the list to Hive
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.add,
-                  size: 40,
-                  color: Color(0xff3049B2),
-                ),
-                title: Text(
-                  "Add Custom Pill",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  setState(() {
-                    Navigator.pop(context);
-                    _showCustomPillDialog();
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
   void showContraceptiveDialog() {
+    final showHideProvider = Provider.of<ShowHideProvider>(context, listen: false); // Access the provider
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -143,7 +71,8 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
-              SizedBox(
+              if (showHideProvider.visibilityMap['Contraceptive Medicine'] == true)
+                SizedBox(
                 height: 300,
                 child: ListView.builder(
                   itemCount: contraceptives.length,
@@ -159,18 +88,15 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                         contraceptive['name'],
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                      onTap: () {
-                        // Save the selected contraceptive before navigating
+                      onTap: () async {
                         setState(() {
                           if (!selectedMedicines.contains(contraceptive['name'])) {
                             selectedMedicines.add(contraceptive['name']);
                           }
                         });
 
-                        // Save the list to Hive
-                        _saveMedicines();
+                       _saveMedicines();
 
-                        // After saving, navigate to the MedicineReminderScreen
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -181,7 +107,6 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                           ),
                         );
 
-                        Navigator.pop(context); // Close the bottom sheet
                       },
                     );
                   },
@@ -243,6 +168,9 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                       });
                       _saveMedicines(); // Save the updated list
 
+                      // Close the dialog first
+                      Navigator.pop(context);
+
                       // Navigate to MedicineReminderScreen after adding the custom pill
                       Navigator.push(
                         context,
@@ -254,7 +182,6 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                         ),
                       );
                     }
-                    Navigator.pop(context); // Close the dialog
                   },
                   text: "Add",
                 ),
@@ -266,41 +193,6 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
     );
   }
 
-  void _editMedicine(String medicine) {
-    TextEditingController editController = TextEditingController(text: medicine);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Edit Medicine"),
-        content: TextField(
-          controller: editController,
-          decoration: InputDecoration(hintText: "Enter new medicine name"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                final index = selectedMedicines.indexOf(medicine);
-                if (index != -1) {
-                  selectedMedicines[index] = editController.text;
-                }
-              });
-              _saveMedicines(); // Save the updated list
-              Navigator.pop(context);
-            },
-            child: Text("Save"),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -350,9 +242,39 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                             //   ),
                             //   onPressed: () => toggleNotificationStatus(medicine),
                             // ),
+                            // IconButton(
+                            //   icon: Icon(Icons.delete, color: Colors.red),
+                            //   onPressed: () {
+                            //     final box = Hive.box<Map>('medicineReminders');
+                            //     final reminder = box.get(medicine);
+                            //
+                            //     if (reminder != null && reminder['notificationId'] != null) {
+                            //       final notificationId = reminder['notificationId'];
+                            //       // Cancel the notification using the notification ID
+                            //       NotificationService.cancelScheduledTask(notificationId);
+                            //     }
+                            //     setState(() {
+                            //       selectedMedicines.removeAt(index);
+                            //       notificationsStatus.remove(medicine);
+                            //     });
+                            //     _saveMedicines(); // Save the updated list
+                            //   },
+                            // ),
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
+                                final box = Hive.box<Map>('medicineReminders');
+                                final reminder = box.get(medicine);
+
+                                if (reminder != null && reminder['notificationIds'] != null) {
+                                  final notificationIds = reminder['notificationIds'] as List;
+
+                                  // Cancel all notifications using the stored notification IDs
+                                  for (var notificationId in notificationIds) {
+                                    NotificationService.cancelScheduledTask(notificationId);
+                                  }
+                                }
+
                                 setState(() {
                                   selectedMedicines.removeAt(index);
                                   notificationsStatus.remove(medicine);
@@ -362,27 +284,27 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
                             ),
                           ],
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MedicineReminderScreen(
-                                selectedMedicines: selectedMedicines,
-                                editingMedicine: medicine, // Pass the medicine to be edited
+      onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => MedicineReminderScreen(
+                                  selectedMedicines: selectedMedicines,
+                                  editingMedicine: medicine, // Pass the medicine to be edited
+                                ),
                               ),
-                            ),
-                          ).then((updatedMedicine) {
-                            if (updatedMedicine != null && updatedMedicine is String) {
-                              // Update the medicine if edited and returned
-                              setState(() {
-                                final index = selectedMedicines.indexOf(medicine);
-                                if (index != -1) {
-                                  selectedMedicines[index] = updatedMedicine;
-                                }
-                              });
-                            }
-                          });
-                        },
+                            ).then((updatedMedicine) {
+                              if (updatedMedicine != null && updatedMedicine is String) {
+                                // Update the medicine if edited and returned
+                                setState(() {
+                                  final index = selectedMedicines.indexOf(medicine);
+                                  if (index != -1) {
+                                    selectedMedicines[index] = updatedMedicine;
+                                  }
+                                });
+                              }
+                            });
+                          },
 
                       ),
                     );
@@ -401,41 +323,6 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
     );
   }
   Map<String, int> notificationIds = {};
-
-  void toggleNotificationStatus(String medicine) async {
-    final currentStatus = notificationsStatus[medicine] ?? false;
-
-    if (!currentStatus) {
-      // Navigate to the MedicineReminderScreen to set the timing
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MedicineReminderScreen(
-            selectedMedicines: selectedMedicines,
-            editingMedicine: medicine, // Pass the medicine to be edited
-          ),
-        ),
-      ).then((result) {
-        if (result != null && result is bool && result) {
-          // If the user set the reminder successfully, update the notification status
-          setState(() {
-            notificationsStatus[medicine] = true;
-          });
-        }
-      });
-    } else {
-      // Cancel the notification
-      int? notificationId = notificationIds[medicine];
-      if (notificationId != null) {
-        await NotificationService.cancelScheduledTask("medicine_reminder_$notificationId");
-        notificationIds.remove(medicine); // Remove the ID after cancellation
-      }
-      setState(() {
-        notificationsStatus[medicine] = false;
-      });
-    }
-  }
-
 
   bool isNotificationEnabled(String medicine) {
     return notificationsStatus[medicine] ?? false;

@@ -1,5 +1,7 @@
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/intercourse_provider.dart';
+import 'package:calender_app/screens/flow2/detail%20page/cycle/intercourse.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,7 +20,7 @@ class TempChart extends StatelessWidget {
 
     // Check if temperature data is available, else display a message
     String latestTemperature = temperatureProvider.temperatureData.isNotEmpty
-        ? "${temperatureProvider.getLatestTemperature()} °F"
+        ? "${temperatureProvider.getLatestTemperature()} °C"
         : "Not Entered Yet";
 
 
@@ -27,10 +29,15 @@ class TempChart extends StatelessWidget {
         : "Cycle Day _";
 
 
-    String intercourseInfo = intercourseProvider
-            .intercourseActivityData.isNotEmpty
-        ? "${intercourseProvider.intercourseActivityData.last['condomOption']} - ${intercourseProvider.intercourseActivityData.last['femaleOrgasm']}"
-        : "Not Entered Yet";
+    // String intercourseInfo = intercourseProvider
+    //         .intercourseActivityData.isNotEmpty
+    //     ? "${intercourseProvider.intercourseActivityData.last['condomOption']} - ${intercourseProvider.intercourseActivityData.last['femaleOrgasm']}"
+    //     : "Not Entered Yet";
+    String condomOption = intercourseProvider.condomOption;
+    String femaleOrgasm = intercourseProvider.femaleOrgasm;
+
+    String intercourseInfo = "${condomOption} - ${femaleOrgasm}";
+
 
     return bgContainer(
       child: Scaffold(
@@ -157,7 +164,7 @@ class TempChart extends StatelessWidget {
                 // Display dynamic date or "Not Entered Yet" message
                 Text(
                   temperatureProvider.temperatureData.isNotEmpty
-                      ? DateFormat('yyyy-MM-dd').format(DateTime.parse(
+                      ? DateFormat(context.watch<SettingsModel>().dateFormat).format(DateTime.parse(
                           temperatureProvider.getLatestTemperatureDate()))
                       : "",
                   style: const TextStyle(
@@ -223,14 +230,18 @@ class TempChart extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      intercourseProvider.intercourseActivityData.isNotEmpty
-                          ? "Details Available"
-                          : "Not Entered Yet",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.pink,
-                        fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () {
+                       Navigator.push(context, MaterialPageRoute(builder: (context)=>IntercourseScreen()));  },
+                      child: Text(
+                        intercourseProvider.intercourseActivityData.isNotEmpty
+                            ? "Details Available"
+                            : "Not Entered Yet",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.pink,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -266,7 +277,7 @@ class TempChart extends StatelessWidget {
                 if (temperature > 0) {
                   // Automatically use today's date
                   String currentDate =
-                      DateFormat('yyyy-MM-dd').format(DateTime.now());
+                      DateFormat("yyyy-MM-dd").format(DateTime.now());
 
                   temperatureProvider.addTemperature(temperature, currentDate);
                   Navigator.pop(context); // Close the dialog

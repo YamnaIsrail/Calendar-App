@@ -62,33 +62,39 @@ class Ovulation extends StatelessWidget {
                     "We use this luteal phase length to predict your next ovulation.",
               ),
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              color: Colors.white,
-              child: ListTile(
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Use Average ",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text("Use Last 3 months data"),
-                  ],
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          color: Colors.white,
+          child: ListTile(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Use Average ",
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                trailing: Switch(
-                  value: false, // Update to reflect provider's state
-                  onChanged: (bool newValue) {
-                    CalendarDialogHelper.showLastMonthsDialog(context, (selection) {
-                      print("Selected option: $selection");
-                      // Update provider or handle the selection
-                    });
-                  },
-                ),
-              ),
+                Text("Use ${cycleProvider.selectedOption} data"), // Dynamic text
+              ],
             ),
-            Padding(
+            trailing: Switch(
+              value: cycleProvider.useAverage, // Reflect the current state from the provider
+              onChanged: (bool newValue) {
+                if (newValue) {
+                  // Show dialog for selection only if the switch is turned on
+                  CalendarDialogHelper.showLastMonthsDialog(context, cycleProvider.selectedOption, (selection) {
+                    // Update the provider with the selected option
+                    cycleProvider.updateUseAverage(newValue, selection);
+                  });
+                } else {
+                  // If the switch is turned off, just update the provider without showing the dialog
+                  cycleProvider.updateUseAverage(newValue, ""); // You can set a default or empty string
+                }
+              },
+            ),
+          ),
+        ),
+        Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 "Turn on the option, use average value to predict your next ovulation.",

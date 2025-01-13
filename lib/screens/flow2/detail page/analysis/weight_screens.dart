@@ -4,12 +4,7 @@ import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-
-import 'progress_bar.dart';
 
 class Weight extends StatefulWidget {
   const Weight({super.key});
@@ -22,43 +17,72 @@ class _WeightState extends State<Weight> {
   List<Map<String, dynamic>> weightData = [];
   late Box weightBox;
   String _selectedView = 'month';  // State variable to track the selected view
+  double userHeight = 0; // Initial height value
 
   @override
   void initState() {
     super.initState();
     initializeHive();
   }
-
   Future<void> initializeHive() async {
-    weightBox = await Hive.openBox('weightBox');
-    setState(() {
-      weightData = List<Map<String, dynamic>>.from(
-          weightBox.get('weights', defaultValue: []));
-    });
-  }
-  Map<String, dynamic>? getLastWeekData() {
-    List<Map<String, dynamic>> weeklyData = weightData
-        .where((entry) =>
-    entry['date']
-        .isAfter(DateTime.now().subtract(const Duration(days: 7))) &&
-        entry['date'].isBefore(DateTime.now().add(const Duration(days: 1))))
-        .toList();
+    try {
+      weightBox = await Hive.openBox('weightBox');
+      setState(() {
+        userHeight = weightBox.get('height', defaultValue: 0.0);
 
-    if (weeklyData.isNotEmpty) {
-      // Sort by date to get the most recent entry
-      weeklyData.sort((a, b) => b['date'].compareTo(a['date']));
-      return weeklyData.first;
+        // Safely retrieve and cast 'weights' data
+        final weights = weightBox.get('weights', defaultValue: []);
+        if (weights is List) {
+          weightData = weights
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+        } else {
+          weightData = [];
+        }
+      });
+    } catch (e) {
+      print("Error initializing Hive: $e");
     }
-    return null;
   }
 
-  void updateWeight(double weight) {
-    setState(() {
-      final date = DateTime.now();
-      weightData.add({'date': date, 'weight': weight});
-      weightBox.put('weights', weightData);
-    });
+  Future<void> updateWeight(double weight) async {
+    final date = DateTime.now();
+    double bmi = weight / ((userHeight / 100) * (userHeight / 100)); // Calculate BMI using the current height
+    String stage = calculateBMIStage(weight, userHeight);
+
+    Map<String, dynamic> newWeightRecord = {
+      'date': date.toIso8601String(), // Save date as string for better compatibility
+      'weight': weight,
+      'bmi': bmi.toStringAsFixed(1),
+      'stage': stage,
+    };
+
+    weightData.add(newWeightRecord);
+
+    // Save the weights list and ensure type consistency
+    await weightBox.put('weights', weightData.map((e) => Map<String, dynamic>.from(e)).toList());
+    setState(() {});
   }
+
+
+  String calculateBMIStage(double weight, double heightCm) {
+    if (heightCm <= 0) {
+      return " ";
+    }
+    double heightM = heightCm / 100;
+    double bmi = weight / (heightM * heightM);
+
+    if (bmi < 18.5) {
+      return "Underweight";
+    } else if (bmi >= 18.5 && bmi < 24.9) {
+      return "Normal";
+    } else if (bmi >= 25.0 && bmi < 29.9) {
+      return "Overweight";
+    } else {
+      return "Obese";
+    }
+  }
+
   void showWeightInputDialog() {
     TextEditingController weightController = TextEditingController();
 
@@ -72,119 +96,87 @@ class _WeightState extends State<Weight> {
           decoration: const InputDecoration(labelText: "Weight in kg"),
         ),
         actions: [
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
-                ),
-              ),
-              Expanded(
-                child: CustomButton(
-                    onPressed: () {
-
-                      if (weightController.text.isNotEmpty) {
-                        double weight = double.parse(weightController.text);
-                        updateWeight(weight);
-                        Provider.of<WeightProvider>(context, listen: false)
-                            .addWeightData(weight);
-                        Navigator.pop(context);
-                      }
-                    },
-                    backgroundColor: primaryColor,
-                    text: "Save"
-                ),
-              ),
-
-            ],
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
           ),
-
+          TextButton(
+            onPressed: () {
+              if (weightController.text.isNotEmpty) {
+                double weight = double.parse(weightController.text);
+                updateWeight(weight);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text("Save"),
+          ),
         ],
       ),
     );
   }
-  double userHeight = 170.0; // Initial height value
-  final double maxHeight = 200.0; // Maximum height reference
-  bool isHeightInputEnabled = false; // Toggle for enabling height input
-
-  // Calculate the progress based on the user's height
-  double calculateHeightProgress(double userHeight) {
-    return userHeight / maxHeight;
-  }
-
-  // Show height input dialog
   void showHeightInputDialog() {
+    TextEditingController heightController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) {
-        TextEditingController heightController = TextEditingController();
         return AlertDialog(
-          title: Text('Enter your height'),
+          title: const Text('Enter your height'),
           content: TextField(
             controller: heightController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: "Height in cm"),
+            decoration: const InputDecoration(hintText: "Height in cm"),
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
                 setState(() {
                   userHeight = double.tryParse(heightController.text) ?? userHeight;
+                  weightBox.put('height', userHeight);
                 });
+                // Recalculate BMI for the last weight entry
+                if (weightData.isNotEmpty) {
+                  final lastWeightData = weightData.last;
+                  double weight = lastWeightData['weight'];
+                  lastWeightData['bmi'] = (weight / ((userHeight / 100) * (userHeight / 100))).toStringAsFixed(1);
+                  lastWeightData['stage'] = calculateBMIStage(weight, userHeight);
+                  weightBox.put('weights', weightData); // Update the weights in Hive
+                }
                 Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
       },
     );
   }
+  bool isHeightInputEnabled = true; // Toggle for enabling height input
+
 
   @override
   Widget build(BuildContext context) {
-    double progress = calculateHeightProgress(userHeight);
+    final lastWeightData = weightData.isNotEmpty ? weightData.last : null;
 
-    final lastWeekData = Provider.of<WeightProvider>(context).getLastWeightData();
-
-    return  bgContainer(
+    return bgContainer(
       child: Scaffold(
-        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
           title: Text("Weight", style: TextStyle(fontWeight: FontWeight.bold)),
           centerTitle: true,
-          leading: IconButton(
-            icon: Container(
-              padding: EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: Color(0xFFFFC4E8),
-                borderRadius: BorderRadius.circular(50),
-              ),
-              child: Icon(Icons.arrow_back),
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-
         ),
         body: ListView(
-          scrollDirection: Axis.vertical,
+          padding: EdgeInsets.symmetric(horizontal: 15),
           children: [
-            const SizedBox(height: 10),
             Container(
               height: 350,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.all( 15),
               child: Column(
                 children: [
                   Text(
@@ -201,6 +193,45 @@ class _WeightState extends State<Weight> {
             ),
             const SizedBox(height: 15),
             Divider(),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  lastWeightData != null && lastWeightData['weight'] != null
+                      ? "${lastWeightData['weight']} kg"
+                      : 'No weight recorded',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+
+                if (isHeightInputEnabled)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                    children: [
+                      if(userHeight!=0)
+                        Text(
+                          lastWeightData != null && lastWeightData['bmi'] != null && lastWeightData['stage'] != null
+                              ? "BMI: ${lastWeightData['bmi']}"
+                              : '',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+
+                      Text(
+                        lastWeightData != null && lastWeightData['bmi'] != null && lastWeightData['stage'] != null
+                            ? " ${lastWeightData['stage']}"
+                            : 'No BMI data',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  )
+                else
+                  Text("Enable BMI tracking")
+
+              ]
+
+              ,
+            ),
             Container(
               padding: EdgeInsets.all(20),
               // height: 80,
@@ -210,8 +241,8 @@ class _WeightState extends State<Weight> {
                 children: [
                   Expanded(
                     child: CustomButton2(text: "Month",
-                      backgroundColor: secondaryColor,
-                      onPressed: () {
+                        backgroundColor: _selectedView == 'month' ? primaryColor : secondaryColor,
+                        onPressed: () {
                         setState(() {
                           _selectedView = 'month';  // Switch to the month view
                         });
@@ -222,7 +253,8 @@ class _WeightState extends State<Weight> {
                   SizedBox(width: 15,),
                   Expanded(
                     child: CustomButton2(text: "Week",
-                      backgroundColor: primaryColor,
+                      backgroundColor: _selectedView == 'week' ? primaryColor : secondaryColor,
+
                       onPressed: ()  {
                         setState(() {
                           _selectedView = 'week';  // Switch to the week view
@@ -234,24 +266,7 @@ class _WeightState extends State<Weight> {
                 ],
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
 
-                Text(
-                    lastWeekData != null ? "${lastWeekData['weight']} kg" : 'No weight recorded',
-                    style:
-                    TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                Text(
-
-                    lastWeekData != null
-                        ? DateFormat('yyyy-MM-dd').format(lastWeekData['date']) // Only date
-                        : 'No data available',
-
-                    style:
-                    TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              ],
-            ),
             Container(
               decoration: BoxDecoration(
                 color: Color(0xffC6E1FC),
@@ -269,14 +284,13 @@ class _WeightState extends State<Weight> {
                       setState(() {
                         isHeightInputEnabled = value;
                       });
-                      if (isHeightInputEnabled) {
-                        showHeightInputDialog();
-                      }
+
                     },
                   ),
-                  Container(
-                      child: MultiColorProgressBar(progress: progress)
-                  ),
+
+                  // Container(
+                  //     child: MultiColorProgressBar(progress: progress)
+                  // ),
                   SizedBox(height: 10,),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -285,14 +299,30 @@ class _WeightState extends State<Weight> {
                         " Height",
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      Text("  ${userHeight.toStringAsFixed(1)} cm",
-                          style: TextStyle(color:Colors.black, fontSize: 14, fontWeight: FontWeight.bold)),
+                      userHeight > 0
+                          ? Row(
+                            children: [
+                              Text("  ${userHeight.toStringAsFixed(1)} cm",
+                              style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold)),
+                              IconButton(
+                                icon: Icon(Icons.add),
+                                onPressed: showHeightInputDialog,
+                              ),
+                            ],
+                          )
+                          : IconButton(
+                        icon: Icon(Icons.add),
+                        onPressed: showHeightInputDialog,
+                      ),
+
+                      //     style: TextStyle(color:Colors.black, fontSize: 14, fontWeight: FontWeight.bold)),
                     ],
                   ),
 
                 ],
               ),
             ),
+
           ],
         ),
       ),
@@ -300,51 +330,85 @@ class _WeightState extends State<Weight> {
   }
 
   Widget buildWeeklyView() {
-    List<double> weeklyWeights = weightData
-        .where((entry) =>
-    entry['date']
-        .isAfter(DateTime.now().subtract(const Duration(days: 7))) &&
-        entry['date'].isBefore(DateTime.now().add(const Duration(days: 1))))
-        .map((entry) => entry['weight'] as double)
-        .toList();
+    DateTime now = DateTime.now();
+    List<Map<String, dynamic>> weeklyData = weightData.where((entry) {
+      final entryDate = entry['date'] is DateTime
+          ? entry['date'] as DateTime
+          : DateTime.parse(entry['date']);
+      return entryDate.isAfter(now.subtract(const Duration(days: 7))) &&
+          entryDate.isBefore(now.add(const Duration(days: 1)));
+    }).toList();
 
-    double progress = 0;
-    if (weeklyWeights.isNotEmpty) {
-      // Calculate progress (example: increase by 10% per day with weight logged)
-      progress = (weeklyWeights.length / 7) * 100;
+    if (weeklyData.isEmpty) {
+      return Center(
+        child: Text("No data available.",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      );
     }
 
-    return weeklyWeights.isEmpty
-        ?
-    // const Center(child: Text("No data for this week")
-    Center(
-      child: Text(
-        "No data available.",
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-
-    )
-        :    Expanded(
+    return Expanded(
       child: LineChart(
         LineChartData(
-          minY: weeklyWeights.reduce((a, b) => a < b ? a : b) - 5,
-          maxY: weeklyWeights.reduce((a, b) => a > b ? a : b) + 5,
+          minY: weeklyData.map((e) => e['weight']).reduce((a, b) => a < b ? a : b) - 5,
+          maxY: weeklyData.map((e) => e['weight']).reduce((a, b) => a > b ? a : b) + 5,
           lineBarsData: [
             LineChartBarData(
-              spots: weeklyWeights
-                  .asMap()
-                  .entries
-                  .map((entry) =>
-                  FlSpot(entry.key.toDouble(), entry.value))
-                  .toList(),
+              spots: weeklyData.asMap().entries.map((entry) {
+                int index = entry.key;
+                Map<String, dynamic> data = entry.value;
+                return FlSpot(index.toDouble(), data['weight']);
+              }).toList(),
+              isCurved: true,
+              dotData: FlDotData(show: true),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget buildMonthlyView() {
+    List<Map<String, dynamic>> monthlyData = weightData.where((entry) {
+      // Log the type of the 'date' field to identify any inconsistencies
+      print("Entry date: ${entry['date']} (Type: ${entry['date'].runtimeType})");
+
+      // Attempt to parse the date if it's a string
+      DateTime entryDate;
+      if (entry['date'] is DateTime) {
+        entryDate = entry['date'] as DateTime;
+      } else if (entry['date'] is String) {
+        // Try to parse the string to a DateTime, handle invalid cases
+        entryDate = DateTime.tryParse(entry['date']) ?? DateTime.now(); // Default to now if parsing fails
+      } else {
+        // If the date is neither DateTime nor String, default to DateTime.now()
+        entryDate = DateTime.now();
+      }
+
+      // Now, return true only if the entryDate is within this month
+      return entryDate.month == DateTime.now().month &&
+          entryDate.year == DateTime.now().year;
+    }).toList();
+
+    if (monthlyData.isEmpty) {
+      return const Center(child: Text("No data for this month"));
+    }
+
+    return Expanded(
+      child: LineChart(
+        LineChartData(
+          minY: monthlyData.map((e) => e['weight']).reduce((a, b) => a < b ? a : b) - 5,
+          maxY: monthlyData.map((e) => e['weight']).reduce((a, b) => a > b ? a : b) + 5,
+          lineBarsData: [
+            LineChartBarData(
+              spots: monthlyData.asMap().entries.map((entry) {
+                int index = entry.key;
+                Map<String, dynamic> data = entry.value;
+                return FlSpot(index.toDouble(), data['weight'] as double);
+              }).toList(),
               isCurved: true,
               belowBarData: BarAreaData(
                 show: true,
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.blue.withOpacity(0.5),
-                    Colors.blue.withOpacity(0.1),
-                  ],
+                  colors: [Colors.green.withOpacity(0.5), Colors.green.withOpacity(0.1)],
                 ),
               ),
             ),
@@ -355,118 +419,31 @@ class _WeightState extends State<Weight> {
                 showTitles: true,
                 getTitlesWidget: (value, _) {
                   final int index = value.toInt();
-                  if (index >= 0 && index < weeklyWeights.length) {
+                  int step = (monthlyData.length / 5).ceil();
+                  if (index % step == 0 && index < monthlyData.length) {
+                    final date = monthlyData[index]['date'] is DateTime
+                        ? monthlyData[index]['date'] as DateTime
+                        : DateTime.parse(monthlyData[index]['date'] as String);
                     return Text(
-                      "${weightData[index]['date'].day}/${weightData[index]['date'].month}",
-                      style: const TextStyle(fontSize: 10),
+                      "${date.day}/${date.month}",
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
                     );
                   }
-                  return const Text("");
+                  return const Text(""); // Empty space for non-visible titles
                 },
               ),
             ),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                getTitlesWidget: (value, _) =>
-                    Text("${value.toInt()} kg", style: TextStyle(fontSize: 12),),
+                getTitlesWidget: (value, _) => Text("${value.toInt()} kg"),
               ),
             ),
           ),
           gridData: const FlGridData(show: false),
         ),
       ),
-
-
     );
   }
 
-
-  Widget buildMonthlyView() {
-    List<Map<String, dynamic>> monthlyData = weightData
-        .where((entry) =>
-    entry['date'].month == DateTime.now().month &&
-        entry['date'].year == DateTime.now().year)
-        .toList();
-
-    double progress = 0;
-    if (monthlyData.isNotEmpty) {
-      // Calculate progress for monthly data
-      progress = (monthlyData.length / DateTime.now().day) * 100;
-    }
-
-    return monthlyData.isEmpty
-        ? const Center(child: Text("No data for this month"))
-        :   Expanded(
-        child: Container(
-          color: Colors.white,
-          padding: EdgeInsets.all(5),
-
-          child: LineChart(
-            LineChartData(
-              minY: monthlyData
-                  .map((e) => e['weight'])
-                  .reduce((a, b) => a < b ? a : b) - 5,
-              maxY: monthlyData
-                  .map((e) => e['weight'])
-                  .reduce((a, b) => a > b ? a : b) + 5,
-              lineBarsData: [
-                LineChartBarData(
-                  spots: monthlyData
-                      .asMap()
-                      .entries
-                      .map((entry) =>
-                      FlSpot(entry.key.toDouble(),
-                          entry.value['weight'] as double))
-                      .toList(),
-                  isCurved: true,
-                  belowBarData: BarAreaData(
-                    show: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.green.withOpacity(0.5),
-                        Colors.green.withOpacity(0.1),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, _) {
-                      final int index = value.toInt();
-
-                      // Show the title for every nth data point
-                      int step = (monthlyData.length / 5).ceil();
-                      if (index % step == 0 && index < monthlyData.length) {
-                        final date = monthlyData[index]['date'];
-                        return Text(
-                          "${date.day}/${date.month}",
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        );
-                      }
-                      return const Text(""); // Empty space for non-visible titles
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, _) =>
-                        Text("${value.toInt()} kg"),
-                  ),
-                ),
-              ),
-              gridData: const FlGridData(show: false),
-            ),
-          ),
-        ));
-  }
-
 }
-

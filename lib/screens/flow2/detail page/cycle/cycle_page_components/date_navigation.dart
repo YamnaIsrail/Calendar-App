@@ -1,24 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date manipulation
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../../provider/date_day_format.dart';
 
 class DateNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-    // Get current date and week
-    DateTime now = DateTime.now();
-    DateTime startOfWeek = now.subtract(Duration(days: now.weekday % 7)); // Sunday
-    List<DateTime> weekDates = List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
+    // Watch for the firstDayOfWeek from the SettingsModel
+    final firstDayOfWeek = context.watch<SettingsModel>().firstDayOfWeek;
 
+    // Get current date
+    DateTime now = DateTime.now();
+
+    // Find the current weekday as per Dart's weekday system (1 = Monday, 7 = Sunday)
+    int currentWeekday = now.weekday;
+
+    // Adjust currentWeekday if the first day of the week is Sunday
+    if (firstDayOfWeek == "Sunday" && currentWeekday == 7) {
+      currentWeekday = 0; // Make Sunday behave as 0
+    }
+
+    // Adjust the start of the week based on firstDayOfWeek
+    int firstDayIndex = dayNames.indexOf(firstDayOfWeek.substring(0, 3).toUpperCase());
+
+    // Find the start of the week based on selected first day of the week
+    DateTime startOfWeek = now.subtract(Duration(days: (currentWeekday - firstDayIndex + 7) % 7));
+
+    // Generate week dates starting from the adjusted start of the week
+    List<DateTime> weekDates = List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       height: 140,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: List.generate(dayNames.length, (index) {
-            bool isSelected = (weekDates[index].day == now.day);
+          children: List.generate(7, (index) {
+            // Check if today is the same day as the current iteration
+            bool isSelected = (weekDates[index].day == now.day) &&
+                (weekDates[index].month == now.month) &&
+                (weekDates[index].year == now.year);
 
             return Container(
               width: 52, // Adjust width for items
@@ -27,18 +50,12 @@ class DateNavigation extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: isSelected
                     ? LinearGradient(
-                  colors: [
-                    Color(0xFFD6A4F8),
-                    Color(0xFF5A5FE3),
-                  ],
+                  colors: [Color(0xFFD6A4F8), Color(0xFF5A5FE3)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 )
                     : LinearGradient(
-                  colors: [
-                    Color(0xFFE8EAF6),
-                    Color(0xFFE6BAEE),
-                  ],
+                  colors: [Color(0xFFE8EAF6), Color(0xFFE6BAEE)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -56,7 +73,7 @@ class DateNavigation extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    dayNames[index],
+                    dayNames[(index + firstDayIndex) % 7], // Adjust day name based on the first day
                     style: TextStyle(
                       fontSize: 14,
                       color: isSelected ? Colors.white : Colors.black,

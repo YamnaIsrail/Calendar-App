@@ -1,3 +1,4 @@
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/paired_days_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/partner_mode/partner_flow/stop_pairing_dialog.dart';
@@ -5,6 +6,7 @@ import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class PartnerModeSetting extends StatelessWidget {
   @override
@@ -50,15 +52,11 @@ class PartnerModeSetting extends StatelessWidget {
                         Row(
                           children: [
                             CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                  'https://example.com/path-to-avatar.jpg'), // Replace with actual image URL
                               radius: 20,
                               child: Icon(Icons.boy),
                             ),
                              CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                  'https://example.com/path-to-avatar.jpg'), // Replace with actual image URL
-                              radius: 20,
+                             radius: 20,
                               child: Icon(Icons.girl),
 
                             ),
@@ -91,6 +89,16 @@ class PartnerModeSetting extends StatelessWidget {
                     style: TextStyle(fontSize: 16, ),
                   ),
 
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<PartnerProvider>().listenForCycleUpdates(); // Call the sync method
+                  },
+                  child: Text('Sync with Partner Data'),
                 ),
               ),
             ],

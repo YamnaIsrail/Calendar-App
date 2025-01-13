@@ -7,11 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../dialog.dart';
+import 'package:intl/intl.dart';
 import 'generate_pdf.dart';
 
 class ExportCyclePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -27,7 +30,6 @@ class ExportCyclePage extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Name: ${cycleProvider.userName}"),
                   Text("Last Period Start: ${cycleProvider.lastPeriodStart}"),
                   Text("Cycle Length: ${cycleProvider.cycleLength} days"),
                   Text("Period Length: ${cycleProvider.periodLength} days"),
@@ -36,8 +38,20 @@ class ExportCyclePage extends StatelessWidget {
                   Text("Days Until Next Period: ${cycleProvider.getDaysUntilNextPeriod()}"),
                   Text("Past Periods:"),
                   ...cycleProvider.pastPeriods.map((period) {
-                    return Text("Start: ${period['startDate']}, End: ${period['endDate']}");
+                    // Format the start and end date
+                    DateTime startDate = DateTime.parse(period['startDate']!);
+                    DateTime endDate = DateTime.parse(period['endDate']!);
+                    String formattedStartDate = dateFormat.format(startDate);
+                    String formattedEndDate = dateFormat.format(endDate);
+
+                    return Text("Start: $formattedStartDate - End: $formattedEndDate");
                   }).toList(),
+
+                  // Text("*****************"),
+                  // Text("Past Periods:"),
+                  // ...cycleProvider.pastPeriods.map((period) {
+                  //   return Text("Start: ${period['startDate']}, End: ${period['endDate']}");
+                  // }).toList(),
                   Spacer(),
                   CustomButton(
                     onPressed: () {

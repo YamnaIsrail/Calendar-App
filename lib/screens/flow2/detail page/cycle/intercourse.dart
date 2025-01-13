@@ -1,4 +1,5 @@
 import 'package:calender_app/provider/intercourse_provider.dart';
+import 'package:calender_app/provider/showhide.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -14,6 +15,7 @@ class IntercourseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<IntercourseProvider>(context);
+    final showHideProvider = context.watch<ShowHideProvider>();
 
     return bgContainer(
       child: Scaffold(
@@ -47,15 +49,32 @@ class IntercourseScreen extends StatelessWidget {
           child: Container(
             color: Colors.white,
             padding: const EdgeInsets.all(30),
-            child: Column(
+            child:showHideProvider.visibilityMap['Intercourse Option'] == true
+                ?
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+
                 if (provider.isSectionVisible('Condom Option')) _buildCondomOptions(provider),
                 if (provider.isSectionVisible('Female Orgasm')) _buildFemaleOrgasmOptions(provider),
                 if (provider.isSectionVisible('Times')) _buildTimesOptions(provider),
                 Spacer(),
                 _buildSaveAndAnalysisButtons(context),
+              ],
+            ):
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Intercourse Options Disabled", // Display this text when the option is false
+                  style: TextStyle(fontSize: 22, color: Colors.red),
+                ),
+                Text(
+                  "Enable it from Settings", // Display this text when the option is false
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
               ],
             ),
           ),
@@ -65,7 +84,8 @@ class IntercourseScreen extends StatelessWidget {
   }
 
   Widget _buildCondomOptions(IntercourseProvider provider) {
-    return Column(
+    return
+      Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Condom Option', style: TextStyle(fontSize: 20)),

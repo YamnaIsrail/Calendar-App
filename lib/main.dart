@@ -1,4 +1,7 @@
+// import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/preg_provider.dart';
+import 'package:calender_app/provider/showhide.dart';
 import 'package:calender_app/screens/settings/auth/password/enter_password.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:calender_app/screens/settings/translation.dart';
@@ -24,14 +27,17 @@ import 'firebase_option.dart';
 import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'hive/partner_model.dart';
 import 'hive/timeline_entry.dart';
 import 'notifications/notification_model.dart';
 import 'notifications/notification_storage.dart';
 import 'provider/analysis/weight_provider.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService.init();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -43,11 +49,11 @@ void main() async {
   final authData = authBox.get('authData', defaultValue: AuthData())!;
   await Hive.openBox('partner_codes');
 
-  await NotificationService.init();
   tz.initializeTimeZones();
 
   Hive.registerAdapter(NoteAdapter());
   await Hive.openBox<Note>('notesBox');
+  await Hive.openBox('temperatureBox'); // Open Hive box to store temperatures
 
   // await NotificationStorage.init();
   var box = await Hive.openBox('myBox');
@@ -58,16 +64,29 @@ void main() async {
   Hive.registerAdapter(CycleDataAdapter());
   await Hive.openBox<CycleData>('cycleData');
 
+  Hive.registerAdapter(PartnerDataAdapter());
+  await Hive.openBox('partnerCycleData');
+
   await CycleProvider().loadCycleDataFromHive();
   Hive.registerAdapter(TimelineEntryAdapter()); // Register Hive Adapter
   await Hive.openBox<TimelineEntry>('timelineBox');
+  await Hive.openBox<Map>('medicineReminders'); // Box to store reminders
+
+  await Hive.openBox('formatsettingsBox');
 
   await Hive.openBox<AuthData>('authBox');
+  final showHideProvider = ShowHideProvider();
+  await showHideProvider.initialize();
+
+  await Hive.openBox('visibleSymptoms'); // Box for visible symptoms
+  await Hive.openBox('visibleMoods'); // Box for visible moods
 
   runApp(
     MultiProvider(
       providers: [
+
         ChangeNotifierProvider(create: (_) => CycleProvider()),
+        ChangeNotifierProvider.value(value: showHideProvider),
         ChangeNotifierProvider(create: (_) => PartnerProvider()),
         ChangeNotifierProvider(create: (_) => PregnancyModeProvider()),
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
@@ -78,7 +97,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SymptomsProvider()),
         ChangeNotifierProvider(create: (_) => PartnerModeProvider()),
         ChangeNotifierProvider(create: (_) => TimelineProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),  // Add the AuthProvider here
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsModel()),
+        // Add the AuthProvider here
       ],
       child: CalenderApp(),
     ),
@@ -99,6 +120,7 @@ class _CalenderAppState extends State<CalenderApp> {
 
   void _loadLanguage() async {
     final languageBox = await Hive.openBox('settingsBox');
+
     final savedLanguage = languageBox.get('language', defaultValue: 'English');
     _changeLanguage(savedLanguage);
   }
@@ -154,6 +176,7 @@ class _CalenderAppState extends State<CalenderApp> {
     super.initState();
     _loadLanguage();
     _initializeCycleProvider();
+    Provider.of<IntercourseProvider>(context, listen: false).loadData();
   }
 
   void _initializeCycleProvider() {
@@ -181,6 +204,7 @@ class _CalenderAppState extends State<CalenderApp> {
       routes: {
     '/login': (context) => EnterPasswordScreen(),
     '/home': (context) => HomeScreen(),
+
         '/languageSelection': (context) => LanguageSelectionScreen(
           onLanguageChanged: (language) {
             _changeLanguage(language);  // Update language when user selects a new language

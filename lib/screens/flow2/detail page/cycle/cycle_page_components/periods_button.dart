@@ -1,6 +1,7 @@
 
 import 'package:calender_app/hive/cycle_model.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -69,7 +70,7 @@ class PeriodButtons extends StatelessWidget {
         if (pickedEndDate.isAfter(startDate) || pickedEndDate.isAtSameMomentAs(startDate)) {
           provider.addPastPeriod(startDate, pickedEndDate);
 
-          final periodLength = pickedEndDate.difference(startDate).inDays;
+          final periodLength = pickedEndDate.difference(startDate).inDays+1;
           provider.updatePeriodLength(periodLength); // Update the period length
           print("Period updated: Start: $startDate, End: $pickedEndDate, Period Length: $periodLength days");
         } else {
@@ -141,8 +142,13 @@ class PeriodButtons extends StatelessWidget {
               DateTime endDate = DateTime.parse(period['endDate']!);
 
               return ListTile(
-                title: Text("Start: ${DateFormat('yyyy-MM-dd').format(startDate)}", style: TextStyle(fontSize: 12, color: Colors.black),),
-                trailing: Text("End: ${DateFormat('yyyy-MM-dd').format(endDate)}"),
+                title: Text(
+                  "Start: ${DateFormat(context.watch<SettingsModel>().dateFormat).format(startDate)}",
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
+                trailing: Text(
+                  "End: ${DateFormat(context.watch<SettingsModel>().dateFormat).format(endDate)}",
+                ),
                 onTap: () {
                   Navigator.pop(context, startDate);  // Return the selected start date
                 },

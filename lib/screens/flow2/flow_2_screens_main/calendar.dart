@@ -1,4 +1,5 @@
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/flow2/flow_2_screens_main/today.dart';
@@ -7,10 +8,24 @@ import 'package:calender_app/widgets/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
+
+import '../../../provider/showhide.dart';
 
 class CustomCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final showHideProvider = context.watch<ShowHideProvider>();
+
+    String formatDate(DateTime date) {
+      String selectedFormat = context.watch<SettingsModel>().dateFormat;
+      if (selectedFormat == "System Default") {
+        return DateFormat.yMd().format(date); // Use system locale's default
+      } else {
+        return DateFormat(selectedFormat).format(date); // Use selected format
+      }
+    }
+
     final cycleProvider = Provider.of<CycleProvider>(context);
     final pregnancyProvider = Provider.of<PregnancyModeProvider>(context);
     final intercourseProvider = Provider.of<IntercourseProvider>(context);
@@ -197,15 +212,16 @@ class CustomCalendar extends StatelessWidget {
                     buildCycleInfoCard(
                       icon: Icons.replay_5,
                       title: 'Cycle Length: ${cycleProvider.cycleLength} days',
-                      subtitle: getPregnancyChanceText(
+                      subtitle:   (showHideProvider.visibilityMap['Chance of getting pregnant'] == true
+                          ? getpPregnancyChanceText(
                           context,
                           cycleProvider.lastPeriodStart,
                           cycleProvider.periodLength,
-                          cycleProvider.daysElapsed,
+                          cycleProvider.cycleDay,
                           cycleProvider.cycleLength,
-                          intercourseProvider
+                          intercourseProvider)
+                          : "Feature is disabled"),
 
-                      ),
                       progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
                       progressLabelEnd: formatDate(
                         cycleProvider.lastPeriodStart.add(
@@ -262,215 +278,4 @@ class CustomCalendar extends StatelessWidget {
       ],
     );
   }
-}
-
-
-class CustomC1alendar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cycleProvider = Provider.of<CycleProvider>(context);
-    final now = DateTime.now();
-
-    String _getGreeting() {
-      final hour = now.hour;
-      if (hour < 12) return "Good Morning!";
-      if (hour < 17) return "Good Afternoon!";
-      return "Good Evening!";
-    }
-
-
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            "My Calendar",
-            style: TextStyle(color: Colors.white),
-          ),
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Greeting
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  _getGreeting(),
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              // Calendar
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: TableCalendar(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2025, 12, 31),
-                  focusedDay: DateTime.now(),
-                  calendarBuilders: CalendarBuilders(
-                    defaultBuilder: (context, date, _) {
-                      final normalizedDate = DateTime(date.year, date.month, date.day);
-                      //all past periods lists start and end dates stored in string
-                      for (var period in cycleProvider.pastPeriods) {
-                        final startDate = DateTime.parse(period['startDate']!);  // Parse the start date
-                        final endDate = DateTime.parse(period['endDate']!);  // Parse the end date
-
-                        // Check if the normalizedDate falls within the cycle's start and end date
-                        if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
-                            normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
-                          return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
-                        }
-                      }
-
-                      // last period's start date that is stored in datetime format
-                      if (cycleProvider.periodDays.contains(normalizedDate)) {
-                        return _buildCalendarCell(date: date, color: Colors.red);
-                      } else if (cycleProvider.predictedDays.contains(normalizedDate)) {
-                        return _buildCalendarCell(
-                          date: date,
-                          border: Border.all(color: Colors.blue, width: 2),
-                        );
-                      } else if (cycleProvider.fertileDays.contains(normalizedDate)) {
-                        return _buildCalendarCell(
-                          date: date,
-                          color: Colors.purple[100],
-                        );
-                      }
-                      return null;
-                    },
-                  ),
-                  calendarStyle: CalendarStyle(
-                    defaultTextStyle: TextStyle(color: Colors.black),
-                    weekendTextStyle: TextStyle(color: Colors.red),
-                  ),
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
-                ),
-              ),
-
-              // Legend
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildLegendItem("Period", Colors.red),
-                    _buildLegendItem("Predicted Period", Colors.blue, isBorder: true),
-                    _buildLegendItem("Fertile Window", Colors.purple[100]!),
-                  ],
-                ),
-              ),
-
-              // Cycle Info Cards
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    buildCycleInfoCard(
-                      title: 'Started: ${formatDate(cycleProvider.lastPeriodStart)}',
-                      subtitle: '${cycleProvider.daysElapsed} days ago',
-                      progressLabelStart: 'Last Period',
-                      progressLabelEnd: 'Today',
-                      progressValue: cycleProvider.daysElapsed/ cycleProvider.cycleLength,
-                      icon: Icons.timer_outlined,
-                    ),
-                    SizedBox(height: 16),
-                    buildCycleInfoCard(
-                      icon: Icons.water_drop,
-                      title: 'Period Length: ${cycleProvider.periodLength} days',
-                      subtitle: 'Normal',
-                      progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
-                      progressLabelEnd: formatDate(
-                        cycleProvider.lastPeriodStart.add(
-                          Duration(days: cycleProvider.periodLength),
-                        ),
-                      ),
-                      progressValue: cycleProvider.daysElapsed/ cycleProvider.periodLength,
-                    ),
-                    SizedBox(height: 16),
-                    buildCycleInfoCard(
-                      icon: Icons.replay_5,
-                      title: 'Cycle Length: ${cycleProvider.cycleLength} days',
-                      subtitle: 'High chance of getting periods',
-                      progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
-                      progressLabelEnd: formatDate(
-                        cycleProvider.lastPeriodStart.add(
-                          Duration(days: cycleProvider.cycleLength),
-                        ),
-                      ),
-                      progressValue: cycleProvider.daysElapsed / cycleProvider.cycleLength,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCalendarCell({
-    required DateTime date,
-    Color? color,
-    Border? border,
-  }) {
-    return Container(
-      margin: EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: color,
-        border: border,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          date.day.toString(),
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLegendItem(String label, Color color, {bool isBorder = false}) {
-    return Row(
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: isBorder ? Colors.transparent : color,
-            border: isBorder ? Border.all(color: color, width: 2) : null,
-            shape: BoxShape.circle,
-          ),
-        ),
-        SizedBox(width: 8),
-        Text(label),
-      ],
-    );
-  }
-
 }

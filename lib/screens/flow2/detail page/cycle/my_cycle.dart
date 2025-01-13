@@ -68,17 +68,20 @@ class MyCyclesScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('History', style: TextStyle(fontSize: 16)),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                FilterChip(label: Text('All'), onSelected: (_) {}),
-                                SizedBox(width: 8),
-                                FilterChip(label: Text('Period'), onSelected: (_) {}),
-                                SizedBox(width: 8),
-                                FilterChip(label: Text('Ovulation'), onSelected: (_) {}),
-                                SizedBox(width: 8),
-                                FilterChip(label: Text('Fertile'), onSelected: (_) {}),
-                              ],
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  FilterChip(label: Text('All'), onSelected: (_) {}),
+                                  SizedBox(width: 8),
+                                  FilterChip(label: Text('Period'), onSelected: (_) {}),
+                                  SizedBox(width: 8),
+                                  FilterChip(label: Text('Ovulation'), onSelected: (_) {}),
+                                  SizedBox(width: 8),
+                                  FilterChip(label: Text('Fertile'), onSelected: (_) {}),
+                                ],
+                              ),
                             ),
                             SizedBox(height: 10),
                             // Display the current month and year dynamically

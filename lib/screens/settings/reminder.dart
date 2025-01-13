@@ -2,12 +2,12 @@ import 'package:calender_app/hive/settingsPageNotifications.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/medicine_reminder_form.dart';
-import 'package:calender_app/screens/flow2/detail%20page/cycle/water.dart';
-import 'package:calender_app/screens/settings/item.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../flow2/detail page/cycle/medicine.dart';
+import '../flow2/detail page/cycle/water.dart';
 
 class ReminderScreen extends StatefulWidget {
   @override
@@ -33,29 +33,26 @@ class _ReminderScreenState extends State<ReminderScreen> {
       isPeriodReminderOn = states['isPeriodReminderOn'] ?? false;
       isFertilityReminderOn = states['isFertilityReminderOn'] ?? false;
       isLutealReminderOn = states['isLutealReminderOn'] ?? false;
-      _waterReminderEnabled =
-          states['waterReminderEnabled'] ?? false; // Load water reminder state
+      _waterReminderEnabled = states['waterReminderEnabled'] ?? false; // Load water reminder state
     });
   }
 
   Future<void> scheduleNotification({
+    required int id,
     required String title,
     required String body,
     required DateTime dateTime,
-    required String tag,
   }) async {
-    await NotificationService.scheduleBackgroundTask(
-      tag,
-      {
-        'title': title,
-        'body': body,
-      },
+    await NotificationService.scheduleNotification(
+      id,
+      title,
+      body,
       dateTime,
     );
   }
 
-  Future<void> cancelNotification(String tag) async {
-    await NotificationService.cancelScheduledTask(tag);
+  Future<void> cancelNotification(int id) async {
+    await NotificationService.cancelScheduledTask(id);
   }
 
   @override
@@ -91,14 +88,26 @@ class _ReminderScreenState extends State<ReminderScreen> {
                     isLutealReminderOn: isLutealReminderOn,
                   );
                   if (value) {
+                    DateTime nextPeriodDate = cycleProvider.getNextPeriodDate();
+                    print("Scheduling next period reminder for: $nextPeriodDate");
+
                     scheduleNotification(
+                      id: 3,
                       title: "Period Reminder",
                       body: "Your next period is expected soon!",
-                      dateTime: cycleProvider.getNextPeriodDate(),
-                      tag: "period_reminder", // Unique tag for this reminder
+                      dateTime: nextPeriodDate,
+                    );
+
+                    NotificationService.showInstantNotification(
+                      "Reminder Scheduled",
+                      "Next period reminder scheduled for ${nextPeriodDate.toLocal()}",
                     );
                   } else {
-                    cancelNotification("period_reminder");
+                    cancelNotification(3);
+                    NotificationService.showInstantNotification(
+                      "Reminder Canceled",
+                      "Next period reminder has been canceled.",
+                    );
                   }
                 },
                 isSwitched: isPeriodReminderOn,
@@ -115,14 +124,25 @@ class _ReminderScreenState extends State<ReminderScreen> {
                     isLutealReminderOn: isLutealReminderOn,
                   );
                   if (value && cycleProvider.fertileDaysRange.isNotEmpty) {
+                    DateTime fertileStartDate = cycleProvider.fertileDaysRange.first;
+
                     scheduleNotification(
+                      id: 4,
                       title: "Fertile Window Reminder",
                       body: "Your fertile window starts today.",
-                      dateTime: cycleProvider.fertileDaysRange.first,
-                      tag: "fertility_reminder", // Unique tag for this reminder
+                      dateTime: fertileStartDate,
+                    );
+
+                    NotificationService.showInstantNotification(
+                      "Reminder Scheduled",
+                      "Fertile window reminder scheduled for ${fertileStartDate.toLocal()}",
                     );
                   } else {
-                    cancelNotification("fertility_reminder");
+                    cancelNotification(4);
+                    NotificationService.showInstantNotification(
+                      "Reminder Canceled",
+                      "Fertile window reminder has been canceled.",
+                    );
                   }
                 },
                 isSwitched: isFertilityReminderOn,
@@ -139,70 +159,76 @@ class _ReminderScreenState extends State<ReminderScreen> {
                     isLutealReminderOn: isLutealReminderOn,
                   );
                   if (value && cycleProvider.lutealPhaseDays.isNotEmpty) {
+                    DateTime lutealStartDate = cycleProvider.lutealPhaseDays.first;
+
                     scheduleNotification(
+                      id: 5,
                       title: "Luteal Phase Reminder",
                       body: "Your luteal phase starts today.",
-                      dateTime: cycleProvider.lutealPhaseDays.first,
-                      tag: "luteal_reminder", // Unique tag for this reminder
+                      dateTime: lutealStartDate,
+                    );
+
+                    NotificationService.showInstantNotification(
+                      "Reminder Scheduled",
+                      "Luteal phase reminder scheduled for ${lutealStartDate.toLocal()}",
                     );
                   } else {
-                    cancelNotification("luteal_reminder");
+                    cancelNotification(5);
+                    NotificationService.showInstantNotification(
+                      "Reminder Canceled",
+                      "Luteal phase reminder has been canceled.",
+                    );
                   }
                 },
                 isSwitched: isLutealReminderOn,
               ),
+
               const SectionHeader(title: 'Add Medicine'),
-              CustomItem(
-                title: "Add Medicine",
-                onChanged: (bool value) {
-                  if (value) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => MedicineReminderScreen(
-                            selectedMedicines: [],
-                          )),
-                    ).then((result) {
-                      if (result != null && result is bool && result) {
-                        setState(() {
-                          // Update the state if the user successfully added a medicine
-                        });
-                      }
-                    });
-                  }
-                },
-                isSwitched: false, // You can add state here as needed
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                color: Colors.white,
+                child: ListTile(
+                  title: Text("Medicine Reminders"),
+                  trailing: IconButton(
+                    icon: Icon(Icons.add, color: Colors.red,),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ContraceptivePage(),
+                        ),
+                      ).then((result) {
+                        if (result != null && result is bool && result) {
+                          setState(() {
+                            // Update the state if the user successfully added a medicine
+                          });
+                        }
+                      });
+                    },
+                  ),
+                ),
               ),
               const SectionHeader(title: 'Life Style'),
-              CustomItem(
-                title: "Drink Water",
-                onChanged: (bool value) {
-                  setState(() {
-                    _waterReminderEnabled = value;
-                  });
 
-                  if (_waterReminderEnabled) {
-                    // Schedule water reminders
-                    for (int i = 1; i <= 10; i++) {
-                      // Example for 10 reminders
-                      scheduleNotification(
-                        title: "Water Reminder",
-                        body: "Time to drink water!",
-                        dateTime: DateTime.now()
-                            .add(Duration(hours: i)), // Example timing
-                        tag:
-                        "water_reminder_$i", // Unique tag for each reminder
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                color: Colors.white,
+                child: ListTile(
+                  title: Text("Drink Water"),
+                  trailing: IconButton(
+                    icon: Icon(Icons.local_drink_rounded, color: Colors.blueAccent,),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SettingsScreen(),
+                        )
                       );
-                    }
-                  } else {
-                    // Cancel all scheduled notifications for water reminders
-                    for (int i = 1; i <= 10; i++) {
-                      cancelNotification("water_reminder_$i");
-                    }
-                  }
-                },
-                isSwitched: _waterReminderEnabled,
+                    },
+                  ),
+                ),
               ),
+
             ],
           ),
         ),
@@ -258,7 +284,10 @@ class SectionHeader extends StatelessWidget {
           if (caption != null)
             Text(
               caption!,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff1C1CAD)),
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff1C1CAD)),
             ),
         ],
       ),

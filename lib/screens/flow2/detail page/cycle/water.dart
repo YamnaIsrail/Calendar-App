@@ -96,10 +96,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         setState(() {
                           _notificationsEnabled = false;
                         });
-                        // Cancel all notifications
-                        for (int i = 1; i < 100; i++) { // Assuming a maximum of 99 reminders
-                          await NotificationService.cancelScheduledTask("water_reminder_$i");
-                        }
+                        // Cancel the scheduled notification for water reminders
+                        await NotificationService.cancelScheduledTask(1); // Use the same ID
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("Notifications Disabled")),
                         );
@@ -107,6 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       }
                     },
                   ),
+
                 ],
               ),
             ),

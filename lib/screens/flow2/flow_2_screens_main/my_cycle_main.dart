@@ -1,5 +1,5 @@
-import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
@@ -23,6 +23,7 @@ import '../detail page/cycle/moods.dart';
 import '../detail page/cycle/my_cycle.dart';
 import '../detail page/cycle/ovulation_screen.dart';
 import '../detail page/cycle/symptoms.dart';
+import 'package:intl/intl.dart';
 
 class CycleTrackerScreen extends StatelessWidget {
   final String? userImageUrl;
@@ -33,6 +34,16 @@ class CycleTrackerScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
     final pregnancyProvider = Provider.of<PregnancyModeProvider>(context);
+
+    String formatDate(DateTime date) {
+      String selectedFormat = context.watch<SettingsModel>().dateFormat;
+      if (selectedFormat == "System Default") {
+        return DateFormat.yMd().format(date); // Use system locale's default
+      } else {
+        return DateFormat(selectedFormat).format(date); // Use selected format
+      }
+    }
+
 
     return bgContainer(
       child: Scaffold(
@@ -65,6 +76,7 @@ class CycleTrackerScreen extends StatelessWidget {
                   subtitle: "${cycleProvider.logCycle()} cycles logged", // Dynamic subtitle
                   progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
                   progressLabelEnd: formatDate(cycleProvider.getNextPeriodDate()),
+
                   progressValue: (cycleProvider.daysElapsed / cycleProvider.cycleLength).clamp(0.0, 1.0),
                   click: () {
                     Navigator.push(

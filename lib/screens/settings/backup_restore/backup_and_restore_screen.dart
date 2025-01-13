@@ -2,9 +2,12 @@
 import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/screens/settings/backup_restore/google_signin.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/screens/settings/track_cycle.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -55,7 +58,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   onTap: (){
                     Navigator.push(context, MaterialPageRoute(builder: (context)=>TrackCycleScreen()));
                   },
-                ),
+            ),
 
 //backup reminder
 
@@ -73,7 +76,7 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
 
                           List<String> frequencyOptions = ["Daily", "Weekly", "Monthly"];
 
-                          DialogHelper.showReminderFrequencyDialog(
+                              DialogHelper.showReminderFrequencyDialog(
                             context,
                             selectedFrequency,
                                 (newFrequencyIndex) {
@@ -88,13 +91,23 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                           );
                         } else {
                           // Cancel the backup reminder notification when switch is turned off
-                          NotificationService.cancelScheduledTask("backup_reminder");
+                          NotificationService.cancelScheduledTask(2);
                         }
                       });
                     },
                   ),
                 ),
+                // Sign In
+                SettingsOption(
+                  icon: Icons.logout,
+                  title: "Sign In",
+                  onTap: () {
+                    DialogHelper.showSignInStatus(context);
+                  },
+                ),
+
                 // Sign Out
+
                 SettingsOption(
                   icon: Icons.logout,
                   title: "Sign Out",
@@ -130,19 +143,32 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   },
                 ),
 
-                // Data lost?
+                 // Data lost?
                 SettingsOption(
                   icon: Icons.warning,
                   title: "Data lost?",
-                  onTap: () {
-                    DialogHelper dialogHelper = DialogHelper();
-                    dialogHelper.showDataLostPopup(context, () {
-                      print("Data recovery initiated");
-                      // Handle data recovery
-                    });
+                  onTap: () async {
+                    if (FirebaseAuth.instance.currentUser != null) {
+                      // If the user is signed in, proceed to handle data loss
+                      await DataHandler.handleDataLost(context);
+                    } else {
+                      // User is not signed in, proceed with sign-in process
+                      bool success = await GoogleSignInService().signInWithGoogle();
+                      await DataHandler.handleDataLost(context);
+
+                      if (success) {
+                        // If sign-in is successful, handle data loss
+                        await DataHandler.handleDataLost(context);
+                      } else {
+                        // If sign-in fails, show an error message
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Sign-in failed. Please try again!'),
+                          backgroundColor: Colors.red,
+                        ));
+                      }
+                    }
                   },
                 ),
-
 
               ],
             ),
@@ -244,12 +270,10 @@ void _scheduleBackupReminder(String frequency) {
   }
 
   // Schedule the notification
-  NotificationService.scheduleBackgroundTask(
-    "backup_reminder", // Unique tag for backup reminder
-    {
-      'title': "Backup Reminder",
-      'body': "It's time to back up your data.",
-    },
+  NotificationService.scheduleNotification(
+    2, // Use a unique ID for the backup reminder
+    "Backup Reminder",
+    "It's time to back up your data.",
     scheduleDate,
   );
 }

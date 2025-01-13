@@ -1,10 +1,11 @@
-// import 'package:calender_app/provider/preg_provider.dart';
+import 'package:calender_app/provider/date_day_format.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:provider/provider.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/widgets/cycle_info_card.dart';
-import 'package:calender_app/widgets/date_format.dart';
+import 'package:intl/intl.dart';
+
 class PartnerModeCalendar extends StatefulWidget {
   @override
   _PartnerModeCalendarState createState() => _PartnerModeCalendarState();
@@ -14,7 +15,7 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
   @override
   Widget build(BuildContext context) {
     final partnerProvider = Provider.of<PartnerProvider>(context);
-   final isPregnancyMode = partnerProvider.pregnancyMode;
+    final isPregnancyMode = partnerProvider.pregnancyMode;
     // final isPregnancyMode =false;
 
     final currentWeek = isPregnancyMode ? partnerProvider.getCurrentWeek() : null;
@@ -24,6 +25,14 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
     final periodLength = partnerProvider.periodLength ?? 0;
     final now = DateTime.now();
 
+    String formatDate(DateTime date) {
+      String selectedFormat = context.watch<SettingsModel>().dateFormat;
+      if (selectedFormat == "System Default") {
+        return DateFormat.yMd().format(date); // Use system locale's default
+      } else {
+        return DateFormat(selectedFormat).format(date); // Use selected format
+      }
+    }
     String _getGreeting() {
       final hour = now.hour;
       if (hour < 12) return "Good Morning!";
@@ -45,7 +54,7 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
           elevation: 0,
           title: Text(
             "My Calendar",
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.black),
           ),
           centerTitle: true,
         ),
@@ -76,83 +85,99 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
                     ),
                   ],
                 ),
-                child: TableCalendar(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2025, 12, 31),
-                  focusedDay: DateTime.now(),
-                  calendarBuilders: CalendarBuilders(
-                    defaultBuilder: (context, date, _) {
-                      final normalizedDate = DateTime(date.year, date.month, date.day);
+                child: Consumer<PartnerProvider>(
+                    builder: (context, partnerProvider, child) {
+                      return TableCalendar(
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.utc(2025, 12, 31),
+                      focusedDay: DateTime.now(),
+                      calendarBuilders: CalendarBuilders(
+                        defaultBuilder: (context, date, _) {
+                          final normalizedDate = DateTime(date.year, date.month, date.day);
 
-                      if (isPregnancyMode) {
-                        // Highlight due date with a specific color
-                        if (partnerProvider.dueDate != null &&
-                            DateUtils.isSameDay(normalizedDate, partnerProvider.dueDate)) {
-                          return _buildCalendarCell(
-                            date: date,
-                            color: Colors.green,
-                            isBold: true,
-                            isSelected: true,
-                          );
-                        }
+                          if (isPregnancyMode) {
+                            // Highlight due date with a specific color
+                            if (partnerProvider.dueDate != null &&
+                                DateUtils.isSameDay(normalizedDate, partnerProvider.dueDate)) {
+                              return _buildCalendarCell(
+                                date: date,
+                                color: Colors.green,
+                                isBold: true,
+                                isSelected: true,
+                              );
+                            }
 
-                        // Highlight current week
-                        if (currentWeek != null && partnerProvider.gestationStart != null) {
-                          // Calculate start and end of the current week
-                          final startOfWeek = partnerProvider.gestationStart!.add(Duration(days: (currentWeek - 1) * 7));
-                          final endOfWeek = startOfWeek.add(Duration(days: 6));
+                            // Highlight current week
+                            if (currentWeek != null && partnerProvider.gestationStart != null) {
+                              // Calculate start and end of the current week
+                              final startOfWeek = partnerProvider.gestationStart!.add(Duration(days: (currentWeek - 1) * 7));
+                              final endOfWeek = startOfWeek.add(Duration(days: 6));
 
-                          if (normalizedDate.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
-                              normalizedDate.isBefore(endOfWeek.add(Duration(days: 1)))) {
+                              if (normalizedDate.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
+                                  normalizedDate.isBefore(endOfWeek.add(Duration(days: 1)))) {
+                                return _buildCalendarCell(
+                                  date: date,
+                                  color: Colors.orange[300],
+                                  isBold: true,
+                                );
+                              }
+                            }
+
+                            // Default pregnancy mode cell
                             return _buildCalendarCell(
                               date: date,
-                              color: Colors.orange[300],
-                              isBold: true,
+                              color: Colors.grey[200],
                             );
                           }
-                        }
+                          else {
+                            // Non-pregnancy mode (period tracking)
 
-                        // Default pregnancy mode cell
-                        return _buildCalendarCell(
-                          date: date,
-                          color: Colors.grey[200],
-                        );
-                      }
-                      else {
-                        // Non-pregnancy mode (period tracking)
+                            // Period days
+                            if (partnerProvider.periodDays.contains(normalizedDate)) {
+                              return _buildCalendarCell(date: date, color: Colors.red);
+                            }
+                            for (var period in partnerProvider.pastPeriods) {
+                              final startDate = DateTime.parse(period['startDate']!);  // Parse the start date
+                              final endDate = DateTime.parse(period['endDate']!);  // Parse the end date
 
-                        // Period days
-                        if (partnerProvider.periodDays.contains(normalizedDate)) {
-                          return _buildCalendarCell(date: date, color: Colors.red);
-                        }
+                              // Check if the normalizedDate falls within the cycle's start and end date
+                              if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+                                  normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
+                                return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
+                              }
+                            }
 
-                        // Predicted periods
-                        if (partnerProvider.predictedDays.contains(normalizedDate)) {
-                          return _buildCalendarCell(
-                            date: date,
-                            border: Border.all(color: Colors.blue, width: 2),
-                          );
-                        }
 
-                        // Fertile window
-                        if (partnerProvider.fertileDays.contains(normalizedDate)) {
-                          return _buildCalendarCell(date: date, color: Colors.purple[100]);
-                        }
 
-                        // Default cell for other dates
-                        return null;
-                      }
-                    },
-                  ),
+                            // Predicted periods
+                            if (partnerProvider.predictedDays.contains(normalizedDate)) {
+                              return _buildCalendarCell(
+                                date: date,
+                                border: Border.all(color: Colors.blue, width: 2),
+                              );
+                            }
 
-                  calendarStyle: CalendarStyle(
-                    defaultTextStyle: TextStyle(color: Colors.black),
-                    weekendTextStyle: TextStyle(color: Colors.red),
-                  ),
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
+                            // Fertile window
+                            if (partnerProvider.fertileDays.contains(normalizedDate)) {
+                              return _buildCalendarCell(date: date, color: Colors.purple[100]);
+                            }
+
+                            // Default cell for other dates
+                            return null;
+                          }
+                        },
+                      ),
+
+                      calendarStyle: CalendarStyle(
+                        defaultTextStyle: TextStyle(color: Colors.black),
+                        weekendTextStyle: TextStyle(color: Colors.red),
+                      ),
+                      headerStyle: HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                      ),
+                    );
+                  }
                 ),
               ),
 

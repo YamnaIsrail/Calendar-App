@@ -40,6 +40,11 @@ dependencies:
   googleapis_auth: ^1.6.0
   workmanager: ^0.5.2
 
+  permission_handler: ^11.3.1
+  package_info_plus: ^8.1.2
+  image_picker: ^1.1.2
+  flutter_email_sender: ^6.0.3
+
 
 
 dev_dependencies:

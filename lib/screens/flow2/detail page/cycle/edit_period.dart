@@ -1,9 +1,11 @@
 import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
+import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart'; // Import intl package for DateFormat
 import 'package:provider/provider.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:table_calendar/table_calendar.dart'; // Import table_calendar package
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -62,15 +64,34 @@ class _CalendarScreenState extends State<CalendarScreen> {
               dateFound = true;
               break;
             }
+          } else if (clickedDate.isBefore(startDate)) {
+            // New logic to handle dates before the start date
+            if (startDate.difference(clickedDate).inDays <= 5) {
+              // Merge the clicked date into the existing period
+              DateTime newStartDate = clickedDate; // Update start date to clicked date
+              DateTime newEndDate = endDate; // Keep the existing end date
+
+              int periodLength = newEndDate.difference(newStartDate).inDays + 1; // +1 to include both start and end date
+              periodProvider.updatePeriodLength(periodLength+1);
+
+              // Remove the old period and add the updated period
+              periodProvider.removePastPeriod(startDate.toIso8601String());
+              periodProvider.addPastPeriod(newStartDate, newEndDate);
+              dateFound = true;
+              break;
+            }
           }
         }
       }
-
       if (!dateFound) {
-        DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength - 1));
+        DateTime newEndDate = clickedDate.add(Duration(days: periodProvider.periodLength-2));
+
+        int periodLength = newEndDate.difference(clickedDate).inDays + 2;
 
         // Update the period length in the provider
-        periodProvider.updatePeriodLength(periodProvider.periodLength);
+        periodProvider.updatePeriodLength(periodLength);
+
+        // Update the period length in the provider
         periodProvider.addPastPeriod(clickedDate, newEndDate);
       }
 
@@ -168,7 +189,5 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 }
-
-
 
 

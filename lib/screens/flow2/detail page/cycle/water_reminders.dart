@@ -6,7 +6,6 @@ import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
 import 'package:calender_app/widgets/wheel.dart';
 
-
 class WaterReminderScreen extends StatefulWidget {
   final bool initialNotificationsEnabled; // New parameter
 
@@ -175,38 +174,25 @@ class _WaterReminderScreenState extends State<WaterReminderScreen> {
       return;
     }
 
-    // List to store generated notification IDs for tracking
-    final List<int> notificationIds = [];
+    // Schedule notifications with unique IDs
+    int notificationIdBase = 100; // Base ID for water reminders
     DateTime current = startDateTime;
-    int idCounter = 1; // Starting ID for notifications
 
     while (current.isBefore(endDateTime)) {
       if (current.isAfter(now)) {
         // Schedule the notification with a unique ID
-        await NotificationService.scheduleBackgroundTask(
-          "water_reminder_$idCounter", // Use a unique tag for each reminder
-          {
-            'title': "Water Reminder",
-            'body': "It's time to drink water.",
-          },
+        await NotificationService.scheduleNotification(
+          notificationIdBase++, // Increment ID for each reminder
+          "Water Reminder",
+          "It's time to drink water.",
           current,
         );
-
-        // Save the ID to the list for cancellation tracking
-        notificationIds.add(idCounter);
-
-        // Increment the ID counter for the next notification
-        idCounter++;
       }
       current = current.add(Duration(minutes: (interval * 60).toInt()));
     }
 
-    // Save the list of IDs to local storage or state for later cancellation
-    // For example:
-    // await saveNotificationIds(notificationIds);
-
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Water reminder saved successfully")),
+      SnackBar(content: Text("Water reminders saved successfully")),
     );
     if (_notificationsEnabled) {
       await NotificationService.showInstantNotification(
@@ -215,8 +201,8 @@ class _WaterReminderScreenState extends State<WaterReminderScreen> {
       );
     }
     Navigator.pop(context, _notificationsEnabled); // Return the current state
-    // Return true on successful save
   }
+
   void _editMessage() async {
     final newMessage = await showDialog<String>(
       context: context,
@@ -274,13 +260,9 @@ class _WaterReminderScreenState extends State<WaterReminderScreen> {
                           _notificationsEnabled = value;
                         });
 
-                        if (_notificationsEnabled) {
-
-                        }
-                        else {
-                          // Cancel all scheduled notifications for water reminders
-                          for (int i = 1; i < 100; i++) { // Assuming a maximum of 99 reminders
-                            await NotificationService.cancelScheduledTask("water_reminder_$i");
+                        if (!_notificationsEnabled) {
+                          for (int i = 1; i <= 10; i++) {
+                            await NotificationService.cancelScheduledTask(100 + i); // Use the same base ID
                           }
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Notifications Disabled")),

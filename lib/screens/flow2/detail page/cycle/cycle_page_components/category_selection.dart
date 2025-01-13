@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'category_grid.dart';
 
 import 'package:provider/provider.dart';
+ List<String> symptomFolders = ['head', 'body', 'cervix', 'fluid', 'abdomen', 'mental'];
 
 class CategorySection extends StatelessWidget {
   final String title;
@@ -24,6 +25,32 @@ class CategorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final moodsProvider = Provider.of<MoodsProvider>(context);
     final symptomsProvider = Provider.of<SymptomsProvider>(context);
+
+    // Check if visibleMoods or visibleSymptoms are empty, and initialize them
+    if (title == "Moods" && moodsProvider.visibleMoods.isEmpty) {
+      // Load emojis and initialize moods
+      Future<List<CategoryItem>> _emojiList = loadCategoryItems('emoji');
+      _emojiList.then((emojis) {
+        moodsProvider.initializeVisibleMoods(emojis.map((emoji) => emoji.label).toList());
+      });
+    } else if (title == "Symptoms" && symptomsProvider.visibleSymptoms.isEmpty) {
+      // Load symptoms and initialize symptoms
+       symptomFolders = ['head', 'body', 'cervix', 'fluid', 'abdomen', 'mental'];
+
+      Future<void> _loadAllSymptoms() async {
+        List<CategoryItem> allSymptoms = [];
+        for (String folder in symptomFolders) {
+          final symptoms = await loadCategoryItems(folder); // Load items dynamically from each folder
+          allSymptoms.addAll(symptoms);
+        }
+        symptomsProvider.initializeVisibleSymptoms(allSymptoms.map((symptom) => symptom.label).toList());
+      }
+
+      if (title == "Symptoms" && symptomsProvider.visibleSymptoms.isEmpty) {
+        _loadAllSymptoms();
+      }
+
+    }
 
     return GestureDetector(
       onTap: () {
@@ -50,56 +77,64 @@ class CategorySection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
-          children
-          : [
-          Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => targetPage),
+                    );
+                  },
+                  child: Icon(Icons.arrow_forward_ios, size: 20),
+                ),
+              ],
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => targetPage),
-                );
+            CategoryGrid(
+              folderName: title == "Symptoms" ? symptomFolders : folderName, // Use symptomFolders if title is "Symptoms"
+              itemCount: 4,
+              onItemSelected: (iconPath, label) {
+                if (title == "Moods") {
+                  moodsProvider.addMood(context, iconPath, label);
+                } else if (title == "Symptoms") {
+                  symptomsProvider.addSymptom(context, iconPath, label);
+                } else if (title == "Intercourse") {
+                  // Navigate to IntercourseScreen with selected data
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => IntercourseScreen(),
+                    ),
+                  );
+                }
               },
-              child: Icon(Icons.arrow_forward_ios, size: 20),
+              isSelected: (label) {
+                if (title == "Moods") {
+                  return moodsProvider.isSelected(label);
+                } else if (title == "Symptoms") {
+                  return symptomsProvider.isSelected(label);
+                }
+                return false;
+              },
+              isVisible: (label) {
+                if (title == "Moods") {
+                  return moodsProvider.isMoodVisible(label); // Visibility logic for moods
+                } else if (title == "Symptoms") {
+                  return symptomsProvider.isSymptomVisible(label); // Visibility logic for symptoms
+                }
+                return true;
+              },
+
             ),
           ],
         ),
-        CategoryGrid(
-          folderName: folderName,
-          itemCount: 4,
-          onItemSelected: (iconPath, label) {
-            if (title == "Moods") {
-              moodsProvider.addMood(context, iconPath, label);
-            } else if (title == "Symptoms") {
-              symptomsProvider.addSymptom(context, iconPath, label);
-            }else if (title == "Intercourse") {
-              // Navigate to IntercourseScreen with selected data
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => IntercourseScreen(),
-                ),
-              );
-            }
-          },
-          isSelected: (label) {
-            if (title == "Moods") {
-              return moodsProvider.isSelected(label);
-            } else if (title == "Symptoms") {
-              return symptomsProvider.isSelected(label);
-            }
-            return false;
-          },
-        ),
-        ],
       ),
-    ),
     );
   }
 }

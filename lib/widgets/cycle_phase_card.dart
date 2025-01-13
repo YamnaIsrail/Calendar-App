@@ -21,7 +21,7 @@ class CyclePhaseCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16.0), // Add some padding for better layout
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Align text to the start
+          crossAxisAlignment: CrossAxisAlignment.center, // Align text to the start
           children: [
             Text(
               phase,

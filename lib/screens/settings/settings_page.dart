@@ -1,10 +1,11 @@
 import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
+import 'package:calender_app/provider/showhide.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
 import 'package:calender_app/screens/settings/language_option.dart';
-import 'package:calender_app/screens/settings/pregnancy_mode/congratualtions_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:calender_app/screens/settings/privacy_policy.dart';
 import 'package:calender_app/screens/settings/translation.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
@@ -31,6 +32,8 @@ import 'track_cycle.dart';
 class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final showHideProvider = context.watch<ShowHideProvider>();
+
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -73,7 +76,6 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ), //Reminders Section
                 SettingsOptionSection(),
-                LanguageOptionSection(),
                 FAQOptionSection(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -197,6 +199,7 @@ class GoalSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
     final pregnancyModeProvider = context.watch<PregnancyModeProvider>();
+    final showHideProvider = context.watch<ShowHideProvider>();
 
     return Container(
       padding: EdgeInsets.all(16.0),
@@ -277,7 +280,9 @@ class GoalSection extends StatelessWidget {
                   );
                 },
               ),
-              SettingsOption(
+
+              if (showHideProvider.visibilityMap['Ovulation / Fertile'] == true)
+                SettingsOption(
                 icon: Icons.calendar_today,
                 title: "Ovulation and fertile",
                 trailing: Text("Details"),
@@ -345,61 +350,7 @@ class SettingsOptionSection extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => ExportCyclePage())
                 );
               }),
-          SettingsOption(icon: Icons.person_add,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TrackCycleScreen()),
-                );
-              },
 
-              title: "Track other’s Cycles"),
-        ],
-      ),
-    );
-  }
-}
-class LanguageOptionSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 16.0),
-      margin: EdgeInsets.symmetric(vertical: 16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          SettingsOption(
-            icon: Icons.language,
-            title: "Language Options",
-            onTap: () {
-              // Navigate and pass the 'onLanguageChanged' parameter
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LanguageSelectionScreen(
-                    onLanguageChanged: (String language) {
-                      // Here, you can define what happens when language is changed.
-                      // For example, updating the selected language or saving to shared preferences
-                      print("Selected Language: $language");
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-          SettingsOption(
-            icon: Icons.visibility,
-            title: "Show or Hide Options",
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ShowHideOption()),
-              );
-            },
-          ),
           SettingsOption(
             icon: Icons.calendar_today,
             title: "Calendar",
@@ -410,11 +361,21 @@ class LanguageOptionSection extends StatelessWidget {
               );
             },
           ),
+          // SettingsOption(icon: Icons.person_add,
+          //     onTap: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(builder: (context) => TrackCycleScreen()),
+          //       );
+          //     },
+          //
+          //     title: "Track other’s Cycles"),
         ],
       ),
     );
   }
 }
+
 
 
 class FAQOptionSection extends StatelessWidget {
@@ -491,8 +452,14 @@ class FAQOptionSection extends StatelessWidget {
 }
 
 // Functionality to share the app link
-void _shareApp() {
-  const appLink = 'https://play.google.com/store/apps/details?id=com.popularapp.periodcalendar';
+Future<void> _shareApp() async {
+  // Get the package info
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+  // Use final instead of const
+  final appLink = 'https://play.google.com/store/apps/details?id=${packageInfo.packageName}&hl=en';
+
+  // Share the app link
   Share.share('Check out this awesome app for tracking your period, symptoms, and ovulation! $appLink');
 }
 
@@ -502,6 +469,7 @@ Future<void> launchEmail() async {
     scheme: 'mailto',
     path: 'yamnaisrailkhan@gmail.com',
     queryParameters: {
+
       'subject': 'Request a New Feature',
       'body': 'I request a new feature.\n\nPlease describe your request here.',
     },

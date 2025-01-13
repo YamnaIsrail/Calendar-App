@@ -63,12 +63,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   }
 
   // Function to handle 'Forgot PIN' action
-  void _forgotPin() {
-    // Logic for forgot PIN (e.g., reset PIN process)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Forgot PIN functionality is under construction")),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -107,25 +102,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                   style: TextStyle(color: Colors.red),
                 ),
               SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: _forgotPin,
-                    child: Text(
-                      'Forgot PIN?',
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _authenticateWithFingerprint,
-                    child: Text(
-                      'Use Fingerprint',
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                ],
-              ),
+
               SizedBox(height: 30),
               CustomButton(
                 onPressed: () {

@@ -1,3 +1,4 @@
+import 'package:calender_app/hive/partner_model.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -12,6 +13,20 @@ import '../hive/cycle_model.dart';
 import 'package:flutter/foundation.dart';
 
 class CycleProvider with ChangeNotifier {
+
+  String _selectedOption = "Last 1 Month"; // Default option
+  bool _useAverage = false; // Default state for average usage
+
+  String get selectedOption => _selectedOption;
+  bool get useAverage => _useAverage;
+
+  // Method to update useAverage and selectedOption
+  void updateUseAverage(bool useAverage, String selectedOption) {
+    _useAverage = useAverage;
+    _selectedOption = selectedOption;
+    notifyListeners();
+  }
+
   late BuildContext _context;
 
   DateTime _lastPeriodStart = DateTime.now();
@@ -282,7 +297,7 @@ class CycleProvider with ChangeNotifier {
 
   int logCycle() {
     _totalCyclesLogged = _pastPeriods.where((period) => period.containsKey('endDate')).length;
-  return _totalCyclesLogged;
+    return _totalCyclesLogged;
   }
 
   void initialize(BuildContext context) {
@@ -302,7 +317,20 @@ class CycleProvider with ChangeNotifier {
 
   // Calculate days until the next period
   int getDaysUntilNextPeriod() {
-    return getNextPeriodDate().difference(DateTime.now()).inDays;
+    // return getNextPeriodDate().difference(DateTime.now()).inDays;
+      DateTime nextPeriodDate = getNextPeriodDate(); // Ensure this returns the correct next period date
+      DateTime currentDate = DateTime.now();
+
+      // Normalize both dates to the start of the day
+      DateTime normalizedNextPeriodDate = DateTime(nextPeriodDate.year, nextPeriodDate.month, nextPeriodDate.day);
+      DateTime normalizedCurrentDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
+
+      // Calculate the difference in days
+      int daysLeft = normalizedNextPeriodDate.difference(normalizedCurrentDate).inDays;
+
+      // Return the number of days left
+      return daysLeft;
+
   }
 
   // Initialize and calculate all dynamic cycle data
@@ -427,12 +455,12 @@ class CycleProvider with ChangeNotifier {
 
   Future<void> _saveToHive() async {
     CycleData cycleData = CycleData(
-      cycleStartDate: _lastPeriodStart.toString(),
-      cycleEndDate:
-      _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
-      periodLength: _periodLength,
-      cycleLength: _cycleLength,
-      pastPeriods: _pastPeriods
+        cycleStartDate: _lastPeriodStart.toString(),
+        cycleEndDate:
+        _lastPeriodStart.add(Duration(days: _cycleLength)).toString(),
+        periodLength: _periodLength,
+        cycleLength: _cycleLength,
+        pastPeriods: _pastPeriods
     );
 
     // Open the Hive box
@@ -444,6 +472,37 @@ class CycleProvider with ChangeNotifier {
 
   }
 
+
+
+  void updateCycleData({
+    required int cycleLength,
+    required int periodLength,
+    DateTime? lastPeriodStart,
+    List<Map<String, String>>? pastPeriods,
+  }) {
+    cycleLength = cycleLength;
+    periodLength = periodLength;
+    lastPeriodStart = lastPeriodStart;
+    pastPeriods = pastPeriods;
+
+
+    _initializeCycleData();
+    notifyListeners();
+    }
+
+  // void updateCycleData({
+  //   required DateTime lastPeriodStart,
+  //   required int cycleLength,
+  //   required int periodLength,
+  // }) {
+  //   // Update the cycle data and recalculate all related information
+  //   _lastPeriodStart = lastPeriodStart;
+  //   _cycleLength = cycleLength;
+  //   _periodLength = periodLength;
+  //
+  //   _initializeCycleData();
+  //   notifyListeners();
+  // }
 
   Future<void> loadCycleDataFromHive() async {
     var box = await Hive.openBox<CycleData>('cycleData');
@@ -478,28 +537,31 @@ class CycleProvider with ChangeNotifier {
           'cycleEndDate': _lastPeriodStart.add(Duration(days: _cycleLength)).toIso8601String(),
           'periodLength': _periodLength,
           'cycleLength': _cycleLength,
-          'pastPeriods': _pastPeriods
+          'pastPeriods': _pastPeriods.map((e) => {'startDate': e['startDate'], 'endDate': e['endDate']}).toList(),
+
         };
 
         final pregnancyProvider = Provider.of<PregnancyModeProvider>(_context, listen: false);
 
-        if (pregnancyProvider.isPregnancyMode) {
-          cycleData.addAll({
-            'pregnancyMode': true,
-            'gestationStart': pregnancyProvider.gestationStart?.toIso8601String(),
-          });
-        } else {
-          // If pregnancy mode is disabled, remove pregnancy-related fields
-          await cycles.doc(userId).update({
-            'pregnancyMode': FieldValue.delete(),
-            'gestationStart': FieldValue.delete(),
-          });
-          print("Deleted pregnancyMode and gestationStart fields from Firestore.");
-        }
+        cycleData.addAll({
+          'pregnancyMode': pregnancyProvider.isPregnancyMode,
+          'gestationStart': pregnancyProvider.gestationStart?.toIso8601String(),
+        });
 
-        // Save cycle data, including pregnancy-related fields if necessary
-        await cycles.doc(userId).set(cycleData, SetOptions(merge: true));
-        print("Cycle data saved successfully.");
+
+        // Check if document exists
+        final docRef = cycles.doc(userId);
+        final docSnapshot = await docRef.get();
+
+        if (docSnapshot.exists) {
+          // Document exists, update it
+          await docRef.update(cycleData);
+          print("Cycle data updated successfully.");
+        } else {
+          // Document does not exist, create it
+          await docRef.set(cycleData, SetOptions(merge: true));
+          print("Cycle data saved successfully.");
+        }
       } catch (e, stackTrace) {
         print("Error saving data: $e");
         print("Stack trace: $stackTrace");
@@ -617,19 +679,7 @@ class CycleProvider with ChangeNotifier {
   }
 
   // Method to update dynamic cycle data
-  void updateCycleData({
-    required DateTime lastPeriodStart,
-    required int cycleLength,
-    required int periodLength,
-  }) {
-    // Update the cycle data and recalculate all related information
-    _lastPeriodStart = lastPeriodStart;
-    _cycleLength = cycleLength;
-    _periodLength = periodLength;
 
-    _initializeCycleData();
-    notifyListeners();
-  }
 
   // Fertility and pregnancy chances logic
   String getPregnancyChance(int day) {
@@ -662,28 +712,48 @@ class CycleProvider with ChangeNotifier {
 
 
 class PartnerProvider with ChangeNotifier {
+  final Box _cycleBox = Hive.box('partnerCycleData');
+  String? user1Id;
   DateTime? _lastMenstrualPeriod;
-  int? _cycleLength;
+  DateTime? _cycleEndDate;
+
+  int _cycleLength = 4;
   int? _periodLength;
   DateTime? _dueDate;
   bool _pregnancyMode = false;
   DateTime? _gestationStart;
+  List<Map<String, String>> _pastPeriods = [];  // Store all past period start dates as strings
+  List<Map<String, String>> get pastPeriods => _pastPeriods;
 
-  // Getters
-  DateTime? get lastMenstrualPeriod => _lastMenstrualPeriod;
-  DateTime? get dueDate => _dueDate;
-  int? get cycleLength => _cycleLength;
-  int? get periodLength => _periodLength;
-  bool get pregnancyMode => _pregnancyMode;
-  DateTime? get gestationStart => _gestationStart;
 
+  bool get isPregnancyMode => _cycleBox.get('pregnancyMode') ?? false;
+
+  int? get cycleLength => _cycleBox.get('cycleLength');
+
+  int? get periodLength => _cycleBox.get('periodLength');
+
+  bool get pregnancyMode => _cycleBox.get('pregnancyMode') ?? false;
+
+  DateTime? get lastMenstrualPeriod => _cycleBox.get('lastMenstrualPeriod') != null
+      ? DateTime.parse(_cycleBox.get('lastMenstrualPeriod'))
+      : null;
+
+  DateTime? get gestationStart => _cycleBox.get('gestationStart') != null
+      ? DateTime.parse(_cycleBox.get('gestationStart'))
+      : null;
+
+  DateTime? get dueDate => _cycleBox.get('dueDate') != null
+      ? DateTime.parse(_cycleBox.get('dueDate'))
+      : null;
 
   List<DateTime> periodDays = [];
   List<DateTime> predictedDays = [];
   List<DateTime> fertileDays = [];
 
-  // Fetch user1's cycle data
   Future<void> fetchUser1CycleData(String user1Id) async {
+    this.user1Id = user1Id; // Store user1Id for later use in the class
+    _cycleBox.put('user1Id', user1Id);
+
     try {
       DocumentSnapshot user1Doc = await FirebaseFirestore.instance
           .collection('cycles')
@@ -695,29 +765,76 @@ class PartnerProvider with ChangeNotifier {
 
         // Parse mandatory fields
         DateTime cycleStartDate = DateTime.parse(pregnancyData['cycleStartDate']);
-        int cycleLength = pregnancyData['cycleLength'];
-        int periodLength = pregnancyData['periodLength'];
+        int cycleLength = (pregnancyData['cycleLength'] as int?) ?? 28; // Default to 28 days if null
+        int periodLength = (pregnancyData['periodLength'] as int?) ?? 5; // Default to 5 days if null
+
+        // Calculate the cycle end date
+        DateTime cycleEndDate = cycleStartDate.add(Duration(days: cycleLength));
 
         // Handle optional fields safely
-        bool isPregnancyMode = pregnancyData['pregnancyMode'] ?? false;
+        bool isPregnancyMode = pregnancyData['pregnancyMode'] ?? false; // Default to false if null
         DateTime? gestationStart = pregnancyData['gestationStart'] != null
             ? DateTime.parse(pregnancyData['gestationStart'])
-            : null;
+            : null; // Keep it null if not provided
 
+        // Fetch list of past periods (string maps for start and end dates)
+        List<Map<String, String>> pastPeriods = [];
+        if (pregnancyData['pastPeriods'] != null) {
+          for (var item in pregnancyData['pastPeriods']) {
+            if (item is Map<String, dynamic>) {
+              String startDate = item['startDate'] ?? '';
+              String endDate = item['endDate'] ?? '';
+              pastPeriods.add({
+                'startDate': startDate,
+                'endDate': endDate,
+              });
+            }
+          }
+        }
+
+        // Create PartnerData object
+        PartnerData partnerData = PartnerData(
+          cycleStartDate: cycleStartDate,
+          cycleLength: cycleLength,
+          periodLength: periodLength,
+          cycleEndDate: cycleEndDate,
+          pregnancyMode: isPregnancyMode,
+          pastPeriods: pastPeriods,
+        );
+
+        // Save the PartnerData object in Hive
+        await _cycleBox.put('partnerData', partnerData);
+
+        // Save to Hive individual fields (optional, if needed)
+        _cycleBox.put('lastMenstrualPeriod', cycleStartDate.toIso8601String());
+        _cycleBox.put('cycleLength', cycleLength);
+        _cycleBox.put('periodLength', periodLength);
+        _cycleBox.put('pregnancyMode', isPregnancyMode);
+        _cycleBox.put('gestationStart', gestationStart?.toIso8601String());
+        _cycleBox.put('cycleEndDate', cycleEndDate.toIso8601String());
+        _cycleBox.put('pastPeriods', pastPeriods);
+
+        // Update class variables
         _lastMenstrualPeriod = cycleStartDate;
         _cycleLength = cycleLength;
         _periodLength = periodLength;
         _pregnancyMode = isPregnancyMode;
         _gestationStart = gestationStart;
+        _cycleEndDate = cycleEndDate;
+        _pastPeriods = pastPeriods;
 
         if (_pregnancyMode && _gestationStart != null) {
           _dueDate = _gestationStart!.add(Duration(days: 280));
+          _cycleBox.put('dueDate', _dueDate?.toIso8601String());
         } else {
           _dueDate = null;
+          _cycleBox.delete('dueDate');
         }
 
-        _initializeCycleData();
+        initializeCycleData();
         notifyListeners();
+
+        print("Data fetched");
       } else {
         print("No data found for User 1.");
       }
@@ -726,8 +843,124 @@ class PartnerProvider with ChangeNotifier {
     }
   }
 
-  // Initialize cycle data
-  void _initializeCycleData() {
+
+  Future<void> fetchUser22CycleData(String user1Id) async {
+    this.user1Id = user1Id; // Store user1Id for later use in the class
+    _cycleBox.put('user1Id', user1Id);
+
+    try {
+      DocumentSnapshot user1Doc = await FirebaseFirestore.instance
+          .collection('cycles')
+          .doc(user1Id)
+          .get();
+
+      if (user1Doc.exists) {
+        var pregnancyData = user1Doc.data() as Map<String, dynamic>;
+
+        // Print the fetched data for debugging
+        print("Fetched pregnancy data: $pregnancyData");
+
+        // Ensure mandatory fields are present
+        if (pregnancyData['cycleStartDate'] == null) {
+          throw Exception("cycleStartDate is missing");
+        }
+
+        // Parse mandatory fields with null checks
+        DateTime cycleStartDate = DateTime.parse(pregnancyData['cycleStartDate']);
+
+        // Check if cycleLength and periodLength are null, and set defaults
+        int cycleLength = (pregnancyData['cycleLength'] as int?) ?? 28; // Default to 28 days if null
+        int periodLength = (pregnancyData['periodLength'] as int?) ?? 5; // Default to 5 days if null
+        print("cycleLength: $cycleLength (type: ${cycleLength.runtimeType})");
+        print("periodLength: $periodLength (type: ${periodLength.runtimeType})");
+
+        // Calculate the cycle end date
+        DateTime cycleEndDate = cycleStartDate.add(Duration(days: cycleLength));
+
+        // Handle optional fields safely
+        bool isPregnancyMode = pregnancyData['pregnancyMode'] ?? false; // Default to false if null
+        DateTime? gestationStart; // Nullable to handle case when it's missing
+        if (isPregnancyMode) {
+          // If pregnancyMode is true, fetch gestationStart
+          if (pregnancyData['gestationStart'] != null) {
+            gestationStart = DateTime.parse(pregnancyData['gestationStart'] as String);
+          }
+        }
+
+        if (!isPregnancyMode) {
+          // If pregnancyMode is false, skip gestationStart and handle accordingly
+          print("Pregnancy mode is off, skipping gestationStart.");
+        }
+
+        print("gestationStart: ${gestationStart?.toString() ?? 'null'}");
+
+        // Fetch list of past periods and map them to Map<String, String>
+        List<Map<String, String>> pastPeriods = [];
+        if (pregnancyData['pastPeriods'] != null) {
+          for (var item in pregnancyData['pastPeriods']) {
+            if (item is Map<String, dynamic>) {
+              String startDate = item['startDate'] as String? ?? '';
+              String endDate = item['endDate'] as String? ?? '';
+              if (startDate.isNotEmpty && endDate.isNotEmpty) {
+                pastPeriods.add({'startDate': startDate, 'endDate': endDate});
+              }
+            }
+          }
+        }
+
+        // Create the PartnerData instance
+        PartnerData partnerData = PartnerData(
+          cycleStartDate: cycleStartDate,
+          cycleLength: cycleLength,
+          periodLength: periodLength,
+          cycleEndDate: cycleEndDate,
+          pregnancyMode: isPregnancyMode,
+          pastPeriods: pastPeriods,
+        );
+
+        // Save the PartnerData object in Hive
+        await _cycleBox.put('partnerData', partnerData);
+
+        // Update class variables
+        _lastMenstrualPeriod = partnerData.cycleStartDate;
+        _cycleLength = partnerData.cycleLength;
+        _periodLength = partnerData.periodLength;
+        _pregnancyMode = partnerData.pregnancyMode;
+        _pastPeriods = partnerData.pastPeriods;
+        _cycleEndDate = partnerData.cycleEndDate;
+
+        // Calculate due date only if pregnancyMode is true
+        _dueDate = isPregnancyMode && gestationStart != null ? gestationStart.add(Duration(days: 280)) : null;
+        await _cycleBox.put('dueDate', _dueDate?.toIso8601String());
+
+        initializeCycleData();
+        notifyListeners();
+
+        print("Data fetched successfully");
+      } else {
+        print("No data found for User 1.");
+      }
+    } catch (e) {
+      print("Error fetching User 1's cycle data: $e");
+    }
+  }
+
+  void initializeCycleData() {
+    if (_cycleBox.isNotEmpty) {
+      _lastMenstrualPeriod = _cycleBox.get('lastMenstrualPeriod') != null
+          ? DateTime.parse(_cycleBox.get('lastMenstrualPeriod'))
+          : null;
+      _cycleLength = _cycleBox.get('cycleLength');
+      _periodLength = _cycleBox.get('periodLength');
+      _pregnancyMode = _cycleBox.get('pregnancyMode') ?? false;
+      _gestationStart = _cycleBox.get('gestationStart') != null
+          ? DateTime.parse(_cycleBox.get('gestationStart'))
+          : null;
+      _dueDate = _cycleBox.get('dueDate') != null
+          ? DateTime.parse(_cycleBox.get('dueDate'))
+          : null;
+    }
+
     if (_lastMenstrualPeriod == null || _cycleLength == null || _periodLength == null) {
       print("Cycle data is incomplete.");
       return;
@@ -811,6 +1044,10 @@ class PartnerProvider with ChangeNotifier {
     return today.difference(_lastMenstrualPeriod!).inDays ;
   }
 
+  DateTime getNextPeriodDate() {
+    return _lastMenstrualPeriod!.add(Duration(days: cycleLength!));
+  }
+
   /// Toggle pregnancy mode and update necessary values accordingly
   void togglePregnancyMode(bool isEnabled) {
     _pregnancyMode = isEnabled;
@@ -823,4 +1060,90 @@ class PartnerProvider with ChangeNotifier {
 
     notifyListeners();
   }
+
+  int getDaysUntilNextPeriod() {
+    return getNextPeriodDate().difference(DateTime.now()).inDays;
+  }
+
+   listenForCycleUpdates() {
+    String? savedUser1Id = _cycleBox.get('user1Id');
+
+    if (savedUser1Id != null) {
+      FirebaseFirestore.instance
+          .collection('cycles')
+          .doc(savedUser1Id)
+          .snapshots()
+          .listen((snapshot) {
+        try {
+          if (snapshot.exists) {
+            var pregnancyData = snapshot.data() as Map<String, dynamic>;
+
+            // Parse mandatory fields with null safety
+            DateTime cycleStartDate = DateTime.parse(pregnancyData['cycleStartDate']);
+            int cycleLength = pregnancyData['cycleLength'] ?? 0;
+            int periodLength = pregnancyData['periodLength'] ?? 0;
+
+            // Optional fields
+            bool isPregnancyMode = pregnancyData['pregnancyMode'] ?? false;
+            DateTime? gestationStart = pregnancyData['gestationStart'] != null
+                ? DateTime.parse(pregnancyData['gestationStart'])
+                : null;
+
+            // Validate past periods
+            List<Map<String, String>> pastPeriods = [];
+            if (pregnancyData['pastPeriods'] != null && pregnancyData['pastPeriods'] is List) {
+              for (var item in pregnancyData['pastPeriods']) {
+                if (item is Map<String, dynamic>) {
+                  String startDate = item['startDate'] ?? '';
+                  String endDate = item['endDate'] ?? '';
+                  if (startDate.isNotEmpty && endDate.isNotEmpty) {
+                    pastPeriods.add({'startDate': startDate, 'endDate': endDate});
+                  }
+                }
+              }
+            }
+
+            // Create and save PartnerData
+            PartnerData partnerData = PartnerData(
+              cycleStartDate: cycleStartDate,
+              cycleLength: cycleLength,
+              periodLength: periodLength,
+              cycleEndDate: cycleStartDate.add(Duration(days: cycleLength)),
+              pregnancyMode: isPregnancyMode,
+              pastPeriods: pastPeriods,
+            );
+
+            _cycleBox.put('partnerData', partnerData);
+
+            // Update class variables
+            _lastMenstrualPeriod = partnerData.cycleStartDate;
+            _cycleLength = partnerData.cycleLength;
+            _periodLength = partnerData.periodLength;
+            _pregnancyMode = partnerData.pregnancyMode;
+            _pastPeriods = partnerData.pastPeriods;
+            _cycleEndDate = partnerData.cycleEndDate;
+
+            if (_pregnancyMode && gestationStart != null) {
+              _dueDate = gestationStart.add(Duration(days: 280));
+              _cycleBox.put('dueDate', _dueDate?.toIso8601String());
+            } else {
+              _dueDate = null;
+              _cycleBox.delete('dueDate');
+            }
+
+            initializeCycleData();
+            notifyListeners();
+            print("Cycle data updated.");
+          } else {
+            print("No data found for User 1.");
+          }
+        } catch (e) {
+          print("Error processing cycle data: $e");
+        }
+      });
+    } else {
+      print("User 1 ID not found in Hive.");
+    }
+  }
+
 }

@@ -1,6 +1,7 @@
 import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/hive/cycle_model.dart';
-import 'package:calender_app/notifications/notification_service.dart';
+import 'package:calender_app/provider/date_day_format.dart';
+import 'package:provider/provider.dart'; // Import Provider package// Import the settings model
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -8,23 +9,25 @@ import 'package:calender_app/widgets/wheel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../auth/auth_model.dart';
 import '../../hive/notes_model.dart';
 import '../../hive/timeline_entry.dart';
+import '../../notifications/notification_model.dart';
 import '../question/q1.dart';
 import 'backup_restore/google_signin.dart';
 import 'backup_restore/transfer_data_page.dart';
 
 class DialogHelper {
 
-  // New Dialog: showRatingPopup
-  static void showRatingPopup(BuildContext context,
-      ValueChanged<int> onRatingSelected,) {
+
+  static void showRatingPopup(BuildContext context, ValueChanged<int> onRatingSelected) {
     int _rating = 0; // Default rating is 0
 
     showDialog(
@@ -55,28 +58,25 @@ class DialogHelper {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
                           5,
-                              (index) =>
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _rating = index + 1;
-                                  });
-                                  onRatingSelected(_rating);
-                                },
-                                child: Icon(
-                                  _rating > index ? Icons.star : Icons
-                                      .star_border,
-                                  color: Colors.amber,
-                                  size: 40,
-                                ),
-                              ),
+                              (index) => GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _rating = index + 1;
+                              });
+                              onRatingSelected(_rating);
+                            },
+                            child: Icon(
+                              _rating > index ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                              size: 40,
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(height: 10),
                       Text(
                         'Current Rating: $_rating',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ],
                   );
@@ -87,13 +87,26 @@ class DialogHelper {
           actions: [
             TextButton(
               onPressed: () async {
-                final googlePlayUri = Uri.parse(
-                  'https://play.google.com/store/apps/details?id=com.popularapp.periodcalendar&hl=en',
-                );
-                if (await canLaunchUrl(googlePlayUri)) {
-                  await launchUrl(googlePlayUri);
+                if (_rating <= 3) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Thank you for your feedback! We will continue to improve the app."),
+                        duration: Duration(seconds: 3),
+                      ),
+                  );
+                  // Navigator.of(context).pop(); // Close the popup
+
                 } else {
-                  throw 'Could not launch $googlePlayUri';
+                  // Redirect to the Play Store for ratings 4 or 5
+                  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+                  final googlePlayUri = Uri.parse(
+                    'https://play.google.com/store/apps/details?id=${packageInfo.packageName}&hl=en',
+                  );
+                  if (await canLaunchUrl(googlePlayUri)) {
+                    await launchUrl(googlePlayUri);
+                  } else {
+                    throw 'Could not launch $googlePlayUri';
+                  }
                 }
 
                 Navigator.of(context).pop(); // Close the popup
@@ -108,6 +121,7 @@ class DialogHelper {
       },
     );
   }
+
 
   static void showConfirmPopup(BuildContext context, VoidCallback onDelete) {
     showDialog(
@@ -126,10 +140,8 @@ class DialogHelper {
               onPressed: () {
                 Navigator.of(context).pop(); // Close popup
                 onDelete(); // Call the delete logic
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => QuestionScreen1()),
-                );
+                SystemNavigator.pop(); // Exit the app
+
               },
               child: const Text(
                 'Delete',
@@ -150,20 +162,40 @@ class DialogHelper {
     var notificationStorageBox = await Hive.openBox('myBox');
     var cycleDataBox = await Hive.openBox<CycleData>('cycleData');
     var timelineBox = await Hive.openBox<TimelineEntry>('timelineBox');
+    var medicineRemindersBox = await Hive.openBox<Map>('medicineReminders');  // Add this line
+    var notificationsBox = await Hive.openBox<NotificationModel>('notifications');  // Add this line
 
-    await authBox.clear();  // Clear the authBox
-    await partnerCodesBox.clear();  // Clear partner codes box
-    await notesBox.clear();  // Clear notes box
-    await notificationStorageBox.clear();  // Clear notification box
-    await cycleDataBox.clear();  // Clear cycle data box
-    await timelineBox.clear();  // Clear timeline box
+
+    await medicineRemindersBox.clear();
+    await notificationsBox.clear();
+
+    await authBox.clear();
+    await partnerCodesBox.clear();
+    await notesBox.clear();
+    await notificationStorageBox.clear();
+    await cycleDataBox.clear();
+    await timelineBox.clear();
 
     // Optionally, delete from disk if you want to remove all data permanently
     await Hive.deleteFromDisk();
   }
 
+  static void showSignOutPopup(BuildContext context, VoidCallback onSignOut) async {
+    // Check if the user is signed in using FirebaseAuth
+    User? user = FirebaseAuth.instance.currentUser;
 
-  static void showSignOutPopup(BuildContext context, VoidCallback onSignOut) {
+    if (user == null) {
+      // If no user is signed in, show a message indicating that the user is not signed in
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("You are not signed in."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return; // Exit the method early
+    }
+
+    // If the user is signed in, show the sign-out confirmation dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -177,7 +209,8 @@ class DialogHelper {
                   child: CustomButton(
                     onPressed: () async {
                       // Sign out logic
-                      await SessionManager.logoutUser();
+                      await _googleSignIn.signOut(); // Sign out from Google
+                      await SessionManager.logoutUser(); // Your custom logout logic
                       Navigator.of(context).pop();
                       onSignOut();
 
@@ -289,84 +322,6 @@ class DialogHelper {
     }
   }
 
-// New Dialog: Data Lost
-  void showDataLostPopup(BuildContext context, VoidCallback onRecover) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Data Lost?"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "We've upgraded our backup system to make it more secure and convenient."
-                    "\n If you find data lost, please log in to the previous backup account again, we will help to retrieve your data.",
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 10),
-              Column(
-                children: [
-                  // Google Account Sign-In
-                  ListTile(
-                    onTap: () async {
-                      Navigator.of(context).pop();
-                      if (FirebaseAuth.instance.currentUser != null) {
-                         await retrieveCycleDataFromFirestore(context);
-                      } else {
-                        // User is not signed in, sign in through Google
-                        bool success = await GoogleSignInService()
-                            .signInWithGoogle();
-                        if (success) {
-                          await retrieveCycleDataFromFirestore(context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                  'Sign-in failed. Please try again!')));
-                        }
-                      }
-                    },
-                    leading: Icon(Icons.g_mobiledata_outlined),
-                    title: Text('Google Account'),
-                    textColor: primaryColor,
-                  ),
-                  // Other recovery methods
-                  ListTile(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onRecover();
-                    },
-                    leading: Icon(Icons.mail),
-                    title: Text('Email Attachment'),
-                    textColor: primaryColor,
-                  ),
-                  ListTile(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onRecover();
-                    },
-                    leading: Icon(Icons.draw),
-                    title: Text("Dropbox"),
-                    textColor: primaryColor,
-                  ),
-                  ListTile(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onRecover();
-                    },
-                    leading: Icon(Icons.cloud_download),
-                    title: Text('Cloud Storage'),
-                    textColor: primaryColor,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   static void showRenamePopup(BuildContext context) {
     TextEditingController _nameController = TextEditingController();
 
@@ -437,35 +392,91 @@ class DialogHelper {
   }
 
 
-  //Calendar Setting Day
-  static void showFirstDayOfWeekDialog(BuildContext context, String selectedDay,
-      Function(String) onSelected) {
+
+
+  static void showFirstDayOfWeekDialog(
+      BuildContext context,
+      String selectedDay,
+      Function(String) onSelected,
+      ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         List<String> daysOfWeek = [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday"
+          "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
         ];
+
         return AlertDialog(
           title: Text("Select first day of week"),
           content: Container(
-            width:
-            double.maxFinite, // Allow the container to take the max width
+            width: double.maxFinite,
             child: ListView(
               shrinkWrap: true,
               children: daysOfWeek.map((day) {
-                return RadioListTile<String>(
+                return ListTile(
                   title: Text(day),
-                  value: day,
-                  groupValue: selectedDay,
+                  leading: Radio<String>(
+                    value: day,
+                    groupValue: selectedDay,
+                    onChanged: (value) {
+                      if (value != null) {
+                        onSelected(value); // Update selected day
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                  onTap: () {
+                    onSelected(day); // Update selected day when tapping on the list tile
+                    Navigator.of(context).pop();
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+  static void showDateFormatDialog(BuildContext context, String selectedFormat,
+      Function(String) onSelected) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        List<String> dateFormats = [
+          "System Default",
+          "dd/MM/yyyy",
+          "MM/dd/yyyy",
+          "yyyy MM dd",
+          "yyyy-MM-dd",
+          "MMM dd, yyyy",
+          "dd MMM, yyyy",
+          "yyyy MMM dd",
+          "dd MM yyyy",
+        ];
+        return AlertDialog(
+          title: Text("Select Date Format"),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: dateFormats.map((format) {
+                return RadioListTile<String>(
+                  title: Text(format),
+                  value: format,
+                  groupValue: selectedFormat,
                   onChanged: (value) {
-                    onSelected(value!); // Notify the caller of the change
+                    context.read<SettingsModel>().setDateFormat(value!); // Update the date format globally
                     Navigator.of(context).pop();
                   },
                 );
@@ -486,57 +497,6 @@ class DialogHelper {
     );
   }
 
-  //Calendar Setting Date
-  static void showDateFormatDialog(BuildContext context, String selectedFormat,
-      Function(String) onSelected) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        DateTime currentDate = DateTime.now();
-        List<String> dateFormats = [
-          "System Default",
-          DateFormat('dd/MM/yyyy').format(currentDate),
-          DateFormat('MM/dd/yyyy').format(currentDate),
-          DateFormat('yyyy MM dd').format(currentDate),
-          DateFormat('yyyy-MM-dd').format(currentDate),
-          DateFormat('MMM dd, yyyy').format(currentDate),
-          DateFormat('dd MMM, yyyy').format(currentDate),
-          DateFormat('yyyy MMM dd').format(currentDate),
-          DateFormat('dd MM yyyy').format(currentDate),
-        ];
-        return AlertDialog(
-          title: Text("Select Date Format"),
-          content: Container(
-            width:
-            double.maxFinite, // Allow the container to take the max width
-            child: ListView(
-              shrinkWrap: true,
-              children: dateFormats.map((format) {
-                return RadioListTile<String>(
-                  title: Text(format),
-                  value: format,
-                  groupValue: selectedFormat,
-                  onChanged: (value) {
-                    onSelected(value!); // Notify the caller of the change
-                    Navigator.of(context).pop();
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            CustomButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              backgroundColor: primaryColor,
-              text: 'Save',
-            ),
-          ],
-        );
-      },
-    );
-  }
 
 //**************************
 // Select Reminder Frequency Dialog
@@ -736,6 +696,85 @@ class DialogHelper {
 
 
 
+  static final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  static void showSignInStatus(BuildContext context) async {
+    String? userId = await SessionManager.getUserId();
+
+    if (userId != null) {
+      // User is signed in
+      GoogleSignInAccount? currentUser = await GoogleSignIn().signInSilently();  // Check if signed in silently
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Sign In Status"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Currently signed in as: $userId"),
+                if (currentUser != null) ...[
+                  Text("Email: ${currentUser.email}"),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _googleSignIn.signOut();  // Log out from Google
+                      await SessionManager.logoutUser();  // Clear session
+                      Navigator.pop(context);  // Close the dialog
+                      showSignIn(context);  // Show sign-in dialog again
+                    },
+                    child: Text("Sign Out"),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      );
+    } else {
+      // No user is signed in
+      showSignIn(context);
+    }
+  }
+
+  static void showSignIn(BuildContext context) {
+    // Show the sign-in dialog
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Sign In"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Sign in to your account"),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    // Attempt to sign in
+                    await _googleSignIn.signIn();
+                    Navigator.pop(context); // Close the dialog
+                    showSignInStatus(context); // Show sign-in status dialog
+                  } catch (error) {
+                    print("Sign in failed: $error");
+                    // Handle sign-in error (e.g., show a message)
+                  }
+                },
+                child: Text("Sign in with Google"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
 
 
@@ -843,28 +882,32 @@ class CalendarDialogHelper {
 
   // 3. Last Months Dialog
   static void showLastMonthsDialog(
-      BuildContext context, ValueChanged<String> onSelectionChanged) {
+      BuildContext context,
+      String currentSelection,  // Add the current selection as a parameter
+      ValueChanged<String> onSelectionChanged
+      ) {
     List<String> options = [
       "Last 1 Month",
       "Last 3 Months",
       "Last 6 Months",
       "Smart Calculate"
     ];
-    int selectedIndex = 0;
+
+    // Find the initial selected index based on the current selection
+    int selectedIndex = options.indexOf(currentSelection);
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Last Months",
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text("Last Months", style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(options.length, (index) {
               return ListTile(
                 leading: Radio<int>(
                   value: index,
-                  groupValue: selectedIndex,
+                  groupValue: selectedIndex, // Bind to groupValue to control selected radio button
                   onChanged: (value) {
                     selectedIndex = value!;
                     onSelectionChanged(options[selectedIndex]);
@@ -1066,50 +1109,6 @@ class ShowTransferDialog {
   }
 }
 
-  Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
-    try {
-      String? userId = await SessionManager.getUserId();
-
-      // Check if user is logged in
-      if (userId == null) {
-        // Open login dialog instead of showing a snackbar
-        showLoginDialog(context);
-        return;
-      }
-
-      var data = await FirebaseFirestore.instance
-          .collection('cycles')
-          .doc(userId)
-          .get();
-
-      if (data.exists) {
-        // Retrieve data from Firestore
-        int? fetchedCycleLength = data['cycleLength'];
-        int? fetchedPeriodLength = data['periodLength'];
-        DateTime? fetchedLastPeriodStart =
-        data['cycleStartDate'] != null ? DateTime.parse(data['cycleStartDate']) : null;
-
-        List<String> restoredPastPeriods = [];
-        if (data['pastPeriods'] != null) {
-          List<String> pastPeriodsFromFirestore = List<String>.from(data['pastPeriods'] ?? []);
-          restoredPastPeriods.addAll(pastPeriodsFromFirestore);
-        }
-
-        // Update the provider with the fetched periods
-        final provider = Provider.of<CycleProvider>(context, listen: false);
-        provider.addPastPeriodsFromFirestore(restoredPastPeriods.cast<Map<String, String>>());
-
-        // Show popup to ask the user if they want to update the cycle details
-        showCycleUpdateDialog(context, provider, fetchedCycleLength, fetchedPeriodLength, fetchedLastPeriodStart);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("No cycle data found for your account.")));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("An error occurred while fetching data.")));
-    }
-  }
 
   void showLoginDialog(BuildContext context) {
     showDialog(
@@ -1216,3 +1215,199 @@ class ShowTransferDialog {
     );
   }
 
+class DataHandler {
+  static Future<void> handleDataLost(BuildContext context) async {
+    // Check if the user is logged in
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Updated to await the sign-in result before calling retrieveCycleDataFromFirestore
+      // Updated to await the sign-in result before calling retrieveCycleDataFromFirestore
+      bool signInSuccess = await showLoginDialog(context);
+      if (signInSuccess) {
+        await retrieveCycleDataFromFirestore(context);
+      }
+
+    } else {
+      // If logged in, proceed with data fetching
+      await retrieveCycleDataFromFirestore(context);
+    }
+
+  }
+
+  static Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
+    try {
+      String? userId = await SessionManager.getUserId();
+
+      if (userId == null) {
+        showLoginDialog(context);
+        return;
+      }
+
+      var data = await FirebaseFirestore.instance.collection('cycles').doc(userId).get();
+
+      if (data.exists) {
+        // Retrieve data from Firestore with type casting
+        int? fetchedCycleLength = data['cycleLength'] as int?;
+        int? fetchedPeriodLength = data['periodLength'] as int?;
+        DateTime? fetchedLastPeriodStart = data['cycleStartDate'] != null
+            ? DateTime.parse(data['cycleStartDate'] as String)
+            : null;
+
+        List<Map<String, String>> restoredPastPeriods = [];
+        if (data['pastPeriods'] != null) {
+          List<dynamic> pastPeriodsFromFirestore = data['pastPeriods'] as List<dynamic>;
+          for (var item in pastPeriodsFromFirestore) {
+            if (item is Map<String, dynamic>) {
+              String startDate = item['startDate'] ?? '';
+              String endDate = item['endDate'] ?? '';
+              restoredPastPeriods.add({'startDate': startDate, 'endDate': endDate});
+            }
+          }
+        }
+
+        // Check if widget is still mounted before showing SnackBar
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Data found: Cycle Length: $fetchedCycleLength, Period Length: $fetchedPeriodLength"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        final provider = Provider.of<CycleProvider>(context, listen: false);
+        await mergeCycleData(context, provider, fetchedCycleLength, fetchedPeriodLength, fetchedLastPeriodStart, restoredPastPeriods);
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("No cycle data found for your account.")),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("An error occurred while fetching data: $e")),
+        );
+      }
+    }
+  }
+
+  static Future<void> mergeCycleData(
+      BuildContext context,
+      CycleProvider provider,
+      int? fetchedCycleLength,
+      int? fetchedPeriodLength,
+      DateTime? fetchedLastPeriodStart,
+      List<Map<String, String>> restoredPastPeriods,
+      ) async {
+    // Get current cycle data
+    int currentCycleLength = provider.cycleLength;
+    int currentPeriodLength = provider.periodLength;
+    DateTime? currentLastPeriodStart = provider.lastPeriodStart;
+
+    // Show a dialog to ask the user how they want to handle the merging of data
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Merge Cycle Data"),
+          content: Text("Current Cycle Length: $currentCycleLength\n"
+              "Fetched Cycle Length: $fetchedCycleLength\n"
+              "Current Period Length: $currentPeriodLength\n"
+              "Fetched Period Length: $fetchedPeriodLength\n"
+              "Last Period Start: ${currentLastPeriodStart?.toIso8601String()}\n"
+              "Fetched Last Period Start: ${fetchedLastPeriodStart?.toIso8601String()}\n"
+              "Do you want to keep the fetched data or the current data?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Keep current data
+
+                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Current data retained.")));
+              },
+              child: Text("Keep Current"),
+            ),
+            TextButton(
+              onPressed: () {
+                // Update provider with fetched data
+                provider.updateCycleData(
+                  cycleLength: fetchedCycleLength ?? currentCycleLength,
+                  periodLength: fetchedPeriodLength ?? currentPeriodLength,
+                  lastPeriodStart: fetchedLastPeriodStart?.isAfter(currentLastPeriodStart ?? DateTime(0)) == true
+                      ? fetchedLastPeriodStart
+                      : currentLastPeriodStart,
+                  pastPeriods: restoredPastPeriods,
+                );
+
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Fetched data retained.")));
+              },
+              child: Text("Use Fetched"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Function to prompt the user to log in if not logged in
+  static Future<bool> showLoginDialog(BuildContext context) async {
+
+    bool signInSuccess = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Login Required"),
+          content: Text("Please log in to retrieve your cycle data."),
+          actions: [
+            TextButton(
+              onPressed: () async {
+
+                  await handleSignIn(context);
+                  signInSuccess = true;  // Set success flag
+
+                  Navigator.of(context).pop();
+              },
+              child: Text("Login"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+    return signInSuccess;
+  }
+  // Handle user sign-in
+  static Future<void> handleSignIn(BuildContext context) async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    try {
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        return; // User canceled sign-in
+      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      String? userId = FirebaseAuth.instance.currentUser?.uid;
+      print("User ID: $userId");  // Debugging line
+      if (userId != null) {
+        await SessionManager.storeUserSession(userId);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed in successfully!")));
+      }
+    } catch (e) {
+      print("Sign-in error: $e");  // Debugging line
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error during sign-in: $e")));
+    }
+  }
+}

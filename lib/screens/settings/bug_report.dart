@@ -1,142 +1,10 @@
+import 'dart:io';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-//
-// class FeedbackScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return bgContainer(
-//         child: Scaffold(
-//       backgroundColor: Colors.transparent,
-//       appBar: AppBar(
-//         backgroundColor: Colors.transparent,
-//       ),
-//       body: ListView(
-//         padding: const EdgeInsets.all(8.0),
-//         scrollDirection: Axis.vertical,
-//         children: [
-//             Image.asset(
-//               "assets/chat.png",
-//               height: 100,
-//               width: 100,
-//           ),
-//             SizedBox(height: 10,),
-//             Container(
-//               padding: const EdgeInsets.all(8.0),
-//               decoration: BoxDecoration(
-//                 borderRadius: BorderRadius.circular(16),
-//                 color: Colors.white,
-//               ),
-//               child: Column(
-//                 children: [
-//                   Text(
-//                     'What are you not satisfied with?',
-//                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//                   ),
-//                   SizedBox(height: 16),
-//                   Column(
-//                     mainAxisAlignment: MainAxisAlignment.center,
-//                     crossAxisAlignment: CrossAxisAlignment.center,
-//                     children: [
-//                       Row(
-//                         mainAxisAlignment: MainAxisAlignment.center,
-//                         children: [
-//                           FeedbackOption(label: 'Prediction'),
-//                           SizedBox(width: 20), // Add space between buttons
-//                           FeedbackOption(label: 'Design'),
-//                         ],
-//                       ),
-//                       SizedBox(height: 20),
-//                       Row(
-//                         mainAxisAlignment: MainAxisAlignment.center,
-//                         children: [
-//                           FeedbackOption(label: 'Reminders'),
-//                           SizedBox(width: 20),
-//                           FeedbackOption(label: 'Ads'),
-//                         ],
-//                       ),
-//                       SizedBox(height: 20),
-//                       Row(
-//                         mainAxisAlignment: MainAxisAlignment.center,
-//                         children: [
-//                           FeedbackOption(label: 'Translation'),
-//                           SizedBox(width: 20),
-//                           FeedbackOption(label: 'Others'),
-//                         ],
-//                       ),
-//                       SizedBox(height: 20),
-//                       Row(
-//                         mainAxisAlignment: MainAxisAlignment.center,
-//                         children: [
-//                           FeedbackOption(label: 'Backup & Restore'),
-//                         ],
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             SizedBox(height: 24),
-//             Container(
-//               padding: const EdgeInsets.all(8.0),
-//               decoration: BoxDecoration(
-//                 borderRadius: BorderRadius.circular(16),
-//                 color: Colors.white,
-//               ),
-//               child: Column(
-//                 children: [
-//                   Text(
-//                     'Kindly send us a detailed explanation of your issue via email to ensure a quicker resolution.',
-//                     style: TextStyle(fontSize: 16, color: Colors.grey),
-//                     textAlign: TextAlign.center,
-//                   ),
-//                   Icon(
-//                     Icons.add_photo_alternate_outlined,
-//                     color: Colors.grey,
-//                     size: 76,
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             Spacer(),
-//             CustomButton(
-//               text: 'Submit',
-//               backgroundColor: primaryColor,
-//               onPressed: () {},
-//             )
-//           ],
-//         ),
-//
-//     ));
-//   }
-// }
-//
-// class FeedbackOption extends StatelessWidget {
-//   final String label;
-//   const FeedbackOption({required this.label});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: 107,
-//       height: 35,
-//       alignment: Alignment.center,
-//       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-//       decoration: BoxDecoration(
-//           color: Color(0xffFFC4E8), borderRadius: BorderRadius.circular(16)),
-//       child: Text(
-//         '$label',
-//         style: TextStyle(
-//           color: Colors.black,
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 class FeedbackScreen extends StatefulWidget {
   @override
@@ -154,17 +22,50 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     'Backup & Restore',
   ];
   final Set<String> _selectedOptions = {}; // To store selected options
+  File? _imageFile; // To store selected image file
 
-  // Function to launch email client
-  void _openEmailClient() async {
-    final String email = "yamnaisrailkhan@gmail.com";
-    final Uri emailUri = Uri.parse("mailto:$email");
+  // Function to open the image picker and select an image
+  Future<void> _pickImage() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Image selected successfully.")),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Could not open email client.")),
+        SnackBar(content: Text("No image selected.")),
+      );
+    }
+  }
+
+  // Function to open email client
+  Future<void> _openEmailClient() async {
+    String subject = 'Feedback on ${_selectedOptions.isEmpty ? 'App' : _selectedOptions.join(', ')}';
+    String body = 'I found an issue in the following areas: ${_selectedOptions.isEmpty ? 'No specific feedback' : _selectedOptions.join(', ')}.\n\n';
+
+    // Prepare the email
+    final Email email = Email(
+      body: body,
+      subject: subject,
+      recipients: ['yamnaisrailkhan@gmail.com'],
+      attachmentPaths: _imageFile != null ? [_imageFile!.path] : [],
+      isHTML: false,
+    );
+
+    try {
+      await FlutterEmailSender.send(email);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text("Email sent successfully.")),
+      // );
+    } catch (error) {
+      print("Error sending email: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error sending email.")),
       );
     }
   }
@@ -178,8 +79,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           backgroundColor: Colors.transparent,
         ),
         body: ListView(
-          padding: const EdgeInsets.all(8.0),
-          scrollDirection: Axis.vertical,
+          padding: EdgeInsets.all(8.0),
           children: [
             Image.asset(
               "assets/chat.png",
@@ -239,10 +139,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
-                  Icon(
-                    Icons.add_photo_alternate_outlined,
+                  _imageFile != null
+                      ? Image.file(
+                    _imageFile!,
+                    height: 76,
+                    width: 76,
+                    fit: BoxFit.cover,
+                  )
+                      : IconButton(
+                    icon: Icon(Icons.add_photo_alternate_outlined),
                     color: Colors.grey,
-                    size: 76,
+                    iconSize: 76,
+                    onPressed: _pickImage,
                   ),
                 ],
               ),

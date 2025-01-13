@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
+import 'package:provider/provider.dart';
+
+import 'date_day_format.dart';
 
 class PairedDaysProvider with ChangeNotifier {
   int _daysPaired = 1;
@@ -9,7 +12,7 @@ class PairedDaysProvider with ChangeNotifier {
   int get daysPaired => _daysPaired;
 
   // Initialize the paired days by fetching the login date from Hive
-  Future<void> initializePairedDays() async {
+  Future<void> initializePairedDays(BuildContext context) async {
     try {
       // Open the Hive box where we will store the login date
       var box = await Hive.openBox('userData');

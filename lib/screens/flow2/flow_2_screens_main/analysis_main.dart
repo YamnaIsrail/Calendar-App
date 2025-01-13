@@ -1,6 +1,6 @@
-import 'package:calender_app/image_check.dart';
 import 'package:calender_app/provider/analysis/temperature_provider.dart';
 import 'package:calender_app/provider/analysis/weight_provider.dart';
+import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/weight_screens.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -80,30 +80,7 @@ class Analysis extends StatelessWidget {
                       label:  Text("Weight",   style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)
                       ),
                     ),
-                    SizedBox(height: 5,),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      child: lastWeightData == null
-                          ? const Center(child: Text('No weight data available'))
-                          :Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${lastWeightData!['weight']} kg',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)
 
-                               ),
-                          const SizedBox(height: 10),
-                          Text(
-                              DateFormat('MM/dd/yyyy').format(lastWeightData['date']),
-                              style: const TextStyle(fontSize: 16),
-                          ),
-                       ],
-                      ),
-                    ),
                     SizedBox(height: 20,),
 
                     Container(
@@ -152,7 +129,7 @@ class Analysis extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16)),
                           Text( temperatureProvider.temperatureData.isNotEmpty
-                              ? DateFormat('yyyy-MM-dd').format(DateTime.parse(
+                              ? DateFormat(context.watch<SettingsModel>().dateFormat).format(DateTime.parse(
                               temperatureProvider.getLatestTemperatureDate()))
                               : ""),
                         ],

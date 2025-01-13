@@ -35,6 +35,7 @@ class AuthProvider with ChangeNotifier {
 
   // Save PIN securely
   Future<void> savePin(String pin) async {
+
     _authData = AuthData(pin: pin, usePassword: false);
     await _authBox.put('authData', _authData);
     notifyListeners();

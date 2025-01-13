@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:calender_app/auth/auth_provider.dart';
+import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/screens/partner_mode/partner_flow/home_partner_flow.dart';
+import 'package:calender_app/screens/partner_mode/partner_flow/partner_mode_today.dart';
 import 'package:calender_app/screens/settings/auth/password/enter_password.dart';
 import 'package:calender_app/screens/settings/auth/password/enter_pin.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +57,33 @@ class _SplashScreenState extends State<SplashScreen> {
       CycleData? cycleData = box.get('cycle'); // Retrieve the cycle data
       return cycleData != null; // Return true if data exists, otherwise false
     }
+    //
+    // Future<bool> checkIfPartnerCycleDataExists() async {
+    //   try {
+    //     if (!Hive.isBoxOpen('partnerCycleData')) {
+    //       await Hive.openBox('partnerCycleData');
+    //     }
+    //
+    //     var box = Hive.box('partnerCycleData');
+    //     var partnerCycleData = box.get('partnerCycleKey'); // Ensure this key is correct
+    //     return partnerCycleData != null;
+    //   } catch (e) {
+    //     print("Error accessing partnerCycleData box: $e");
+    //     return false; // Return false if there was an error
+    //   }
+    // }
+    Future<bool> checkIfPartnerCycleDataExists() async {
+      try {
+
+        var box = Hive.box('partnerCycleData');
+        var partnerCycleData = box.get('partnerData');
+        print("Partner cycle data: $partnerCycleData");  // Debug log
+        return partnerCycleData != null;
+      } catch (e) {
+        print("Error accessing partnerCycleData box: $e");
+        return false;
+      }
+    }
 
     if (authProvider.hasPasswordOrPin) {
       if (authProvider.usePassword) {
@@ -68,13 +98,27 @@ class _SplashScreenState extends State<SplashScreen> {
           MaterialPageRoute(builder: (context) => EnterPinScreen()),
         );
       }
-     } else {
+     } else
+     {
       bool hasCycleData = await checkIfCycleDataExists();
+      bool hasPartnerCycleData = await checkIfPartnerCycleDataExists();
+
       if (hasCycleData) {
         // If data exists, navigate to the main screen or the next page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => Flow2Page()),
+        );
+      } else  if (hasPartnerCycleData) {
+        final partnerProvider = Provider.of<PartnerProvider>(context, listen: false);
+        await partnerProvider.listenForCycleUpdates();  // Pass the user1Id here
+
+
+        print("Navigating to PregnancyStatusScreen"); // Debug log
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePartnerFlow()),
         );
       } else {
         // If no data exists, navigate to homescreen
@@ -87,7 +131,6 @@ class _SplashScreenState extends State<SplashScreen> {
     //   Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
