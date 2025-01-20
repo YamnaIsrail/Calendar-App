@@ -148,27 +148,10 @@ class _BackupAndRestoreScreenState extends State<BackupAndRestoreScreen> {
                   icon: Icons.warning,
                   title: "Data lost?",
                   onTap: () async {
-                    if (FirebaseAuth.instance.currentUser != null) {
-                      // If the user is signed in, proceed to handle data loss
-                      await DataHandler.handleDataLost(context);
-                    } else {
-                      // User is not signed in, proceed with sign-in process
-                      bool success = await GoogleSignInService().signInWithGoogle();
-                      await DataHandler.handleDataLost(context);
-
-                      if (success) {
-                        // If sign-in is successful, handle data loss
-                        await DataHandler.handleDataLost(context);
-                      } else {
-                        // If sign-in fails, show an error message
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('Sign-in failed. Please try again!'),
-                          backgroundColor: Colors.red,
-                        ));
-                      }
-                    }
+                    // Directly call handleDataLost and let it manage the snack bar and data retrieval
+                    await DataHandler.handleDataLost(context);
                   },
-                ),
+                )
 
               ],
             ),
@@ -254,26 +237,59 @@ class UserProfileSection extends StatelessWidget {
   }
 }
 
-
 void _scheduleBackupReminder(String frequency) {
   DateTime now = DateTime.now();
   DateTime scheduleDate;
 
   // Determine the schedule date based on the frequency
   if (frequency == "Daily") {
-    scheduleDate = DateTime(now.year, now.month, now.day, 9, 0); // Example: 9 AM daily
+    scheduleDate = DateTime(now.year, now.month, now.day, 9, 0); // 9 AM daily
+    // Reschedule for the next day
+    NotificationService.scheduleNotification(
+      2, // Unique ID
+      "Backup Reminder",
+      "It's time to back up your data.",
+      scheduleDate,
+    );
+    // Reschedule for the next day
+    NotificationService.scheduleNotification(
+      2, // Unique ID
+      "Backup Reminder",
+      "It's time to back up your data.",
+      scheduleDate.add(Duration(days: 1)),
+    );
   } else if (frequency == "Weekly") {
-    scheduleDate = DateTime(now.year, now.month, now.day + 7, 9, 0); // Example: 9 AM next week
+    scheduleDate = DateTime(now.year, now.month, now.day + 7, 9, 0); // 9 AM next week
+    NotificationService.scheduleNotification(
+      2, // Unique ID
+      "Backup Reminder",
+      "It's time to back up your data.",
+      scheduleDate,
+    );
+    // Reschedule for the next week
+    NotificationService.scheduleNotification(
+      2, // Unique ID
+      "Backup Reminder",
+      "It's time to back up your data.",
+      scheduleDate.add(Duration(days: 7)),
+    );
+  } else if (frequency == "Monthly") {
+    scheduleDate = DateTime(now.year, now.month + 1, now.day, 9, 0); // 9 AM next month
+    NotificationService.scheduleNotification(
+      2, // Unique ID
+      "Backup Reminder",
+      "It's time to back up your data.",
+      scheduleDate,
+    );
+    // Reschedule for the next month
+    NotificationService.scheduleNotification(
+      2, // Unique ID
+      "Backup Reminder",
+      "It's time to back up your data.",
+      scheduleDate.add(Duration(days: 30)), // Approximation for a month
+    );
   } else {
-    // Handle other frequencies as needed
+    // Handle invalid frequency or default behavior
     return;
   }
-
-  // Schedule the notification
-  NotificationService.scheduleNotification(
-    2, // Use a unique ID for the backup reminder
-    "Backup Reminder",
-    "It's time to back up your data.",
-    scheduleDate,
-  );
 }

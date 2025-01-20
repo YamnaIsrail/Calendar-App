@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../flow2/detail page/cycle/medicine.dart';
 import '../flow2/detail page/cycle/water.dart';
+import 'reminder_times.dart';
 
 class ReminderScreen extends StatefulWidget {
   @override
@@ -23,9 +24,20 @@ class _ReminderScreenState extends State<ReminderScreen> {
   @override
   void initState() {
     super.initState();
+    NotificationService.init();
+    _requestPermission();
+
     _loadToggleStates(); // Load toggle states when the page is initialized
   }
 
+  void _requestPermission() async {
+    bool granted = await NotificationService.requestNotificationPermission();
+    if (!granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Notification permissions are required to schedule reminders.")),
+      );
+    }
+  }
   // Load the toggle states from Hive
   void _loadToggleStates() async {
     final states = await ToggleStateService.loadToggleState();
@@ -35,6 +47,40 @@ class _ReminderScreenState extends State<ReminderScreen> {
       isLutealReminderOn = states['isLutealReminderOn'] ?? false;
       _waterReminderEnabled = states['waterReminderEnabled'] ?? false; // Load water reminder state
     });
+  }
+  void handleReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime startDate,
+    required String phaseType,
+  }) async {
+    DateTime now = DateTime.now();
+
+    if (startDate.isBefore(now)) {
+      // Immediate notification for past event
+      await NotificationService.showInstantNotification(
+        title,
+        "Your $phaseType started on ${startDate.toLocal()}.",
+      );
+    }
+
+    // Schedule notifications for future cycles
+    const int monthsToSchedule = 12;
+    final cycleProvider = Provider.of<CycleProvider>(context, listen: false); // Get the instance of CycleProvider
+    final int cycleLength = cycleProvider.cycleLength; // Access the cycleLength instance member
+
+    for (int i = 0; i < monthsToSchedule; i++) {
+      DateTime nextDate = startDate.add(Duration(days: cycleLength  * i));
+      if (nextDate.isAfter(now)) {
+        await scheduleNotification(
+          id: id + i, // Unique ID for each month's notification
+          title: title,
+          body: body,
+          dateTime: nextDate,
+        );
+      }
+    }
   }
 
   Future<void> scheduleNotification({
@@ -76,112 +122,199 @@ class _ReminderScreenState extends State<ReminderScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(title: 'Period & Ovulation'),
+
+             // CustomItem(
+             //    title: "Next Period Reminder",
+             //    onChanged: (bool value) {
+             //      setState(() {
+             //        isPeriodReminderOn = value;
+             //      });
+             //      ToggleStateService.saveToggleState(
+             //        isPeriodReminderOn: isPeriodReminderOn,
+             //        isFertilityReminderOn: isFertilityReminderOn,
+             //        isLutealReminderOn: isLutealReminderOn,
+             //      );
+             //
+             //      if (value) {
+             //        cycleProvider.rescheduleNotifications();
+             //      } else {
+             //        NotificationService.showInstantNotification(
+             //          "Reminder Canceled",
+             //          "Next period reminder has been canceled.",
+             //        );
+             //        cycleProvider.cancelNotification(1000);
+             //      }
+             //    },
+             //    isSwitched: isPeriodReminderOn,
+             //  ),
+             //
+             //  CustomItem(
+             //    title: "Fertile Window Reminder",
+             //    onChanged: (bool value) {
+             //      setState(() {
+             //        isFertilityReminderOn = value;
+             //      });
+             //      ToggleStateService.saveToggleState(
+             //        isPeriodReminderOn: isPeriodReminderOn,
+             //        isFertilityReminderOn: isFertilityReminderOn,
+             //        isLutealReminderOn: isLutealReminderOn,
+             //      );
+             //
+             //      if (value) {
+             //        cycleProvider.rescheduleNotifications();
+             //      } else {
+             //        NotificationService.showInstantNotification(
+             //          "Reminder Canceled",
+             //          "Fertile window reminder has been canceled.",
+             //        );
+             //        cycleProvider.cancelNotification(2000);
+             //      }
+             //    },
+             //    isSwitched: isFertilityReminderOn,
+             //  ),
+             //
+             //  CustomItem(
+             //    title: "Luteal Phase Reminder",
+             //    onChanged: (bool value) {
+             //      setState(() {
+             //        isLutealReminderOn = value;
+             //      });
+             //      ToggleStateService.saveToggleState(
+             //        isPeriodReminderOn: isPeriodReminderOn,
+             //        isFertilityReminderOn: isFertilityReminderOn,
+             //        isLutealReminderOn: isLutealReminderOn,
+             //      );
+             //
+             //      if (value) {
+             //        cycleProvider.rescheduleNotifications();
+             //      } else {
+             //        NotificationService.showInstantNotification(
+             //          "Reminder Canceled",
+             //          "Luteal phase reminder has been canceled.",
+             //        );
+             //        cycleProvider.cancelNotification(3000);
+             //      }
+             //    },
+             //    isSwitched: isLutealReminderOn,
+             //  ),
               CustomItem(
                 title: "Next Period Reminder",
-                onChanged: (bool value) {
+                onChanged: (bool value) async {
                   setState(() {
                     isPeriodReminderOn = value;
                   });
+
                   ToggleStateService.saveToggleState(
                     isPeriodReminderOn: isPeriodReminderOn,
                     isFertilityReminderOn: isFertilityReminderOn,
                     isLutealReminderOn: isLutealReminderOn,
                   );
+
                   if (value) {
-                    DateTime nextPeriodDate = cycleProvider.getNextPeriodDate();
-                    print("Scheduling next period reminder for: $nextPeriodDate");
-
-                    scheduleNotification(
-                      id: 3,
-                      title: "Period Reminder",
-                      body: "Your next period is expected soon!",
-                      dateTime: nextPeriodDate,
+                    // Show time picker when the user turns on the toggle
+                    TimeOfDay? selectedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(hour: 9, minute: 0), // Default time
                     );
 
-                    NotificationService.showInstantNotification(
-                      "Reminder Scheduled",
-                      "Next period reminder scheduled for ${nextPeriodDate.toLocal()}",
+                    // Use default time if the user doesn't select one
+                    TimeOfDay reminderTime = selectedTime ?? TimeOfDay(hour: 9, minute: 0);
+
+                    // Save the selected time
+                    await NotificationTimeService.saveNotificationTime(
+                      key: NotificationTimeService.periodTimeKey,
+                      time: reminderTime,
                     );
+
+                    // Reschedule notifications with the updated time
+                    cycleProvider.rescheduleNotifications();
                   } else {
-                    cancelNotification(3);
                     NotificationService.showInstantNotification(
                       "Reminder Canceled",
                       "Next period reminder has been canceled.",
                     );
+                    cycleProvider.cancelNotification(1000);
                   }
                 },
                 isSwitched: isPeriodReminderOn,
               ),
+
               CustomItem(
                 title: "Fertile Window Reminder",
-                onChanged: (bool value) {
+                onChanged: (bool value) async {
                   setState(() {
                     isFertilityReminderOn = value;
                   });
+
                   ToggleStateService.saveToggleState(
                     isPeriodReminderOn: isPeriodReminderOn,
                     isFertilityReminderOn: isFertilityReminderOn,
                     isLutealReminderOn: isLutealReminderOn,
                   );
-                  if (value && cycleProvider.fertileDaysRange.isNotEmpty) {
-                    DateTime fertileStartDate = cycleProvider.fertileDaysRange.first;
 
-                    scheduleNotification(
-                      id: 4,
-                      title: "Fertile Window Reminder",
-                      body: "Your fertile window starts today.",
-                      dateTime: fertileStartDate,
+                  if (value) {
+                    TimeOfDay? selectedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(hour: 8, minute: 0), // Default time
                     );
 
-                    NotificationService.showInstantNotification(
-                      "Reminder Scheduled",
-                      "Fertile window reminder scheduled for ${fertileStartDate.toLocal()}",
+                    TimeOfDay reminderTime = selectedTime ?? TimeOfDay(hour: 8, minute: 0);
+
+                    await NotificationTimeService.saveNotificationTime(
+                      key: NotificationTimeService.fertilityTimeKey,
+                      time: reminderTime,
                     );
+
+                    cycleProvider.rescheduleNotifications();
                   } else {
-                    cancelNotification(4);
                     NotificationService.showInstantNotification(
                       "Reminder Canceled",
                       "Fertile window reminder has been canceled.",
                     );
+                    cycleProvider.cancelNotification(2000);
                   }
                 },
                 isSwitched: isFertilityReminderOn,
               ),
+
               CustomItem(
                 title: "Luteal Phase Reminder",
-                onChanged: (bool value) {
+                onChanged: (bool value) async {
                   setState(() {
                     isLutealReminderOn = value;
                   });
+
                   ToggleStateService.saveToggleState(
                     isPeriodReminderOn: isPeriodReminderOn,
                     isFertilityReminderOn: isFertilityReminderOn,
                     isLutealReminderOn: isLutealReminderOn,
                   );
-                  if (value && cycleProvider.lutealPhaseDays.isNotEmpty) {
-                    DateTime lutealStartDate = cycleProvider.lutealPhaseDays.first;
 
-                    scheduleNotification(
-                      id: 5,
-                      title: "Luteal Phase Reminder",
-                      body: "Your luteal phase starts today.",
-                      dateTime: lutealStartDate,
+                  if (value) {
+                    TimeOfDay? selectedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(hour: 10, minute: 0), // Default time
                     );
 
-                    NotificationService.showInstantNotification(
-                      "Reminder Scheduled",
-                      "Luteal phase reminder scheduled for ${lutealStartDate.toLocal()}",
+                    TimeOfDay reminderTime = selectedTime ?? TimeOfDay(hour: 10, minute: 0);
+
+                    await NotificationTimeService.saveNotificationTime(
+                      key: NotificationTimeService.lutealTimeKey,
+                      time: reminderTime,
                     );
+
+                    cycleProvider.rescheduleNotifications();
                   } else {
-                    cancelNotification(5);
                     NotificationService.showInstantNotification(
                       "Reminder Canceled",
                       "Luteal phase reminder has been canceled.",
                     );
+                    cycleProvider.cancelNotification(3000);
                   }
                 },
                 isSwitched: isLutealReminderOn,
               ),
+
 
               const SectionHeader(title: 'Add Medicine'),
               Container(

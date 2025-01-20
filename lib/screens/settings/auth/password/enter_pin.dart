@@ -1,9 +1,13 @@
 import 'package:calender_app/auth/auth_provider.dart';
+import 'package:calender_app/hive/cycle_model.dart';
+import 'package:calender_app/screens/flow2/home_flow2.dart';
 import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/screens/homeScreen.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 
 class EnterPinScreen extends StatelessWidget {
@@ -46,10 +50,22 @@ class EnterPinScreen extends StatelessWidget {
                 SizedBox(height: 20),
                 CustomButton(
                   backgroundColor: primaryColor,
-                  onPressed: () {
+                  onPressed: () async {
                     final authProvider = Provider.of<AuthProvider>(context, listen: false);
                     if (pinController.text == authProvider.pin) {
-                        Navigator.pushReplacementNamed(context, '/home');
+                      bool hasCycleData = await checkIfCycleDataExists();
+                      if (hasCycleData) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => Flow2Page()),
+                        );
+                      } else {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => HomeScreen()),
+                        );
+                      }
+                      // Navigator.pushReplacementNamed(context, '/home');
                     } else {
                       // Show error if PIN doesn't match
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid PIN')));
@@ -64,4 +80,10 @@ class EnterPinScreen extends StatelessWidget {
       ),
     );
   }
+  Future<bool> checkIfCycleDataExists() async {
+    var box = await Hive.openBox<CycleData>('cycleData');
+    CycleData? cycleData = box.get('cycle'); // Retrieve the cycle data
+    return cycleData != null; // Return true if data exists, otherwise false
+  }
+
 }

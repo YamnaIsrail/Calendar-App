@@ -16,12 +16,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../main.dart';
+import 'progress_arcs.dart';
 
 class CycleStatusScreen extends StatelessWidget {
   final String? userImageUrl;
 
   CycleStatusScreen({this.userImageUrl});
-
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +41,7 @@ class CycleStatusScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         appBar: CustomAppBar(
           pageTitle: "",
-          onCancel: () {
-
-          },
+          onCancel: () {},
           onBack: () {
             Navigator.push(
               context,
@@ -51,80 +49,131 @@ class CycleStatusScreen extends StatelessWidget {
             );
           },
         ),
-        body: Consumer3<CycleProvider, PregnancyModeProvider, IntercourseProvider>(
-          builder: (context, cycleProvider, pregnancyModeProvider,intercourseProvider, child) {
+        body: Consumer3<CycleProvider, PregnancyModeProvider,
+            IntercourseProvider>(
+          builder: (context, cycleProvider, pregnancyModeProvider,
+              intercourseProvider, child) {
             final daysUntilNextPeriod = cycleProvider.getDaysUntilNextPeriod();
             final nextPeriodDate = cycleProvider.getNextPeriodDate();
             final currentCycleDay = cycleProvider.daysElapsed + 1;
             final lastPeriodDate = cycleProvider.lastPeriodStart;
             final periodLength = cycleProvider.periodLength;
             final cycleLength = cycleProvider.cycleLength;
+            final endDate = cycleProvider.lastPeriodStart.add(Duration(days:  periodLength - 1));;
 
 
             String getFormattedDueDate(DateTime? dueDate) {
               if (dueDate == null) return "No due date";
-              return DateFormat(context.watch<SettingsModel>().dateFormat).format(dueDate);
+              return DateFormat(context.watch<SettingsModel>().dateFormat)
+                  .format(dueDate);
             }
+
             // Determine if in pregnancy mode
             bool isPregnancyMode = pregnancyModeProvider.isPregnancyMode;
 
             return Column(
-
-            children: [
-
-                Container(
-                  height: 280,
-                  width: 280,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: AssetImage("assets/cal.png"),
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      height: 280,
+                      width: 280,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          fit: BoxFit.cover,
+                          image: AssetImage("assets/cal.png"),
+                        ),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (pregnancyModeProvider.isPregnancyMode) ...[
+                              // Pregnancy Mode Active
+                              Text(
+                                pregnancyModeProvider.gestationWeeks != null
+                                    ? "Expected due date\n ${getFormattedDueDate(pregnancyModeProvider.dueDate)}"
+                                    : "Pregnancy Mode Active",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16, color: Colors.black),
+                              ),
+                              SizedBox(height: 5),
+                              if (pregnancyModeProvider.gestationStart != null) ...[
+                                Text(
+                                  "${pregnancyModeProvider.gestationWeeks!} Weeks ${pregnancyModeProvider.gestationDays!} Days",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12, color: Colors.black),
+                                ),
+                              ],
+                            ] else ...[
+                              // Not in Pregnancy Mode, show period-related information
+                              if (currentCycleDay <= periodLength-1) ...[
+                                // Show current cycle details
+                                Text(
+                                  "Periods", // Show the period end date
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 8, color: Colors.black),
+                                ),
+                                Text(
+                                  "Day $currentCycleDay", // Show the period day
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16, color: Colors.black),
+                                ),
+                                SizedBox(height: 5),
+                                // Show the period end date
+                                Text(
+                                  "Period will end on \n ${formatDate(endDate)}",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12, color: Colors.black),
+                                ),
+                              ] else ...[
+                                // Period is over, show future period details
+                                Text(
+                                  showHideProvider.visibilityMap['Future Period'] == true
+                                      ? (daysUntilNextPeriod == 0
+                                      ? "Today" // If the period is due today, show "Today"
+                                      : (daysUntilNextPeriod < 0
+                                      ? "${daysUntilNextPeriod.abs()} Day(s) Late"
+                                      : "$daysUntilNextPeriod Day(s) Left"))
+                                      : "Future Period\n is Disabled",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16, color: Colors.black),
+                                ),
+                                SizedBox(height: 5),
+                                // Show next period details
+                                Text(
+                                  showHideProvider.visibilityMap['Future Period'] == true
+                                      ? (daysUntilNextPeriod == 0
+                                      ? "Period is expected to begin \n ${formatDate(nextPeriodDate)}"
+                                      : (daysUntilNextPeriod < 0
+                                      ? "Your period was expected\non ${formatDate(nextPeriodDate)}."
+                                      : "Next period will start\non ${formatDate(nextPeriodDate)}"))
+                                      : " ",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12, color: Colors.black),
+                                ),
+                              ],
+                            ],
+                          ],
+                        ),
+                      )
                     ),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-
-                      children: [
-                        // First Text widget (showing "Today" or other messages)
-                        Text(
-                          isPregnancyMode
-                              ? pregnancyModeProvider.gestationWeeks != null
-                              ? "Expected date\n ${getFormattedDueDate(pregnancyModeProvider.dueDate)}"
-                              : "Pregnancy Mode Active"
-                              : (showHideProvider.visibilityMap['Future Period'] == true)
-                              ? (daysUntilNextPeriod == 0
-                              ? "Today"  // If the period is due today, show "Today"
-                              : (daysUntilNextPeriod < 0
-                              ? "${daysUntilNextPeriod.abs()} Day(s) Late"
-                              : "$daysUntilNextPeriod Day(s) Left"))
-                              : "Future Period\n is Disabled",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.black),
+                    SizedBox(
+                      height: 280,
+                      width: 280,
+                      child: CustomPaint(
+                        painter: isPregnancyMode
+                            ? PregnancyProgressPainter(
+                          pregnancyProvider: pregnancyModeProvider,
+                        )
+                            : CycleProgressPainter(
+                          cycleProvider: CycleProvider(),
                         ),
-                        SizedBox(height: 5),
-                        // Second Text widget (showing period due date and details)
-                        Text(
-                          isPregnancyMode
-                              ? pregnancyModeProvider.gestationStart != null
-                              ? " ${pregnancyModeProvider.gestationWeeks!} Weeks ${pregnancyModeProvider.gestationDays!} Days"
-                              : ""
-                              : (showHideProvider.visibilityMap['Future Period'] == true)
-                              ? (daysUntilNextPeriod == 0
-                              ? "The period is due today \n ${formatDate(nextPeriodDate)}"  // Ensure this text shows only for the period's due date
-                              : (daysUntilNextPeriod < 0
-                              ? "Your period was expected\non ${formatDate(nextPeriodDate)}."
-                              : "Next period will start\non ${formatDate(nextPeriodDate)}"))
-                              : " ",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12, color: Colors.black),
-                        ),
-                      ],
-                    )
-
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -134,7 +183,8 @@ class CycleStatusScreen extends StatelessWidget {
                         children: [
                           // Cycle Phase Card Section
                           Container(
-                            padding: const EdgeInsets.only(top: 16.0, bottom: 16.0, left: 16),
+                            padding: const EdgeInsets.only(
+                                top: 16.0, bottom: 16.0, left: 16),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
@@ -150,26 +200,25 @@ class CycleStatusScreen extends StatelessWidget {
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       "Cycle Phase",
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.arrow_forward_ios_rounded),
-                                      onPressed: () {
+                                      icon:
+                                          Icon(Icons.arrow_forward_ios_rounded),
+                                      onPressed: () async {
                                         try {
-                                          final box = Hive.box<CycleData>('cycledata');
-                                          print("Stored Data:");
-                                          print("Last Period Start: ${box.get('lastPeriodStart')}");
-                                          print("Cycle Length: ${box.get('cycleLength')}");
-                                          print("Period Length: ${box.get('periodLength')}");
-
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => PeriodPhaseScreen(),
+                                              builder: (context) =>
+                                                  PeriodPhaseScreen(),
                                             ),
                                           );
                                         } catch (e) {
@@ -179,7 +228,7 @@ class CycleStatusScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                    SizedBox(
+                                SizedBox(
                                   height: 120,
                                   child: ListView(
                                     scrollDirection: Axis.horizontal,
@@ -191,12 +240,13 @@ class CycleStatusScreen extends StatelessWidget {
                                             ? "First Trimester"
                                             : "Menstrual Phase",
                                         date: isPregnancyMode
-                                            ? pregnancyModeProvider.gestationStart != null
-                                            ? "Pregnancy start ${formatDate(pregnancyModeProvider.gestationStart!)}"
-                                            : ""
+                                            ? pregnancyModeProvider
+                                                        .gestationStart !=
+                                                    null
+                                                ? "Pregnancy start ${formatDate(pregnancyModeProvider.gestationStart!)}"
+                                                : ""
                                             : "Start Date: ${formatDate(cycleProvider.lastPeriodStart)}",
                                       ),
-
                                       CyclePhaseCard(
                                         icon: Icons.wb_sunny,
                                         color: Colors.green[100]!,
@@ -204,38 +254,49 @@ class CycleStatusScreen extends StatelessWidget {
                                             ? "Second Trimester"
                                             : "Fertility Window", // Always show the card
                                         date: isPregnancyMode
-                                            ? pregnancyModeProvider.gestationStart != null
-                                            ? "Due soon" // You can also add the expected due date here
-                                            : ""
-                                            : showHideProvider.visibilityMap['Ovulation / Fertile'] == true
-                                            ? "From: ${formatDate(cycleProvider.getFertilityWindowStart())} "
-                                             : "  Disabled", // Show 'Disabled' when not visible
+                                            ? pregnancyModeProvider
+                                                        .gestationStart !=
+                                                    null
+                                                ? "Due soon" // You can also add the expected due date here
+                                                : ""
+                                            : showHideProvider.visibilityMap[
+                                                        'Ovulation / Fertile'] ==
+                                                    true
+                                                ? "From: ${formatDate(cycleProvider.getFertilityWindowStart())} "
+                                                : "  Disabled", // Show 'Disabled' when not visible
                                       ),
-
-                                      if (!isPregnancyMode || showHideProvider.visibilityMap['Ovulation / Fertile'] == true)
+                                      if (!isPregnancyMode ||
+                                          showHideProvider.visibilityMap[
+                                                  'Ovulation / Fertile'] ==
+                                              true)
                                         CyclePhaseCard(
                                           icon: Icons.egg,
                                           color: Colors.orange[100]!,
                                           phase: "Ovulation",
-                                          date: showHideProvider.visibilityMap['Ovulation / Fertile'] == true
+                                          date: showHideProvider.visibilityMap[
+                                                      'Ovulation / Fertile'] ==
+                                                  true
                                               ? "Date: ${formatDate(cycleProvider.getOvulationDate())}" // Ovulation card with date
                                               : "Disabled", // If not visible, show 'Disabled'
                                         ),
-
                                       CyclePhaseCard(
                                         icon: Icons.next_plan,
                                         color: Colors.purple[100]!,
                                         phase: isPregnancyMode
                                             ? "Due Date"
                                             : "Next Period",
-            date: showHideProvider.visibilityMap['Future Period'] == true
-            ? (isPregnancyMode
-            ? (pregnancyModeProvider.dueDate != null
-            ? "Due Date: ${formatDate(pregnancyModeProvider.dueDate!)}"
-                : "")
-                : "Date: ${formatDate(cycleProvider.getNextPeriodDate())}")
-                : " Disabled", // Disabled message with the same date
-            ),
+                                        date: showHideProvider.visibilityMap[
+                                                    'Future Period'] ==
+                                                true
+                                            ? (isPregnancyMode
+                                                ? (pregnancyModeProvider
+                                                            .dueDate !=
+                                                        null
+                                                    ? "Due Date: ${formatDate(pregnancyModeProvider.dueDate!)}"
+                                                    : "")
+                                                : "Date: ${formatDate(cycleProvider.getNextPeriodDate())}")
+                                            : " Disabled", // Disabled message with the same date
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -252,46 +313,44 @@ class CycleStatusScreen extends StatelessWidget {
                                 : 'Today - Cycle Day $currentCycleDay',
                             subtitle: isPregnancyMode
                                 ? "Track your pregnancy milestones"
-                                :
-
-                            (showHideProvider.visibilityMap['Chance of getting pregnant'] == true
-                                ? getpPregnancyChanceText(
-                                context,
-                                lastPeriodDate,
-                                periodLength,
-                                currentCycleDay,
-                                cycleLength,
-                                intercourseProvider)
-                                : "Feature is disabled"),
-
+                                : (showHideProvider.visibilityMap[
+                                            'Chance of getting pregnant'] ==
+                                        true
+                                    ? getpPregnancyChanceText(
+                                        context,
+                                        lastPeriodDate,
+                                        periodLength,
+                                        currentCycleDay,
+                                        cycleLength,
+                                        intercourseProvider)
+                                    : "Feature is disabled"),
                             progressLabelStart: isPregnancyMode
                                 ? pregnancyModeProvider.gestationStart != null
-                                ? formatDate(pregnancyModeProvider.gestationStart!)
-                                : ""
+                                    ? formatDate(
+                                        pregnancyModeProvider.gestationStart!)
+                                    : ""
                                 : formatDate(cycleProvider.lastPeriodStart),
                             progressLabelEnd: isPregnancyMode
                                 ? pregnancyModeProvider.dueDate != null
-                                ? formatDate(pregnancyModeProvider.dueDate!)
-                                : ""
+                                    ? formatDate(pregnancyModeProvider.dueDate!)
+                                    : ""
                                 : formatDate(
-                              cycleProvider.lastPeriodStart.add(
-                                Duration(days: cycleProvider.periodLength),
-                              ),
-                            ),
+                                    cycleProvider.lastPeriodStart.add(
+                                      Duration(
+                                          days: cycleProvider.cycleLength),
+                                    ),
+                                  ),
                             progressValue: isPregnancyMode
-                                ? (pregnancyModeProvider.gestationWeeks ?? 1) / 40.0
-                                : currentCycleDay / cycleProvider.cycleLength,
+                                ? (pregnancyModeProvider.gestationWeeks ?? 1) /
+                                    40.0
+                                : currentCycleDay / cycleProvider.cycleLength ,
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-
-
-
               ],
-
             );
           },
         ),
@@ -300,16 +359,14 @@ class CycleStatusScreen extends StatelessWidget {
   }
 }
 
-
-
 String getpPregnancyChanceText(
-    BuildContext context,
-    DateTime lastPeriodDate,
-    int periodLength,
-    int currentCycleDay,
-    int cycleLength,
-    IntercourseProvider intercourseProvider,
-    ) {
+  BuildContext context,
+  DateTime lastPeriodDate,
+  int periodLength,
+  int currentCycleDay,
+  int cycleLength,
+  IntercourseProvider intercourseProvider,
+) {
   // Calculate ovulation window
   int ovulationStart = (cycleLength ~/ 2) - 1; // Adjust as needed
   int ovulationEnd = ovulationStart + 4;
@@ -332,9 +389,11 @@ String getpPregnancyChanceText(
     chanceText = 'Low chance of pregnancy';
   }
   // Fertile window check
-  else if (currentCycleDay >= ovulationStart && currentCycleDay <= ovulationEnd) {
+  else if (currentCycleDay >= ovulationStart &&
+      currentCycleDay <= ovulationEnd) {
     if (!isProtected) {
-      pregnancyChancePercentage = intercourseProvider.femaleOrgasm == 'Happened' ? 90.0 : 70.0;
+      pregnancyChancePercentage =
+          intercourseProvider.femaleOrgasm == 'Happened' ? 90.0 : 70.0;
       chanceText = 'High chance of pregnancy';
     } else {
       pregnancyChancePercentage = 20.0; // Low chance with protection
@@ -343,17 +402,21 @@ String getpPregnancyChanceText(
   }
   // Approaching fertile window (late period)
   else if (currentCycleDay > periodLength && currentCycleDay < ovulationStart) {
-    pregnancyChancePercentage = isProtected ? 10.0 : (30.0 + (numberOfTimes * 5.0));
-    chanceText = isProtected ? 'Low chance of pregnancy' : 'Medium chance of pregnancy';
+    pregnancyChancePercentage =
+        isProtected ? 10.0 : (30.0 + (numberOfTimes * 5.0));
+    chanceText =
+        isProtected ? 'Low chance of pregnancy' : 'Medium chance of pregnancy';
   }
   // Luteal phase (after ovulation)
   else if (currentCycleDay > ovulationEnd && currentCycleDay <= cycleLength) {
     pregnancyChancePercentage = isProtected ? 5.0 : 30.0;
-    chanceText = isProtected ? 'Low chance of pregnancy' : 'Medium chance of pregnancy';
+    chanceText =
+        isProtected ? 'Low chance of pregnancy' : 'Medium chance of pregnancy';
   }
   // Late periods and post-cycle
   else if (currentCycleDay > cycleLength) {
-    pregnancyChancePercentage = 20.0; // Some chance of pregnancy after periods end
+    pregnancyChancePercentage =
+        20.0; // Some chance of pregnancy after periods end
     chanceText = ' Medium chance of pregnancy';
   }
   // Cycle has ended, no chance

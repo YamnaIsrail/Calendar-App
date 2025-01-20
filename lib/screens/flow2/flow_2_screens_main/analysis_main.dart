@@ -158,25 +158,33 @@ class Analysis extends StatelessWidget {
 
 
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 color: Colors.white,
 
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.access_alarm),
-                      label:  Text("TimeLine",   style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)
-                      ),
-                    ),
-
-                    IconButton(onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=> TimelinePage()));
+                child: ListTile(
+                  leading: Icon(Icons.access_alarm),
+                  title: Text(
+                    "TimeLine",
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  trailing: IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => TimelinePage()),
+                      );
                     },
-                        icon: Icon(Icons.arrow_forward_ios_rounded))
-                  ],
-                ),
+                    icon: Icon(Icons.arrow_forward_ios_rounded),
+                  ),
+                  onTap: () {
+                    // You can also navigate when tapping the ListTile
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => TimelinePage()),
+                    );
+                  },
+                )
+
               ),
             ],
           )

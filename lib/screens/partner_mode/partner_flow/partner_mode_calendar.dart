@@ -91,83 +91,146 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
                       firstDay: DateTime.utc(2020, 1, 1),
                       lastDay: DateTime.utc(2025, 12, 31),
                       focusedDay: DateTime.now(),
-                      calendarBuilders: CalendarBuilders(
-                        defaultBuilder: (context, date, _) {
-                          final normalizedDate = DateTime(date.year, date.month, date.day);
+                      // calendarBuilders: CalendarBuilders(
+                      //   defaultBuilder: (context, date, _) {
+                      //     final normalizedDate = DateTime(date.year, date.month, date.day);
+                      //     Widget calendarCell = _buildCalendarCell(date: date);
+                      //
+                      //     if (isPregnancyMode) {
+                      //       if (partnerProvider.gestationStart != null && partnerProvider.dueDate != null) {
+                      //         final pregnancyStartDate = partnerProvider.gestationStart!.toLocal();
+                      //         final dueDate = partnerProvider.dueDate!.toLocal();
+                      //         final currentDate = date.toLocal();
+                      //
+                      //         // Highlight the gestation start date in green
+                      //         if (currentDate.year == pregnancyStartDate.year &&
+                      //             currentDate.month == pregnancyStartDate.month &&
+                      //             currentDate.day == pregnancyStartDate.day) {
+                      //           calendarCell = _buildCalendarCell(date: date, color: Colors.green);
+                      //         }
+                      //
+                      //         // Highlight the due date in orange
+                      //         else if (currentDate.year == dueDate.year &&
+                      //             currentDate.month == dueDate.month &&
+                      //             currentDate.day == dueDate.day) {
+                      //           calendarCell = _buildCalendarCell(date: date, color: Colors.orange);
+                      //         }
+                      //
+                      //         // Highlight dates between gestation start and due date in light green or light grey
+                      //         else if (currentDate.isAfter(pregnancyStartDate) && currentDate.isBefore(dueDate)) {
+                      //           calendarCell = _buildCalendarCell(date: date, color: Colors.green[100]); // Light green or light grey
+                      //         }
+                      //       }
+                      //     }
+                      //
+                      //     else {
+                      //       // Non-pregnancy mode (period tracking)
+                      //
+                      //       // Period days
+                      //       if (partnerProvider.periodDays.contains(normalizedDate)) {
+                      //         return _buildCalendarCell(date: date, color: Colors.red);
+                      //       }
+                      //       for (var period in partnerProvider.pastPeriods) {
+                      //         final startDate = DateTime.parse(period['startDate']!);  // Parse the start date
+                      //         final endDate = DateTime.parse(period['endDate']!);  // Parse the end date
+                      //
+                      //         // Check if the normalizedDate falls within the cycle's start and end date
+                      //         if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+                      //             normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
+                      //           return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
+                      //         }
+                      //       }
+                      //
+                      //
+                      //
+                      //       // Predicted periods
+                      //       if (partnerProvider.predictedDays.contains(normalizedDate)) {
+                      //         return _buildCalendarCell(
+                      //           date: date,
+                      //           border: Border.all(color: Colors.blue, width: 2),
+                      //         );
+                      //       }
+                      //
+                      //       // Fertile window
+                      //       if (partnerProvider.fertileDays.contains(normalizedDate)) {
+                      //         return _buildCalendarCell(date: date, color: Colors.purple[100]);
+                      //       }
+                      //
+                      //       // Default cell for other dates
+                      //       return null;
+                      //     }
+                      //   },
+                      // ),
 
-                          if (isPregnancyMode) {
-                            // Highlight due date with a specific color
-                            if (partnerProvider.dueDate != null &&
-                                DateUtils.isSameDay(normalizedDate, partnerProvider.dueDate)) {
-                              return _buildCalendarCell(
-                                date: date,
-                                color: Colors.green,
-                                isBold: true,
-                                isSelected: true,
-                              );
-                            }
+                        calendarBuilders: CalendarBuilders(
+                          defaultBuilder: (context, date, _) {
+                            final normalizedDate = DateTime(date.year, date.month, date.day);
+                            Widget calendarCell = _buildCalendarCell(date: date); // Initial cell without any color
 
-                            // Highlight current week
-                            if (currentWeek != null && partnerProvider.gestationStart != null) {
-                              // Calculate start and end of the current week
-                              final startOfWeek = partnerProvider.gestationStart!.add(Duration(days: (currentWeek - 1) * 7));
-                              final endOfWeek = startOfWeek.add(Duration(days: 6));
+                            if (isPregnancyMode) {
+                              if (partnerProvider.gestationStart != null && partnerProvider.dueDate != null) {
+                                final pregnancyStartDate = partnerProvider.gestationStart!.toLocal();
+                                final dueDate = partnerProvider.dueDate!.toLocal();
+                                final currentDate = date.toLocal();
 
-                              if (normalizedDate.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
-                                  normalizedDate.isBefore(endOfWeek.add(Duration(days: 1)))) {
+                                // Highlight the gestation start date in green
+                                if (currentDate.year == pregnancyStartDate.year &&
+                                    currentDate.month == pregnancyStartDate.month &&
+                                    currentDate.day == pregnancyStartDate.day) {
+                                  calendarCell = _buildCalendarCell(date: date, color: Colors.green);
+                                }
+
+                                // Highlight the due date in orange
+                                else if (currentDate.year == dueDate.year &&
+                                    currentDate.month == dueDate.month &&
+                                    currentDate.day == dueDate.day) {
+                                  calendarCell = _buildCalendarCell(date: date, color: Colors.orange);
+                                }
+
+                                // Highlight dates between gestation start and due date in light green or light grey
+                                else if (currentDate.isAfter(pregnancyStartDate) && currentDate.isBefore(dueDate)) {
+                                  calendarCell = _buildCalendarCell(date: date, color: Colors.green[100]); // Light green or light grey
+                                }
+                              }
+                            } else {
+                              // Non-pregnancy mode (period tracking)
+
+                              // Period days
+                              if (partnerProvider.periodDays.contains(normalizedDate)) {
+                                return _buildCalendarCell(date: date, color: Colors.red);
+                              }
+                              for (var period in partnerProvider.pastPeriods) {
+                                final startDate = DateTime.parse(period['startDate']!);  // Parse the start date
+                                final endDate = DateTime.parse(period['endDate']!);  // Parse the end date
+
+                                // Check if the normalizedDate falls within the cycle's start and end date
+                                if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+                                    normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
+                                  return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
+                                }
+                              }
+
+                              // Predicted periods
+                              if (partnerProvider.predictedDays.contains(normalizedDate)) {
                                 return _buildCalendarCell(
                                   date: date,
-                                  color: Colors.orange[300],
-                                  isBold: true,
+                                  border: Border.all(color: Colors.blue, width: 2),
                                 );
                               }
-                            }
 
-                            // Default pregnancy mode cell
-                            return _buildCalendarCell(
-                              date: date,
-                              color: Colors.grey[200],
-                            );
-                          }
-                          else {
-                            // Non-pregnancy mode (period tracking)
-
-                            // Period days
-                            if (partnerProvider.periodDays.contains(normalizedDate)) {
-                              return _buildCalendarCell(date: date, color: Colors.red);
-                            }
-                            for (var period in partnerProvider.pastPeriods) {
-                              final startDate = DateTime.parse(period['startDate']!);  // Parse the start date
-                              final endDate = DateTime.parse(period['endDate']!);  // Parse the end date
-
-                              // Check if the normalizedDate falls within the cycle's start and end date
-                              if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
-                                  normalizedDate.isBefore(endDate.add(Duration(days: 0)))) {
-                                return _buildCalendarCell(date: date, color: Colors.red);  // Highlight the date if it's within the cycle
+                              // Fertile window
+                              if (partnerProvider.fertileDays.contains(normalizedDate)) {
+                                return _buildCalendarCell(date: date, color: Colors.purple[100]);
                               }
+
+                              // Default cell for other dates
+                              return calendarCell; // Ensure to return the default cell if no special condition is met
                             }
 
-
-
-                            // Predicted periods
-                            if (partnerProvider.predictedDays.contains(normalizedDate)) {
-                              return _buildCalendarCell(
-                                date: date,
-                                border: Border.all(color: Colors.blue, width: 2),
-                              );
-                            }
-
-                            // Fertile window
-                            if (partnerProvider.fertileDays.contains(normalizedDate)) {
-                              return _buildCalendarCell(date: date, color: Colors.purple[100]);
-                            }
-
-                            // Default cell for other dates
-                            return null;
-                          }
-                        },
-                      ),
-
+                            // Return the modified calendarCell for both pregnancy and non-pregnancy modes
+                            return calendarCell;
+                          },
+                        ),
                       calendarStyle: CalendarStyle(
                         defaultTextStyle: TextStyle(color: Colors.black),
                         weekendTextStyle: TextStyle(color: Colors.red),
@@ -191,10 +254,10 @@ class _PartnerModeCalendarState extends State<PartnerModeCalendar> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: isPregnancyMode
                           ? [
-                        _buildLegendItem("Due Date", Colors.green),
-                        _buildLegendItem("Current Week", Colors.orange[300]!),
-                        _buildLegendItem("Neutral Days", Colors.grey[200]!),
-                      ]
+                        _buildLegendItem("Gestation Start", Colors.green),
+                         _buildLegendItem("Pregnancy Duration", Colors.green[100]!),
+                        _buildLegendItem("Due Date", Colors.orange[300]!),
+                        ]
                           : [
                         _buildLegendItem("Period", Colors.red),
                         _buildLegendItem("Predicted Period", Colors.blue, isBorder: true),

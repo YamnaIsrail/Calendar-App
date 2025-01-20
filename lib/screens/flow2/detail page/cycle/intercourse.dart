@@ -1,5 +1,7 @@
+import 'package:calender_app/hive/timeline_entry.dart';
 import 'package:calender_app/provider/intercourse_provider.dart';
 import 'package:calender_app/provider/showhide.dart';
+import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_providers.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -224,7 +226,20 @@ class IntercourseScreen extends StatelessWidget {
                   ),
                 );
               } else {
-                // Call the saveSelections method to save the data if selections are made
+                TimelineEntry newEntry = TimelineEntry(
+                  type: "intercourse",
+                  id: DateTime.now().millisecondsSinceEpoch,
+                  date: DateTime.now(),
+                  details: {
+                    'CondomOption': provider.condomOption,
+                    'FemaleOrgasm': provider.femaleOrgasm,
+                    'Times': provider.times,
+                  },
+                );
+
+                // Add the new entry to the Timeline
+                final timelineProvider = Provider.of<TimelineProvider>(context, listen: false);
+                timelineProvider.addEntry(newEntry, context);
                 provider.saveSelections();
                 // Add save logic here
                 ScaffoldMessenger.of(context).showSnackBar(

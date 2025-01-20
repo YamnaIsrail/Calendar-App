@@ -65,7 +65,8 @@ class CycleTrackerScreen extends StatelessWidget {
               children: [
                 DateNavigation(),
                 const SizedBox(height: 20),
-                PeriodButtons(),
+                if (!pregnancyProvider.isPregnancyMode) // Check if pregnancy mode is off
+                  PeriodButtons(),
                   const SizedBox(height: 20),
                 FlowSection(),
                 const SizedBox(height: 20),

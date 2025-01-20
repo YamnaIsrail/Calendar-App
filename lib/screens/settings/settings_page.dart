@@ -4,16 +4,17 @@ import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/provider/showhide.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
-import 'package:calender_app/screens/settings/language_option.dart';
+// import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:calender_app/screens/settings/privacy_policy.dart';
-import 'package:calender_app/screens/settings/translation.dart';
+// import 'package:calender_app/screens/settings/translation.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
+import '../flow2/home_flow2.dart';
 import 'FAQ.dart';
 import 'auth/password/password.dart';
 import 'backup_restore/backup_and_restore_screen.dart';
@@ -35,68 +36,83 @@ class SettingsPage extends StatelessWidget {
     final showHideProvider = context.watch<ShowHideProvider>();
 
     return bgContainer(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+      child: WillPopScope(
+        onWillPop: () async {
+          // Navigate to Flow2Home when back is pressed
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => Flow2Page()),
+                (route) => false,
+          );
+          return false; // Prevent default back navigation
+        },
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          title: Text(
-            "Settings",
-            style: TextStyle(fontWeight: FontWeight.bold),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            title: Text(
+              "Settings",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            leading: IconButton(onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => Flow2Page()),
+                    (route) => false,
+              );
+            }, icon: Icon(Icons.close)),
           ),
-          leading: IconButton(onPressed: () {
-            Navigator.pop(context);
-          }, icon: Icon(Icons.close)),
-        ),
-        body: SingleChildScrollView(
+          body: SingleChildScrollView(
 
-          child: Padding(
-            padding: const EdgeInsets.all(2.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                UserProfileSection1(),
-                GoalSection(),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SettingsOption(
-                    icon: Icons.notifications,
-                    title: "Reminders",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ReminderScreen()),
-                      );
-                    },
-
-                    trailing: Icon(Icons.notifications),
-                  ),
-                ), //Reminders Section
-                SettingsOptionSection(),
-                FAQOptionSection(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                        onTap: () {
-                          // Call showFirstDayOfWeekDialog
-                          DialogHelper.showConfirmPopup(context, (){
-                            DialogHelper.deleteAllHiveData();  // Call to delete all Hive data from DialogHelper
-
-                          });  },
-
-                        child: Text("Delete All Data",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: primaryColor)
-                         )
+            child: Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  UserProfileSection1(),
+                  GoalSection(),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
-                )
+                    child: SettingsOption(
+                      icon: Icons.notifications,
+                      title: "Reminders",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ReminderScreen()),
+                        );
+                      },
 
-              ],
+                      trailing: Icon(Icons.notifications),
+                    ),
+                  ), //Reminders Section
+                  SettingsOptionSection(),
+                  FAQOptionSection(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                          onTap: () {
+                            // Call showFirstDayOfWeekDialog
+                            DialogHelper.showConfirmPopup(context, (){
+                              DialogHelper.deleteAllHiveData();  // Call to delete all Hive data from DialogHelper
+
+                            });  },
+
+                          child: Text("Delete All Data",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: primaryColor)
+                           )
+                      ),
+                    ],
+                  )
+
+                ],
+              ),
             ),
           ),
         ),
@@ -149,7 +165,7 @@ class UserProfileSection1 extends StatelessWidget {
                     ),
                     child: TextButton(
                       child: Text(
-                        "Sync Data",
+                        "Sign In",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -157,29 +173,7 @@ class UserProfileSection1 extends StatelessWidget {
                         ),
                       ),
                       onPressed: () async {
-                        bool isLoggedIn = await SessionManager.checkUserLoginStatus(); // Check the user's logged-in status
-
-                        if (!isLoggedIn) {
-                          context.read<CycleProvider>().saveCycleDataToFirestore();
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("You are not signed in. Please sign in to sync data."),
-                              backgroundColor: Colors.blueGrey,
-                            ),
-                          );
-                        } else {
-                          // If user is logged in, show syncing data Snackbar
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Syncing Data..."),
-                              backgroundColor: Colors.blue,
-                            ),
-                          );
-
-                          // Call saveCycleDataToFirestore function
-                          Provider.of<CycleProvider>(context, listen: false).saveCycleDataToFirestore();
-                        }
+                        DialogHelper.showSignInStatus(context);
                       },
                     ),
 

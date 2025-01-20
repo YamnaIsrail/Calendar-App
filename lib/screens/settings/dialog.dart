@@ -12,16 +12,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
-import 'package:intl/intl.dart';
+import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../auth/auth_model.dart';
 import '../../hive/notes_model.dart';
 import '../../hive/timeline_entry.dart';
 import '../../notifications/notification_model.dart';
-import '../question/q1.dart';
-import 'backup_restore/google_signin.dart';
 import 'backup_restore/transfer_data_page.dart';
 
 class DialogHelper {
@@ -712,7 +709,7 @@ class DialogHelper {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Currently signed in as: $userId"),
+                Text("Currently signed in as "),
                 if (currentUser != null) ...[
                   Text("Email: ${currentUser.email}"),
                   ElevatedButton(
@@ -751,13 +748,34 @@ class DialogHelper {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    // Attempt to sign in
+                    // Check network connectivity using dart:io
+                    final result = await InternetAddress.lookup('google.com');
+                    if (result.isEmpty || result[0].rawAddress.isEmpty) {
+                      throw Exception("No internet connection. Please try again.");
+                    }
+
+
                     await _googleSignIn.signIn();
                     Navigator.pop(context); // Close the dialog
-                    showSignInStatus(context); // Show sign-in status dialog
-                  } catch (error) {
-                    print("Sign in failed: $error");
-                    // Handle sign-in error (e.g., show a message)
+                    showSignInStatus(context);
+
+                    } catch (error) {
+                    String errorMessage;
+
+                    // Handle different error scenarios
+                    if (error is Exception) {
+                      errorMessage = error.toString().replaceAll("Exception: ", "");
+                    } else {
+                      errorMessage = "An unexpected error occurred. Please try again.";
+                    }
+
+                    // Show error message to user
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(errorMessage),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 },
                 child: Text("Sign in with Google"),
@@ -976,7 +994,10 @@ class CalendarDialogHelper {
     showDialog(
       context: context,
       builder: (context) {
-        int selectedLength = 14; // Default value
+
+        final cycleProvider = context.read<CycleProvider>();
+        int selectedLength = cycleProvider.lutealPhaseLength ?? 14; // Default or current value
+
         return AlertDialog(
           title: Text("Update Luteal Phase Length"),
           content: TextField(
@@ -988,6 +1009,7 @@ class CalendarDialogHelper {
             TextButton(
               onPressed: () {
                 onUpdate(selectedLength); // Pass new length to update
+                Hive.box('luteal_data').put('lutealPhaseLength', selectedLength);
                 Navigator.pop(context);
               },
               child: Text("Update"),
@@ -997,9 +1019,8 @@ class CalendarDialogHelper {
       },
     );
   }
+
 }
-
-
 
 class ShowTransferDialog {
   static void showTransferDataDialog(BuildContext context) async {
@@ -1110,26 +1131,26 @@ class ShowTransferDialog {
 }
 
 
-  void showLoginDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Login Required"),
-          content: Text("Please log in to access your cycle data."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                // Redirect user to login screen or trigger login flow
-              },
-              child: Text("Log In"),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void showLoginDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text("Login Required"),
+  //         content: Text("Please log in to access your cycle data."),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop(); // Close dialog
+  //               // Redirect user to login screen or trigger login flow
+  //             },
+  //             child: Text("Log In"),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   void showCycleUpdateDialog(BuildContext context, CycleProvider provider, int? fetchedCycleLength, int? fetchedPeriodLength, DateTime? fetchedLastPeriodStart) {
     showDialog(
@@ -1220,12 +1241,9 @@ class DataHandler {
     // Check if the user is logged in
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // Updated to await the sign-in result before calling retrieveCycleDataFromFirestore
-      // Updated to await the sign-in result before calling retrieveCycleDataFromFirestore
-      bool signInSuccess = await showLoginDialog(context);
-      if (signInSuccess) {
-        await retrieveCycleDataFromFirestore(context);
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("You are not signed in")),
+      );
 
     } else {
       // If logged in, proceed with data fetching
@@ -1305,6 +1323,7 @@ class DataHandler {
     int currentCycleLength = provider.cycleLength;
     int currentPeriodLength = provider.periodLength;
     DateTime? currentLastPeriodStart = provider.lastPeriodStart;
+    List<Map<String, String>> currentPastPeriods = provider.pastPeriods;
 
     // Show a dialog to ask the user how they want to handle the merging of data
     showDialog(
@@ -1312,26 +1331,44 @@ class DataHandler {
       builder: (context) {
         return AlertDialog(
           title: Text("Merge Cycle Data"),
-          content: Text("Current Cycle Length: $currentCycleLength\n"
-              "Fetched Cycle Length: $fetchedCycleLength\n"
-              "Current Period Length: $currentPeriodLength\n"
-              "Fetched Period Length: $fetchedPeriodLength\n"
-              "Last Period Start: ${currentLastPeriodStart?.toIso8601String()}\n"
-              "Fetched Last Period Start: ${fetchedLastPeriodStart?.toIso8601String()}\n"
-              "Do you want to keep the fetched data or the current data?"),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Fetched Cycle Length: $fetchedCycleLength\n"
+                  "Fetched Period Length: $fetchedPeriodLength\n"
+                  "Fetched Last Period Start: ${fetchedLastPeriodStart?.toIso8601String()}\n"),
+              SizedBox(height: 10),
+              Text("Fetched Past Periods:"),
+              // Display fetched past periods if available
+              if (restoredPastPeriods.isNotEmpty)
+                ...restoredPastPeriods.map((period) {
+                  return Text("Start Date: ${period['startDate']}, End Date: ${period['endDate']}");
+                }).toList(),
+              if (restoredPastPeriods.isEmpty) Text("No past periods available."),
+              SizedBox(height: 10),
+              Text("Do you want to merge or use the fetched past periods data?"),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () {
-                // Keep current data
-
-                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Current data retained.")));
+                // Update provider with the current data
+                provider.MergeCycleData(
+                  cycleLength: currentCycleLength,
+                  periodLength: currentPeriodLength,
+                  lastPeriodStart: currentLastPeriodStart,
+                  pastPeriods: currentPastPeriods,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Current data retained.")));
+                Navigator.pop(context); // Close dialog
               },
-              child: Text("Keep Current"),
+              child: Text("Use Current Data"),
             ),
             TextButton(
               onPressed: () {
-                // Update provider with fetched data
-                provider.updateCycleData(
+                // Use fetched data
+                provider.MergeCycleData(
                   cycleLength: fetchedCycleLength ?? currentCycleLength,
                   periodLength: fetchedPeriodLength ?? currentPeriodLength,
                   lastPeriodStart: fetchedLastPeriodStart?.isAfter(currentLastPeriodStart ?? DateTime(0)) == true
@@ -1339,10 +1376,10 @@ class DataHandler {
                       : currentLastPeriodStart,
                   pastPeriods: restoredPastPeriods,
                 );
-
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Fetched data retained.")));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Fetched data retained.")));
+                Navigator.pop(context); // Close dialog
               },
-              child: Text("Use Fetched"),
+              child: Text("Use Fetched Data"),
             ),
           ],
         );

@@ -20,7 +20,8 @@ class MedicineReminderScreen extends StatefulWidget {
       _MedicineReminderScreenState();
 }
 
-class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
+class _MedicineReminderScreenState extends
+State<MedicineReminderScreen> {
   TimeOfDay? reminderTime;
   DateTime? startDate;
   List<TimeOfDay?> reminderTimes = [TimeOfDay.now()];
@@ -76,6 +77,90 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
     super.dispose();
   }
 
+  // Future<void> _saveReminder() async {
+  //   if (medicineController.text.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Please enter a medicine name")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   if (isNotificationEnabled && (startDate == null || reminderTimes.any((time) => time == null))) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Please select a valid start date and all reminder times")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   // Prepare the reminder data
+  //   final reminderData = {
+  //     'startDate': startDate!.toIso8601String(),
+  //     'reminderTimes': reminderTimes.map((time) => "${time!.hour}:${time.minute}").toList(),
+  //     'intakePerDay': intakePerDay,
+  //     'interval': interval,
+  //     'duration': duration,
+  //     'isNotificationEnabled': isNotificationEnabled,
+  //     'notificationIds': [],
+  //   };
+  //
+  //   final box = Hive.box<Map>('medicineReminders');
+  //
+  //   // If editing an existing reminder, cancel existing notifications
+  //   if (widget.editingMedicine != null) {
+  //     final existingReminder = box.get(widget.editingMedicine);
+  //     if (existingReminder?['notificationIds'] != null) {
+  //       final notificationIds = existingReminder!['notificationIds'] as List;
+  //       for (var id in notificationIds) {
+  //         await NotificationService.cancelScheduledTask(id);
+  //       }
+  //     }
+  //   }
+  //
+  //   // Schedule new notifications
+  //   List<int> notificationIds = [];
+  //   if (isNotificationEnabled) {
+  //     DateTime currentDate = startDate!;
+  //     int durationDays = _calculateDurationDays(duration);
+  //
+  //     while (currentDate.isBefore(startDate!.add(Duration(days: durationDays)))) {
+  //       for (var index = 0; index < reminderTimes.length; index++) {
+  //         var time = reminderTimes[index];
+  //         if (time != null) {
+  //           DateTime notificationTime = DateTime(
+  //             currentDate.year,
+  //             currentDate.month,
+  //             currentDate.day,
+  //             time.hour,
+  //             time.minute,
+  //           );
+  //
+  //           if (notificationTime.isAfter(DateTime.now())) {
+  //             // Generate unique ID based on medicine name and intake counter
+  //             int notificationId = "${medicineController.text.hashCode}_$index".hashCode;
+  //             await NotificationService.scheduleNotification(
+  //               notificationId,
+  //               "Medicine Reminder",
+  //               "Time to take ${medicineController.text}",
+  //               notificationTime,
+  //             );
+  //             notificationIds.add(notificationId);
+  //           }
+  //         }
+  //       }
+  //       // Increment date based on interval
+  //       currentDate = _incrementDate(currentDate, interval);
+  //     }
+  //   }
+  //
+  //   // Store the notification IDs in Hive
+  //   reminderData['notificationIds'] = notificationIds;
+  //   box.put(medicineController.text, reminderData);
+  //
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text("Reminder saved successfully")),
+  //   );
+  //   Navigator.pop(context, true);
+  // }
   void _pickStartDate() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -116,8 +201,17 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       }
     });
   }
+
+
   Future<void> _saveReminder() async {
-    // Validate input
+    bool isPermissionGranted = await NotificationService.requestNotificationPermission();
+    if (!isPermissionGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Notification permission is required to set reminders")),
+      );
+      return;
+    }
+
     if (medicineController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please enter a medicine name")),
@@ -125,128 +219,118 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
       return;
     }
 
-    if (isNotificationEnabled) {
-      if (startDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please select a start date")),
-        );
-        return;
-      }
-
-      if (reminderTimes.any((time) => time == null)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please select all reminder times")),
-        );
-        return;
-      }
-    }
-
-    // Combine start date and reminder times
-    final initialSchedules = reminderTimes.map((time) {
-      return DateTime(
-        startDate!.year,
-        startDate!.month,
-        startDate!.day,
-        time!.hour,
-        time.minute,
-      );
-    }).toList();
-
-    // Ensure no past time is scheduled
-    if (isNotificationEnabled) {
-      if (initialSchedules.any((date) => date.isBefore(DateTime.now()))) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Scheduled times cannot be in the past")),
-        );
-        return;
-      }
-    }
-
-    // Request notification permission
-    bool isPermissionGranted = await NotificationService.requestNotificationPermission();
-    if (!isPermissionGranted) {
+    if (isNotificationEnabled && (startDate == null || reminderTimes.any((time) => time == null))) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Notification permission is required")),
+        SnackBar(content: Text("Please select a valid start date and all reminder times")),
       );
       return;
     }
 
-    // Prepare reminder data
+    // Prepare the reminder data for the first day
     final reminderData = {
       'startDate': startDate!.toIso8601String(),
       'reminderTimes': reminderTimes.map((time) => "${time!.hour}:${time.minute}").toList(),
       'intakePerDay': intakePerDay,
-      'interval': interval,
-      'duration': duration,
+      'interval': interval,  // "Everyday" or "Weekly"
+      'duration': duration,  // "Forever", "1 Day", "7 Days", "1 Month"
       'isNotificationEnabled': isNotificationEnabled,
+      'notificationIds': [], // No notification scheduled yet
     };
 
     final box = Hive.box<Map>('medicineReminders');
+
+    // Save only the first day's data
     box.put(medicineController.text, reminderData);
-
-    // Schedule notifications if enabled
-    if (isNotificationEnabled) {
-      List<DateTime> schedules = initialSchedules;
-
-      // Calculate interval-based schedules
-      int durationDays = 0;
-      switch (duration) {
-        case "1 Day":
-          durationDays = 1;
-          break;
-        case "7 Days":
-          durationDays = 7;
-          break;
-        case "1 Month":
-          durationDays = 30;
-          break;
-        case "Forever":
-          durationDays = 365 * 10; // Arbitrary long duration for "Forever"
-          break;
-      }
-
-      DateTime currentDate = startDate!;
-      while (currentDate.isBefore(startDate!.add(Duration(days: durationDays)))) {
-        for (var time in reminderTimes) {
-          schedules.add(DateTime(
-            currentDate.year,
-            currentDate.month,
-            currentDate.day,
-            time!.hour,
-            time.minute,
-          ));
-        }
-
-        // Increment currentDate based on the interval
-        currentDate = interval == "Everyday"
-            ? currentDate.add(Duration(days: 1))
-            : currentDate.add(Duration(days: 7));
-      }
-
-      // Schedule each notification
-      for (var time in schedules) {
-        int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
-        await NotificationService.scheduleNotification(
-          notificationId,
-          "Medicine Reminder",
-          "Time to take ${medicineController.text}",
-          time,
-        );
-      }
-
-      await NotificationService.showInstantNotification(
-        'Notifications Enabled',
-        'You will now receive notifications for ${medicineController.text}.',
-      );
-    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Reminder saved successfully")),
     );
-
     Navigator.pop(context, true);
-  }
 
+    // Schedule first day's notifications
+    await _scheduleReminderForDay(reminderData);
+
+    // After scheduling the first day's reminder, call the reschedule function for the next day
+    await _rescheduleReminderForNextDay(reminderData);
+  }
+  Future<void> _scheduleReminderForDay(Map reminderData) async {
+    final notificationIds = [];
+
+    // Schedule the reminders for today based on the saved reminder data
+    DateTime currentDate = DateTime.parse(reminderData['startDate']);
+
+    for (var index = 0; index < reminderData['reminderTimes'].length; index++) {
+      var time = reminderData['reminderTimes'][index];
+      List<String> timeParts = time.split(":");
+      DateTime notificationTime = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+        int.parse(timeParts[0]),
+        int.parse(timeParts[1]),
+      );
+
+      if (notificationTime.isAfter(DateTime.now())) {
+        // Generate a unique ID based on the current date and reminder index
+        int notificationId = "${medicineController.text.hashCode}_$index".hashCode;
+        await NotificationService.scheduleNotification(
+          notificationId,
+          "Medicine Reminder",
+          "Time to take ${medicineController.text}",
+          notificationTime,
+        );
+        notificationIds.add(notificationId);
+      }
+    }
+
+    // Store the notification IDs for the first day
+    reminderData['notificationIds'] = notificationIds;
+    final box = Hive.box<Map>('medicineReminders');
+    box.put(medicineController.text, reminderData);
+  }
+  Future<void> _rescheduleReminderForNextDay(Map reminderData) async {
+    DateTime currentDate = DateTime.parse(reminderData['startDate']);
+
+    // Increment the current date based on the selected interval
+    if (reminderData['interval'] == "Everyday") {
+      currentDate = currentDate.add(Duration(days: 1)); // Move to next day
+    } else if (reminderData['interval'] == "Weekly") {
+      currentDate = currentDate.add(Duration(days: 7)); // Move to next week
+    }
+
+    // Handle the duration
+    int remainingDays = _calculateRemainingDays(reminderData['duration']);
+
+    // If there are still days left in the duration, reschedule for the next date
+    if (remainingDays > 0) {
+      reminderData['startDate'] = currentDate.toIso8601String();
+
+      // Schedule reminder for the next day (or week)
+      await _scheduleReminderForDay(reminderData);
+
+      // Save the updated start date and reminder times in Hive
+      final box = Hive.box<Map>('medicineReminders');
+      box.put(medicineController.text, reminderData);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Reminder duration ended.")),
+      );
+    }
+  }
+  int _calculateRemainingDays(String duration) {
+    switch (duration) {
+      case "1 Day":
+        return 1;
+      case "7 Days":
+        return 7;
+      case "1 Month":
+        return 30;
+      case "Forever":
+        return 365; // or some other large value, or keep it running indefinitely
+      default:
+        return 0;
+    }
+  }
 
 
   void fetchReminders() {
@@ -286,19 +370,23 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
                     isNotificationEnabled = value;
                   });
 
-                  if (!isNotificationEnabled) {
-                    final box = Hive.box<Map>('medicineReminders');
-                    final reminder = box.get(medicineController.text);
+                  final box = Hive.box<Map>('medicineReminders');
+                  final reminder = box.get(medicineController.text);
 
-                    if (reminder != null && reminder['notificationIds'] != null) {
-                      final notificationIds = reminder['notificationIds'] as List;
+                  if (reminder != null && reminder['notificationIds'] != null) {
+                    final notificationIds = reminder['notificationIds'] as List;
 
-                      // Cancel all notifications using the stored notification IDs
-                      for (var notificationId in notificationIds) {
-                        await NotificationService.cancelScheduledTask(notificationId);
-                      }
+                    // Cancel all notifications using the stored notification IDs
+                    for (var notificationId in notificationIds) {
+                      await NotificationService.cancelScheduledTask(notificationId);
                     }
 
+                    // Clear the notificationIds list if notifications are disabled
+                    reminder['notificationIds'] = [];
+                    box.put(medicineController.text, reminder);  // Update the reminder data
+                  }
+
+                  if (!isNotificationEnabled) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Notifications Disabled")),
                     );

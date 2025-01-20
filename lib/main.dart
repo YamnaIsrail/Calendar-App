@@ -1,10 +1,7 @@
-// import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/provider/showhide.dart';
 import 'package:calender_app/screens/settings/auth/password/enter_password.dart';
-import 'package:calender_app/screens/settings/language_option.dart';
-import 'package:calender_app/screens/settings/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/analysis/temperature_provider.dart';
@@ -48,7 +45,7 @@ void main() async {
   final authBox = await Hive.openBox<AuthData>('authBox');
   final authData = authBox.get('authData', defaultValue: AuthData())!;
   await Hive.openBox('partner_codes');
-
+  await Hive.openBox('timeBox');
   tz.initializeTimeZones();
 
   Hive.registerAdapter(NoteAdapter());
@@ -66,6 +63,7 @@ void main() async {
 
   Hive.registerAdapter(PartnerDataAdapter());
   await Hive.openBox('partnerCycleData');
+  await Hive.openBox('luteal_data');
 
   await CycleProvider().loadCycleDataFromHive();
   Hive.registerAdapter(TimelineEntryAdapter()); // Register Hive Adapter
@@ -73,13 +71,21 @@ void main() async {
   await Hive.openBox<Map>('medicineReminders'); // Box to store reminders
 
   await Hive.openBox('formatsettingsBox');
+  await Hive.openBox('settingsBox');
 
   await Hive.openBox<AuthData>('authBox');
   final showHideProvider = ShowHideProvider();
   await showHideProvider.initialize();
 
-  await Hive.openBox('visibleSymptoms'); // Box for visible symptoms
-  await Hive.openBox('visibleMoods'); // Box for visible moods
+  await Hive.openBox('visibleMoods');
+  // await Hive.openBox('recentMoods');
+  await Hive.openBox('visibleSymptoms');
+  // await Hive.openBox('recentSymptoms');
+
+
+  final pregnancyModeProvider = PregnancyModeProvider();
+  await pregnancyModeProvider.initHive(); // Await initialization before running the app
+
 
   runApp(
     MultiProvider(
@@ -88,7 +94,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CycleProvider()),
         ChangeNotifierProvider.value(value: showHideProvider),
         ChangeNotifierProvider(create: (_) => PartnerProvider()),
-        ChangeNotifierProvider(create: (_) => PregnancyModeProvider()),
+
+        ChangeNotifierProvider.value(value: pregnancyModeProvider), // Provide the initialized PregnancyModeProvider
+        // ChangeNotifierProvider(create: (_) => PregnancyModeProvider()..initHive()),
+
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
         ChangeNotifierProvider(create: (_) => NoteProvider()),
         ChangeNotifierProvider(create: (_) => WeightProvider()),
@@ -114,67 +123,11 @@ class CalenderApp extends StatefulWidget {
 }
 
 class _CalenderAppState extends State<CalenderApp> {
-  String _selectedLanguage = 'English'; // Default language
-  final DynamicTranslation _dynamicTranslation = DynamicTranslation();
-  Map<String, String> _localizedStrings = {};
-
-  void _loadLanguage() async {
-    final languageBox = await Hive.openBox('settingsBox');
-
-    final savedLanguage = languageBox.get('language', defaultValue: 'English');
-    _changeLanguage(savedLanguage);
-  }
-
-  void _saveLanguage(String language) async {
-    final languageBox = await Hive.openBox('settingsBox');
-    await languageBox.put('language', language);
-  }
-
-  Future<void> _changeLanguage(String language) async {
-    setState(() {
-      _selectedLanguage = language;
-    });
-
-    final languageCode = _getLanguageCode(language);
-
-    // Get the translated words for the selected language
-    final translatedStrings = await _dynamicTranslation.translateStrings(AppStrings.words, languageCode);
-
-    // Update UI with the translated words
-    setState(() {
-      _localizedStrings = translatedStrings;
-    });
-
-    _saveLanguage(language);
-  }
-
-  // Helper method to map language name to its code
-  String _getLanguageCode(String language) {
-    final languageCodeMap = {
-      "English": "en",
-      "Spanish": "es",
-      "French": "fr",
-      "German": "de",
-      "Italian": "it",
-      "Portuguese": "pt",
-      "Russian": "ru",
-      "Chinese (Simplified)": "zh-cn",
-      "Chinese (Traditional)": "zh-tw",
-      "Japanese": "ja",
-      "Korean": "ko",
-      "Hindi": "hi",
-      "Arabic": "ar",
-      "Turkish": "tr",
-      "Dutch": "nl",
-      "Urdu": "ur",
-    };
-    return languageCodeMap[language] ?? 'en'; // Default to English
-  }
 
   @override
   void initState() {
     super.initState();
-    _loadLanguage();
+
     _initializeCycleProvider();
     Provider.of<IntercourseProvider>(context, listen: false).loadData();
   }
@@ -199,17 +152,10 @@ class _CalenderAppState extends State<CalenderApp> {
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Roboto',
       ),
-      locale: Locale(_getLanguageCode(_selectedLanguage)),
-      home: SplashScreen(),
+       home: SplashScreen(),
       routes: {
     '/login': (context) => EnterPasswordScreen(),
     '/home': (context) => HomeScreen(),
-
-        '/languageSelection': (context) => LanguageSelectionScreen(
-          onLanguageChanged: (language) {
-            _changeLanguage(language);  // Update language when user selects a new language
-          },
-        ),
 
     },
     );

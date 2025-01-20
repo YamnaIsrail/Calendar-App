@@ -120,7 +120,7 @@ class _CalendarSettingState extends State<CalendarSetting> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ShowHideSymptomScreen()
+                        MaterialPageRoute(builder: (context) => ShowHideMood()
                         ),
                       );
                     },

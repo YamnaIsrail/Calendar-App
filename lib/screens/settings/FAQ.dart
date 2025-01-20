@@ -8,14 +8,12 @@ class FAQScreen extends StatelessWidget {
   final List<Map<String, String>> faqs = [
     {
       'question': 'Add a past period record',
-      'answer': 'Go to Settings > Show or Hide Options > Enable "Show Past Period Records".'
+      'answer': '1. Navigate to Cycle Page > My Cycles > Add/Edit Periods > Select Dates, OR\n'
+          '2. Use the Start/End buttons on the Cycle page.'
     },
     {
       'question': 'Record start/end of my periods',
-      'answer': " On the Home Screen, go to the Cycle Tracker (the center tab in the "
-          "navigation bar). This page shows buttons"
-          " labeled Start Period and End Period. You can tap these buttons "
-          "to record or edit the start and end dates of your period."
+      'answer': 'On the Home Screen, go to Cycle Page (center tab) and tap Start Period or End Period to record or edit your dates.'
     },
     {
       'question': 'Transfer data to Android',
@@ -25,17 +23,14 @@ class FAQScreen extends StatelessWidget {
       'question': 'Fertile days disappear on the calendar',
       'answer': 'Go to Settings > Show or Hide Options > Ensure "Fertile Days" is enabled.'
     },
-    {
-      'question': 'Transfer data to iOS',
-      'answer': 'Use Settings > Backup & Restore to export data, then import on iOS.'
-    },
+
     {
       'question': 'Hide fertile days on the calendar',
       'answer': 'Go to Settings > Show or Hide Options > Disable "Fertile Days".'
     },
     {
       'question': 'Delete a period record',
-      'answer': 'Navigate to the calendar, select the period record, and choose "Delete".'
+      'answer': ' Navigate to Cycle Page > click on Remove Button > select the period record, to "Delete".'
     },
     {
       'question': 'Adjust fertile days on the calendar',

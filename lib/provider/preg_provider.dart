@@ -1,61 +1,51 @@
   import 'package:calender_app/provider/cycle_provider.dart';
   import 'package:flutter/material.dart';
   import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:hive/hive.dart';
   class PregnancyModeProvider with ChangeNotifier {
     final CycleProvider cycleProvider = CycleProvider();
 
+    // Hive box for storing data
+    late Box _pregnancyBox;
+
     // State variables
-    bool _isPregnancyMode = false; // Single source of truth
+    bool _isPregnancyMode = false;
     DateTime? _gestationStart;
     DateTime? _dueDate;
     List<String> _loggedSymptoms = [];
     int? _gestationWeeks;
     int? _gestationDays;
+    int get daysSinceGestation => _gestationStart == null ? 0 : DateTime.now().difference(_gestationStart!).inDays;
 
     // Getters
     bool get isPregnancyMode => _isPregnancyMode;
     DateTime? get gestationStart => _gestationStart;
-    DateTime? get dueDate => _dueDate;
+
+    DateTime? get dueDate => gestationStart!.add(Duration(days: 280)); // 280 days after gestation start
+
+    // DateTime? get dueDate => _dueDate;
+
     List<String> get loggedSymptoms => _loggedSymptoms;
-    int? get gestationWeeks => _gestationWeeks;
-    int? get gestationDays => _gestationDays;
+    int get gestationWeeks => _gestationStart == null ? 0 : daysSinceGestation ~/ 7;
 
-    /// Toggles pregnancy mode and handles related logic
-    void togglePregnancyMode(bool value) {
-      _isPregnancyMode = value;
+    // Calculate remaining gestation days within the week
+    int get gestationDays => _gestationStart == null ? 0 : daysSinceGestation % 7;
 
-      if (_isPregnancyMode) {
-        // If pregnancy mode is enabled, initialize gestation logic
-        _gestationStart = cycleProvider.lastPeriodStart;
-        calculateGestationWeeksAndDays();
-      } else {
-        // Clear any pregnancy-related states
-        _gestationStart = null;
-        _gestationWeeks = null;
-        _gestationDays = null;
-      }
+    // int? get gestationWeeks => _gestationWeeks;
+    // int? get gestationDays => _gestationDays;
+
+    // Open Hive box and load initial data
+    Future<void> initHive() async {
+      _pregnancyBox = await Hive.openBox('pregnancyBox');
+
+      _isPregnancyMode = _pregnancyBox.get('isPregnancyMode', defaultValue: false);
+      _gestationStart = _pregnancyBox.get('gestationStart');
+      // _gestationWeeks = _pregnancyBox.get('gestationWeeks');
+      // _gestationDays = _pregnancyBox.get('gestationDays');
+      // _dueDate = _pregnancyBox.get('dueDate');
 
       notifyListeners();
     }
-
-    /// Log symptoms to Firebase & local state
-    Future<void> logSymptom(String symptom, String userId) async {
-      try {
-        await FirebaseFirestore.instance
-            .collection('pregnancy')
-            .doc(userId)
-            .update({
-          'symptoms': FieldValue.arrayUnion([symptom]),
-        });
-
-        _loggedSymptoms.add(symptom);
-        notifyListeners();
-      } catch (e) {
-        print("Could not log symptom: $e");
-      }
-    }
-
     /// Calculates gestational weeks and days since the gestation start date
     void calculateGestationWeeksAndDays() {
       if (_gestationStart == null) return;
@@ -71,11 +61,15 @@
 
       notifyListeners();
     }
-
     set gestationStart(DateTime? newStart) {
       _gestationStart = newStart;
-      notifyListeners(); // Notify listeners when the gestation start is updated
+      calculateGestationWeeksAndDays();
+      // Save to Hive
+      _pregnancyBox.put('gestationStart', _gestationStart);
+      notifyListeners();
     }
+
+
 
     /// Fetch the last period start from Firebase if available and sync with the provider.
     Future<void> syncAndInitializeStart(String userId) async {
@@ -97,4 +91,31 @@
         print("Error fetching initial gestation data: $e");
       }
     }
+
+    /// Save pregnancy mode to Hive
+    void togglePregnancyMode(bool value) {
+      _isPregnancyMode = value;
+      _pregnancyBox.put('isPregnancyMode', _isPregnancyMode);
+
+      if (_isPregnancyMode) {
+        // Initialize gestation logic
+        _gestationStart = cycleProvider.lastPeriodStart;
+        calculateGestationWeeksAndDays();
+      } else {
+        // Clear any pregnancy-related states
+        _gestationStart = null;
+        _gestationWeeks = null;
+        _gestationDays = null;
+      }
+
+      // Save to Hive
+      _pregnancyBox.put('gestationStart', _gestationStart);
+      _pregnancyBox.put('gestationWeeks', _gestationWeeks);
+      _pregnancyBox.put('gestationDays', _gestationDays);
+      _pregnancyBox.put('dueDate', _dueDate);
+
+      notifyListeners();
+    }
+
   }
+

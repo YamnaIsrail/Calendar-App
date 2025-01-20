@@ -99,7 +99,7 @@ class PregnancyScreen extends StatelessWidget {
     if (newDate != null) {
       // Update the gestation start date in the provider
       pregnancyModeProvider.gestationStart = newDate;
-      pregnancyModeProvider.calculateGestationWeeksAndDays;
+      pregnancyModeProvider.calculateGestationWeeksAndDays();
       pregnancyModeProvider.notifyListeners();
     }
   }

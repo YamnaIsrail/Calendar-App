@@ -1,6 +1,7 @@
 //be2e48
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/date_day_format.dart';
+import 'package:calender_app/screens/partner_mode/partner_flow/partner_mode_progress_arcs.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 import 'partner_mode_setting.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 
 
 import 'package:intl/intl.dart';
+
 class PregnancyStatusScreen extends StatelessWidget {
 
   String formatDate(DateTime date) {
@@ -71,35 +73,46 @@ class PregnancyStatusScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          height: 280,
-          width: 280,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              fit: BoxFit.cover,
-              image: AssetImage("assets/cal.png"),
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        Stack(
+          children: [
+            Container(
+              height: 280,
+              width: 280,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: AssetImage("assets/cal.png"),
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
 
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                dueDate != null ? "Pregnancy\n Week $currentWeek" : "Pregnancy Data Unavailable",
-                style: TextStyle(fontSize: 18, color: Colors.black),
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    dueDate != null ? "Pregnancy\n Week $currentWeek" : "Pregnancy Data Unavailable",
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    dueDate != null
+                        ? "Day: $daysUntilDueDate"
+                        : "Due Date: Not Available",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.black),
+                  ),
+                ],
               ),
-              SizedBox(height: 8),
-              Text(
-                dueDate != null
-                    ? "Day: $daysUntilDueDate"
-                    : "Due Date: Not Available",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.black),
+            ),
+            SizedBox(
+              height: 280,
+              width: 280,
+              child: CustomPaint(
+                painter: PregnancyProgress(partnerProvider: PartnerProvider()),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -144,35 +157,46 @@ class PregnancyStatusScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
 
       children: [
-        Container(
-          height: 280,
-          width: 280,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              fit: BoxFit.cover,
-              image: AssetImage("assets/cal.png"),
+        Stack(
+          children: [
+            Container(
+              height: 280,
+              width: 280,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: AssetImage("assets/cal.png"),
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    daysUntilNextPeriod > 0
+                        ? "Periods\n${daysUntilNextPeriod} days Left"
+                        : "Periods\n${daysUntilNextPeriod.abs()} days Late",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.black),
+                  ),
+                  SizedBox(height: 8),
+
+                  Text(
+                    partnerProvider.currentPhase,
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                  ),
+
+                ],
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                daysUntilNextPeriod > 0
-                    ? "Periods\n${daysUntilNextPeriod} days Left"
-                    : "Periods\n${daysUntilNextPeriod.abs()} days Late",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.black),
+            SizedBox(
+              height: 280,
+              width: 280,
+              child: CustomPaint(
+                painter: DualProgress(partnerProvider: PartnerProvider()),
               ),
-              SizedBox(height: 8),
-
-              Text(
-                partnerProvider.currentPhase,
-                style: TextStyle(fontSize: 18, color: Colors.black),
-              ),
-
-            ],
-          ),
+            ),
+          ],
         ),
         Expanded(
           child: SingleChildScrollView(

@@ -1,4 +1,5 @@
 import 'package:calender_app/hive/partner_model.dart';
+import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/buttons.dart';
@@ -12,7 +13,134 @@ import '../firebase/user_session.dart';
 import '../hive/cycle_model.dart';
 import 'package:flutter/foundation.dart';
 
+import '../hive/settingsPageNotifications.dart';
+import '../screens/settings/reminder_times.dart';
+
 class CycleProvider with ChangeNotifier {
+
+
+  // Load data from Hive during initialization
+  void loadFromHive() {
+    final box = Hive.box('luteal_data');
+    _lutealPhaseLength = box.get('lutealPhaseLength', defaultValue: 14);
+    notifyListeners();
+  }
+
+
+  Future<void> rescheduleNotifications() async {
+    final toggleStates = await ToggleStateService.loadToggleState();
+
+    bool isPeriodReminderOn = toggleStates[ToggleStateService.periodReminderKey] ?? false;
+    bool isFertilityReminderOn = toggleStates[ToggleStateService.fertilityReminderKey] ?? false;
+    bool isLutealReminderOn = toggleStates[ToggleStateService.lutealReminderKey] ?? false;
+    print("Toggle States - Period: $isPeriodReminderOn, Fertility: $isFertilityReminderOn, Luteal: $isLutealReminderOn");
+    // Retrieve saved times or use defaults
+    TimeOfDay periodReminderTime = await NotificationTimeService.loadNotificationTime(
+      NotificationTimeService.periodTimeKey,
+      TimeOfDay(hour: 9, minute: 0),
+    );
+    TimeOfDay fertilityReminderTime = await NotificationTimeService.loadNotificationTime(
+      NotificationTimeService.fertilityTimeKey,
+      TimeOfDay(hour: 8, minute: 0),
+    );
+    TimeOfDay lutealReminderTime = await NotificationTimeService.loadNotificationTime(
+      NotificationTimeService.lutealTimeKey,
+      TimeOfDay(hour: 10, minute: 0),
+    );
+
+    // Cancel existing notifications
+    cancelNotification(1000);
+    cancelNotification(2000);
+    cancelNotification(3000);
+
+    DateTime nextPeriodStart = lastPeriodStart.add(Duration(days: cycleLength));
+
+    // Schedule Period Reminder
+    if (isPeriodReminderOn) {
+      DateTime periodReminderDateTime = DateTime(
+        nextPeriodStart.year,
+        nextPeriodStart.month,
+        nextPeriodStart.day,
+        periodReminderTime.hour,
+        periodReminderTime.minute,
+      );
+      print("Period Reminder scheduled for: $periodReminderDateTime");
+      // if (periodReminderDateTime.isBefore(DateTime.now())) {
+      //   // If reminder time is in the past, notify immediately
+      //   NotificationService.showInstantNotification(
+      //     "Period Reminder",
+      //     "Your period has started on ${nextPeriodStart.toLocal()}!",
+      //   );
+      // }
+      NotificationService.scheduleNotification(
+        1000,
+        "Upcoming Period",
+        "Your period is expected to start soon.",
+        periodReminderDateTime,
+      );
+    }
+
+    // Schedule Fertility Window Reminder
+    if (isFertilityReminderOn) {
+      DateTime fertilityWindowStart = nextPeriodStart.subtract(Duration(days: 14));
+      DateTime fertilityReminderDateTime = DateTime(
+        fertilityWindowStart.year,
+        fertilityWindowStart.month,
+        fertilityWindowStart.day,
+        fertilityReminderTime.hour,
+        fertilityReminderTime.minute,
+      );
+      // if (fertilityReminderDateTime.isBefore(DateTime.now())) {
+      //   // If reminder time is in the past, notify immediately
+      //   NotificationService.showInstantNotification(
+      //     "Fertility Reminder",
+      //     "Your fertility window has started on ${nextPeriodStart.toLocal()}!",
+      //   );
+      // }
+      print("Fertility Reminder scheduled for: $fertilityReminderDateTime");
+
+      NotificationService.scheduleNotification(
+        2000,
+        "Fertility Window",
+        "Your fertility window starts soon.",
+        fertilityReminderDateTime,
+      );
+    }
+
+    // Schedule Luteal Phase Reminder
+    if (isLutealReminderOn) {
+      DateTime lutealPhaseStart = nextPeriodStart.subtract(Duration(days: 7));
+      DateTime lutealReminderDateTime = DateTime(
+        lutealPhaseStart.year,
+        lutealPhaseStart.month,
+        lutealPhaseStart.day,
+        lutealReminderTime.hour,
+        lutealReminderTime.minute,
+      );
+      // if (lutealReminderDateTime.isBefore(DateTime.now())) {
+      //   // If reminder time is in the past, notify immediately
+      //   NotificationService.showInstantNotification(
+      //     "Luteal Reminder",
+      //     "Your luteal has started on ${nextPeriodStart.toLocal()}!",
+      //   );
+      // }
+      print("Luteal Reminder scheduled for: $lutealReminderDateTime");
+
+      NotificationService.scheduleNotification(
+        3000,
+        "Luteal Phase",
+        "Your luteal phase starts soon.",
+        lutealReminderDateTime,
+      );
+    }
+  }
+
+
+  // Helper function to cancel notifications in a specific ID range
+  void cancelNotification(int id) {
+    NotificationService.cancelScheduledTask(id); // Cancel the specific notification by its ID
+  }
+
 
   String _selectedOption = "Last 1 Month"; // Default option
   bool _useAverage = false; // Default state for average usage
@@ -335,6 +463,7 @@ class CycleProvider with ChangeNotifier {
 
   // Initialize and calculate all dynamic cycle data
   void _initializeCycleData() {
+  //  rescheduleNotifications();
     // Predict period days (from last period start date)
     predictedDays = List.generate(
       _periodLength,
@@ -384,12 +513,14 @@ class CycleProvider with ChangeNotifier {
 
 // Get the fertility window start and end dates
   DateTime getFertilityWindowStart() {
-    return lastPeriodStart.add(Duration(days: cycleLength - 14)); // Start of the fertile window
+    return lastPeriodStart.add(Duration(days: cycleLength - lutealPhaseLength - 5));
   }
 
+
   DateTime getFertilityWindowEnd() {
-    return lastPeriodStart.add(Duration(days: cycleLength - 6)); // End of the fertile window
+    return getFertilityWindowStart().add(Duration(days: 7));
   }
+
 
 // Get the ovulation date
   DateTime getOvulationDate() {
@@ -469,40 +600,59 @@ class CycleProvider with ChangeNotifier {
     print("Cycle data saved to Hive.");
 
     saveCycleDataToFirestore();
-
+    rescheduleNotifications();
   }
 
 
-
-  void updateCycleData({
+  void MergeCycleData({
     required int cycleLength,
     required int periodLength,
     DateTime? lastPeriodStart,
     List<Map<String, String>>? pastPeriods,
   }) {
+    // Update cycle length, period length, and last period start
     cycleLength = cycleLength;
     periodLength = periodLength;
     lastPeriodStart = lastPeriodStart;
-    pastPeriods = pastPeriods;
 
+    // Merge fetched past periods with current past periods
+    if (pastPeriods != null && pastPeriods.isNotEmpty) {
+      for (var fetchedPeriod in pastPeriods) {
+        DateTime fetchedStartDate = DateTime.parse(fetchedPeriod['startDate']!);
+        DateTime fetchedEndDate = DateTime.parse(fetchedPeriod['endDate']!);
+
+        // Check if the fetched period already exists in the current past periods
+        bool exists = _pastPeriods.any((period) =>
+        period['startDate'] == fetchedPeriod['startDate']);
+
+        if (!exists) {
+          // If the period doesn't exist, add it using the addPastPeriod method
+          addPastPeriod(fetchedStartDate, fetchedEndDate);
+        } else {
+          // If it exists, you can choose to update it or skip
+          // In this case, we'll skip adding duplicate periods.
+          print("Fetched period already exists: ${fetchedPeriod['startDate']}");
+        }
+      }
+    }
+
+    _initializeCycleData(); // Initialize the cycle data
+    notifyListeners(); // Notify listeners to update UI
+  }
+
+  void updateCycleData({
+    required DateTime lastPeriodStart,
+    required int cycleLength,
+    required int periodLength,
+  }) {
+    // Update the cycle data and recalculate all related information
+    _lastPeriodStart = lastPeriodStart;
+    _cycleLength = cycleLength;
+    _periodLength = periodLength;
 
     _initializeCycleData();
     notifyListeners();
-    }
-
-  // void updateCycleData({
-  //   required DateTime lastPeriodStart,
-  //   required int cycleLength,
-  //   required int periodLength,
-  // }) {
-  //   // Update the cycle data and recalculate all related information
-  //   _lastPeriodStart = lastPeriodStart;
-  //   _cycleLength = cycleLength;
-  //   _periodLength = periodLength;
-  //
-  //   _initializeCycleData();
-  //   notifyListeners();
-  // }
+  }
 
   Future<void> loadCycleDataFromHive() async {
     var box = await Hive.openBox<CycleData>('cycleData');
@@ -1002,6 +1152,13 @@ class PartnerProvider with ChangeNotifier {
     final weeksPregnant = (daysPregnant / 7).floor() + 1;
 
     return weeksPregnant;
+  }
+  int getCurrentDay() {
+    if (!_pregnancyMode || _gestationStart == null) return 0;
+
+    final daysPregnant = DateTime.now().difference(_gestationStart!).inDays;
+
+    return daysPregnant + 1; // Adding 1 because gestation starts from day 1, not day 0
   }
 
   /// Get days into pregnancy

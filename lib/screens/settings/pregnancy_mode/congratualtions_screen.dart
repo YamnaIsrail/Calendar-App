@@ -15,7 +15,8 @@ class CongratulationsScreen extends StatelessWidget {
     return bgContainer(
         child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Center(
+
+          body: Center(
         child: Stack(
           children: [
             Image(image: AssetImage("assets/obj.png")),

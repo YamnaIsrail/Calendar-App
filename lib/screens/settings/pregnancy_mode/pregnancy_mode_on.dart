@@ -1,4 +1,5 @@
 import 'package:calender_app/screens/globals.dart';
+import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,21 @@ class congrats extends StatelessWidget {
     return bgContainer(child:
       Scaffold(
         backgroundColor: Colors.transparent,
-      body:  Padding(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(
+            " ",
+          ),
+          leading: IconButton(onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => SettingsPage()),
+                  (route) => false,
+            );
+          }, icon: Icon(Icons.clear_rounded), color: Colors.grey, iconSize: 30,),
+        ),
+
+        body:  Padding(
         padding: const EdgeInsets.all(10.0),
         child: SingleChildScrollView(
           scrollDirection: Axis.vertical,
