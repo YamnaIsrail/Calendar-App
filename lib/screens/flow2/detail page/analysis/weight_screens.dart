@@ -5,6 +5,7 @@ import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hive/hive.dart';
+import 'package:provider/provider.dart';
 
 class Weight extends StatefulWidget {
   const Weight({super.key});
@@ -41,7 +42,7 @@ class _WeightState extends State<Weight> {
         }
       });
     } catch (e) {
-      print("Error initializing Hive: $e");
+      // print("Error initializing Hive: $e");
     }
   }
 
@@ -61,6 +62,10 @@ class _WeightState extends State<Weight> {
 
     // Save the weights list and ensure type consistency
     await weightBox.put('weights', weightData.map((e) => Map<String, dynamic>.from(e)).toList());
+
+    final weightProvider = Provider.of<WeightProvider>(context, listen: false);
+    weightProvider.updateLatestWeight(weight, date);
+
     setState(() {});
   }
 
@@ -216,13 +221,15 @@ class _WeightState extends State<Weight> {
                               : '',
                           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                         ),
-
                       Text(
                         lastWeightData != null && lastWeightData['bmi'] != null && lastWeightData['stage'] != null
                             ? " ${lastWeightData['stage']}"
-                            : 'No BMI data',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                            : 'BMI: N/A',
+                        style: lastWeightData != null && lastWeightData['bmi'] != null && lastWeightData['stage'] != null
+                            ? const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, ) // Style for stage
+                            : const TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Colors.red), // Style for 'Enter Height'
                       ),
+
                     ],
                   )
                 else
@@ -362,30 +369,57 @@ class _WeightState extends State<Weight> {
               dotData: FlDotData(show: true),
             ),
           ],
+          titlesData: FlTitlesData(
+        topTitles: AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: false, // Hide top titles
         ),
       ),
+      leftTitles: AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: false, // Hide left titles
+        ),
+      ),
+      rightTitles: AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true, // Show right titles
+          getTitlesWidget: (value, meta) {
+            return Text(
+              "${value.toInt()}", // Add "kg" to the right titles
+              style: const TextStyle(fontSize: 10),
+            );
+          },
+        ),
+      ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, _) {
+                  if (value % 1 == 0) { // Only process whole numbers
+                    final int index = value.toInt();
+                    return Text(
+                      index.toString(),
+                      style: const TextStyle(fontSize: 10),
+                    );
+                  }
+                  return const SizedBox.shrink(); // Hide fractional values
+                },
+              ),
+            ),
+
+          ),
+      ),
+    )
     );
   }
   Widget buildMonthlyView() {
+    DateTime now = DateTime.now();
     List<Map<String, dynamic>> monthlyData = weightData.where((entry) {
-      // Log the type of the 'date' field to identify any inconsistencies
-      print("Entry date: ${entry['date']} (Type: ${entry['date'].runtimeType})");
-
-      // Attempt to parse the date if it's a string
-      DateTime entryDate;
-      if (entry['date'] is DateTime) {
-        entryDate = entry['date'] as DateTime;
-      } else if (entry['date'] is String) {
-        // Try to parse the string to a DateTime, handle invalid cases
-        entryDate = DateTime.tryParse(entry['date']) ?? DateTime.now(); // Default to now if parsing fails
-      } else {
-        // If the date is neither DateTime nor String, default to DateTime.now()
-        entryDate = DateTime.now();
-      }
-
-      // Now, return true only if the entryDate is within this month
-      return entryDate.month == DateTime.now().month &&
-          entryDate.year == DateTime.now().year;
+      final entryDate = entry['date'] is DateTime
+          ? entry['date'] as DateTime
+          : DateTime.parse(entry['date']);
+      return entryDate.isAfter(now.subtract(const Duration(days: 30))) &&
+          entryDate.isBefore(now.add(const Duration(days: 1)));
     }).toList();
 
     if (monthlyData.isEmpty) {
@@ -418,6 +452,22 @@ class _WeightState extends State<Weight> {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (value, _) {
+                  if (value % 1 == 0) { // Only process whole numbers
+                    final int index = value.toInt();
+                    return Text(
+                      index.toString(),
+                      style: const TextStyle(fontSize: 10),
+                    );
+                  }
+                  return const SizedBox.shrink(); // Hide fractional values
+                },
+              ),
+            ),
+
+            topTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: false,
+                getTitlesWidget: (value, _) {
                   final int index = value.toInt();
                   int step = (monthlyData.length / 5).ceil();
                   if (index % step == 0 && index < monthlyData.length) {
@@ -435,11 +485,11 @@ class _WeightState extends State<Weight> {
             ),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
-                showTitles: true,
+                showTitles: false,
                 getTitlesWidget: (value, _) => Text("${value.toInt()} kg"),
               ),
             ),
-          ),
+             ),
           gridData: const FlGridData(show: false),
         ),
       ),

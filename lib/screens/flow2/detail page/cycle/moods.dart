@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../firebase/analytics/analytics_service.dart';
 import 'cycle_page_components/category_grid.dart';
 
 class Moods extends StatefulWidget {
@@ -14,11 +15,23 @@ class Moods extends StatefulWidget {
 
 class _MoodsState extends State<Moods> {
   late Future<List<CategoryItem>> _emojiList;
+  DateTime? _startTime;
 
   @override
   void initState() {
     super.initState();
-    _emojiList = loadCategoryItems('emoji'); // Load emojis from assets/emoji folder
+    _emojiList = loadCategoryItems('emoji');
+    _startTime = DateTime.now();  // Stores start time locally for THIS screen instance
+    AnalyticsService.logScreenView("Moods Screen");
+  }
+
+  @override
+  void dispose() {
+    if (_startTime != null) {
+      final duration = DateTime.now().difference(_startTime!).inSeconds;
+      AnalyticsService.logScreenTime("Moods Screen", duration);
+    }
+    super.dispose();
   }
 
   @override

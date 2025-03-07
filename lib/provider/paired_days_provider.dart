@@ -33,7 +33,7 @@ class PairedDaysProvider with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      print("Error initializing paired days: $e");
+      // print("Error initializing paired days: $e");
     }
   }
 
@@ -45,7 +45,7 @@ class PairedDaysProvider with ChangeNotifier {
       _daysPaired = 1;
       notifyListeners();
     } catch (e) {
-      print("Error resetting paired days: $e");
+      // print("Error resetting paired days: $e");
     }
   }
 }

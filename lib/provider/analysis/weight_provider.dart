@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
-
+import 'package:hive/hive.dart';
 class WeightProvider with ChangeNotifier {
-  List<Map<String, dynamic>> _weightData = [];
+  double? get latestWeight {
+    final weightBox = Hive.box('weightBox');
+    final weights = weightBox.get('weights', defaultValue: []) as List;
 
-  List<Map<String, dynamic>> get weightData => _weightData;
-
-  // Add new weight data
-  void addWeightData(double weight) {
-    final newWeightData = {
-      'date': DateTime.now(),
-      'weight': weight,
-    };
-    _weightData.add(newWeightData);
-    notifyListeners();
+    if (weights.isNotEmpty) {
+      // Safely convert Map<dynamic, dynamic> to Map<String, dynamic>
+      final lastEntry = Map<String, dynamic>.from(weights.last as Map);
+      return lastEntry['weight'] as double;
+    }
+    return null;
   }
 
-  // Get last weight data for the week
-  Map<String, dynamic>? getLastWeightData() {
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: 7));
-    final lastWeekData = _weightData.where((entry) {
-      DateTime entryDate = entry['date'];
-      return entryDate.isAfter(weekStart) && entryDate.isBefore(now);
-    }).toList();
-    return lastWeekData.isNotEmpty ? lastWeekData.last : null;
+  DateTime? get latestDate {
+    final weightBox = Hive.box('weightBox');
+    final weights = weightBox.get('weights', defaultValue: []) as List;
+
+    if (weights.isNotEmpty) {
+      // Safely convert Map<dynamic, dynamic> to Map<String, dynamic>
+      final lastEntry = Map<String, dynamic>.from(weights.last as Map);
+      return DateTime.parse(lastEntry['date'] as String);
+    }
+    return null;
+  }
+
+  void updateLatestWeight(double weight, DateTime date) {
+    final weightBox = Hive.box('weightBox');
+    final weights = weightBox.get('weights', defaultValue: []) as List;
+
+    Map<String, dynamic> newWeightRecord = {
+      'date': date.toIso8601String(),
+      'weight': weight,
+    };
+
+    weights.add(newWeightRecord);
+    weightBox.put('weights', weights);
+    notifyListeners();
   }
 }

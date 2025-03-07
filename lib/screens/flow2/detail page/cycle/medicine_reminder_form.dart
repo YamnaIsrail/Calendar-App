@@ -5,6 +5,7 @@ import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:flutter/scheduler.dart';  // Add this import
 
 
 class MedicineReminderScreen extends StatefulWidget {
@@ -77,90 +78,7 @@ State<MedicineReminderScreen> {
     super.dispose();
   }
 
-  // Future<void> _saveReminder() async {
-  //   if (medicineController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Please enter a medicine name")),
-  //     );
-  //     return;
-  //   }
-  //
-  //   if (isNotificationEnabled && (startDate == null || reminderTimes.any((time) => time == null))) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Please select a valid start date and all reminder times")),
-  //     );
-  //     return;
-  //   }
-  //
-  //   // Prepare the reminder data
-  //   final reminderData = {
-  //     'startDate': startDate!.toIso8601String(),
-  //     'reminderTimes': reminderTimes.map((time) => "${time!.hour}:${time.minute}").toList(),
-  //     'intakePerDay': intakePerDay,
-  //     'interval': interval,
-  //     'duration': duration,
-  //     'isNotificationEnabled': isNotificationEnabled,
-  //     'notificationIds': [],
-  //   };
-  //
-  //   final box = Hive.box<Map>('medicineReminders');
-  //
-  //   // If editing an existing reminder, cancel existing notifications
-  //   if (widget.editingMedicine != null) {
-  //     final existingReminder = box.get(widget.editingMedicine);
-  //     if (existingReminder?['notificationIds'] != null) {
-  //       final notificationIds = existingReminder!['notificationIds'] as List;
-  //       for (var id in notificationIds) {
-  //         await NotificationService.cancelScheduledTask(id);
-  //       }
-  //     }
-  //   }
-  //
-  //   // Schedule new notifications
-  //   List<int> notificationIds = [];
-  //   if (isNotificationEnabled) {
-  //     DateTime currentDate = startDate!;
-  //     int durationDays = _calculateDurationDays(duration);
-  //
-  //     while (currentDate.isBefore(startDate!.add(Duration(days: durationDays)))) {
-  //       for (var index = 0; index < reminderTimes.length; index++) {
-  //         var time = reminderTimes[index];
-  //         if (time != null) {
-  //           DateTime notificationTime = DateTime(
-  //             currentDate.year,
-  //             currentDate.month,
-  //             currentDate.day,
-  //             time.hour,
-  //             time.minute,
-  //           );
-  //
-  //           if (notificationTime.isAfter(DateTime.now())) {
-  //             // Generate unique ID based on medicine name and intake counter
-  //             int notificationId = "${medicineController.text.hashCode}_$index".hashCode;
-  //             await NotificationService.scheduleNotification(
-  //               notificationId,
-  //               "Medicine Reminder",
-  //               "Time to take ${medicineController.text}",
-  //               notificationTime,
-  //             );
-  //             notificationIds.add(notificationId);
-  //           }
-  //         }
-  //       }
-  //       // Increment date based on interval
-  //       currentDate = _incrementDate(currentDate, interval);
-  //     }
-  //   }
-  //
-  //   // Store the notification IDs in Hive
-  //   reminderData['notificationIds'] = notificationIds;
-  //   box.put(medicineController.text, reminderData);
-  //
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(content: Text("Reminder saved successfully")),
-  //   );
-  //   Navigator.pop(context, true);
-  // }
+
   void _pickStartDate() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -173,6 +91,10 @@ State<MedicineReminderScreen> {
       setState(() {
         startDate = pickedDate;
       });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please select a valid start date")),
+      );
     }
   }
 
@@ -183,11 +105,48 @@ State<MedicineReminderScreen> {
     );
 
     if (pickedTime != null) {
+      if (startDate == null) {
+        if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please select a start date first")),
+        );
+        return;
+      }
+      // Get the current time for comparison
+      final pickedDateTime = DateTime(
+        startDate!.year,
+        startDate!.month,
+        startDate!.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+
+      if (pickedDateTime.isBefore(DateTime.now())) {
+        if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please select a future time or adjust the start date for the selected time.")),
+        );
+        return;
+      }
+
       setState(() {
         reminderTimes[index] = pickedTime;
       });
     }
   }
+
+  bool _isTimeInFuture(TimeOfDay time) {
+    final reminderDateTime = DateTime(
+      startDate!.year,
+      startDate!.month,
+      startDate!.day,
+      time.hour,
+      time.minute,
+    );
+    return reminderDateTime.isAfter(DateTime.now());
+  }
+
+
   void _updateIntakePerDay(int value) {
     setState(() {
       intakePerDay = value;
@@ -202,27 +161,167 @@ State<MedicineReminderScreen> {
     });
   }
 
-
   Future<void> _saveReminder() async {
     bool isPermissionGranted = await NotificationService.requestNotificationPermission();
     if (!isPermissionGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Notification permission is required to set reminders")),
-      );
+      if (mounted) {
+        // Delay showing the alert dialog after the widget is still mounted
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Permission Required'),
+                  content: Text('Notification permission is required to set reminders'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        });
+      }
+      return;
+    }
+
+    if (startDate == null) {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Invalid Date'),
+                  content: Text('Please select a valid start date'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        });
+      }
+      return;
+    }
+    if (!isNotificationEnabled) {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Notification is disabled'),
+                  content: Text('Please enable the notification'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        });
+      }
+      return;
+    }
+
+    if (reminderTimes.any((time) => time == null || !_isTimeInFuture(time!))) {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Invalid Time'),
+                  content: Text('Please select valid reminder times in the future or adjust the start date for the selected time.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        });
+      }
       return;
     }
 
     if (medicineController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter a medicine name")),
-      );
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Missing Medicine Name'),
+                  content: Text('Please enter a medicine name'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        });
+      }
       return;
     }
 
     if (isNotificationEnabled && (startDate == null || reminderTimes.any((time) => time == null))) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select a valid start date and all reminder times")),
-      );
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Invalid Data'),
+                  content: Text('Please select a valid start date and all reminder times'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        });
+      }
       return;
     }
 
@@ -239,47 +338,77 @@ State<MedicineReminderScreen> {
 
     final box = Hive.box<Map>('medicineReminders');
 
-    // Save only the first day's data
-    box.put(medicineController.text, reminderData);
+    // Save the reminder data
+    await box.put(medicineController.text, reminderData);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Reminder saved successfully")),
-    );
+    // Show confirmation dialog after saving, ensuring widget is mounted
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text('Reminder Saved'),
+                content: Text('Reminder saved successfully'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      });
+    }
+
+    // Navigate back after saving
     Navigator.pop(context, true);
 
-    // Schedule first day's notifications
+    // Schedule the reminders
     await _scheduleReminderForDay(reminderData);
 
-    // After scheduling the first day's reminder, call the reschedule function for the next day
+    // After scheduling, reschedule for next days if necessary
     await _rescheduleReminderForNextDay(reminderData);
   }
+
+
   Future<void> _scheduleReminderForDay(Map reminderData) async {
     final notificationIds = [];
-
-    // Schedule the reminders for today based on the saved reminder data
     DateTime currentDate = DateTime.parse(reminderData['startDate']);
 
-    for (var index = 0; index < reminderData['reminderTimes'].length; index++) {
-      var time = reminderData['reminderTimes'][index];
-      List<String> timeParts = time.split(":");
-      DateTime notificationTime = DateTime(
-        currentDate.year,
-        currentDate.month,
-        currentDate.day,
-        int.parse(timeParts[0]),
-        int.parse(timeParts[1]),
-      );
+    // Schedule reminders for the entire duration
+    int remainingDays = _calculateRemainingDays(reminderData['duration']);
 
-      if (notificationTime.isAfter(DateTime.now())) {
-        // Generate a unique ID based on the current date and reminder index
-        int notificationId = "${medicineController.text.hashCode}_$index".hashCode;
-        await NotificationService.scheduleNotification(
-          notificationId,
-          "Medicine Reminder",
-          "Time to take ${medicineController.text}",
-          notificationTime,
+    for (int dayOffset = 0; dayOffset < remainingDays; dayOffset++) {
+      DateTime scheduledDate = currentDate.add(Duration(days: dayOffset));
+
+      for (var index = 0; index < reminderData['reminderTimes'].length; index++) {
+        var time = reminderData['reminderTimes'][index];
+        List<String> timeParts = time.split(":");
+        DateTime notificationTime = DateTime(
+          scheduledDate.year,
+          scheduledDate.month,
+          scheduledDate.day,
+          int.parse(timeParts[0]),
+          int.parse(timeParts[1]),
         );
-        notificationIds.add(notificationId);
+
+        if (notificationTime.isAfter(DateTime.now())) {
+          // Generate a unique ID based on the current date and reminder index
+          int notificationId = "${medicineController.text.hashCode}_$index".hashCode;
+          await NotificationService.scheduleNotification(
+            notificationId,
+            "Medicine Reminder",
+            "Time to take ${medicineController.text}",
+            notificationTime,
+          );
+          notificationIds.add(notificationId);
+        }
       }
     }
 
@@ -317,6 +446,7 @@ State<MedicineReminderScreen> {
       );
     }
   }
+
   int _calculateRemainingDays(String duration) {
     switch (duration) {
       case "1 Day":
@@ -338,7 +468,7 @@ State<MedicineReminderScreen> {
     final reminders = box.toMap();
 
     reminders.forEach((key, value) {
-      print("Medicine: $key, Details: $value");
+      // print("Medicine: $key, Details: $value");
     });
   }
   void deleteReminder(String medicineName) {

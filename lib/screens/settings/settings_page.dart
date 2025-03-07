@@ -1,19 +1,19 @@
+import 'package:calender_app/auth/auth_services.dart';
 import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/provider/showhide.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/settings/cycle_length.dart';
-// import 'package:calender_app/screens/settings/language_option.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:calender_app/screens/settings/privacy_policy.dart';
-// import 'package:calender_app/screens/settings/translation.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
+import '../../firebase/analytics/analytics_service.dart';
 import '../flow2/home_flow2.dart';
 import 'FAQ.dart';
 import 'auth/password/password.dart';
@@ -27,10 +27,30 @@ import 'partner_mode/partner_info.dart';
 import 'period_length.dart';
 import 'pregnancy_mode/pregnancy_mode_on.dart';
 import 'reminder.dart';
-import 'show_hide_option/show_hide_option.dart';
-import 'track_cycle.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  DateTime _startTime= DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _startTime = DateTime.now();
+    AnalyticsService.logScreenView("settings_page");
+  }
+
+  @override
+  void dispose() {
+    int duration = DateTime.now().difference(_startTime).inSeconds; // Calculate time spent
+    AnalyticsService.logScreenTime("settings_page", duration).then((_) {
+      super.dispose();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final showHideProvider = context.watch<ShowHideProvider>();
@@ -38,11 +58,14 @@ class SettingsPage extends StatelessWidget {
     return bgContainer(
       child: WillPopScope(
         onWillPop: () async {
-          // Navigate to Flow2Home when back is pressed
+          int duration = DateTime.now().difference(_startTime).inSeconds;
+
+          AnalyticsService.logScreenTime("SettingsPage",duration );
+
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => Flow2Page()),
-                (route) => false,
+            (route) => false,
           );
           return false; // Prevent default back navigation
         },
@@ -54,16 +77,17 @@ class SettingsPage extends StatelessWidget {
               "Settings",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            leading: IconButton(onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => Flow2Page()),
+            leading: IconButton(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => Flow2Page()),
                     (route) => false,
-              );
-            }, icon: Icon(Icons.close)),
+                  );
+                },
+                icon: Icon(Icons.close)),
           ),
           body: SingleChildScrollView(
-
             child: Padding(
               padding: const EdgeInsets.all(2.0),
               child: Column(
@@ -81,12 +105,15 @@ class SettingsPage extends StatelessWidget {
                       icon: Icons.notifications,
                       title: "Reminders",
                       onTap: () {
+                        AnalyticsService.logEvent("navigate_to_reminders", parameters: {
+                          "from_screen": "SettingsPage",
+                        });
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ReminderScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => ReminderScreen()),
                         );
                       },
-
                       trailing: Icon(Icons.notifications),
                     ),
                   ), //Reminders Section
@@ -97,20 +124,19 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       GestureDetector(
                           onTap: () {
-                            // Call showFirstDayOfWeekDialog
-                            DialogHelper.showConfirmPopup(context, (){
-                              DialogHelper.deleteAllHiveData();  // Call to delete all Hive data from DialogHelper
-
-                            });  },
-
+                            AnalyticsService.logEvent("delete_all_data_confirmed", parameters: {
+                              "action": "Delete All Data",
+                            });
+                            DialogHelper.showConfirmPopup(context, () {
+                              DialogHelper
+                                  .deleteAllHiveData(); // Call to delete all Hive data from DialogHelper
+                            });
+                          },
                           child: Text("Delete All Data",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: primaryColor)
-                           )
-                      ),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: primaryColor))),
                     ],
                   )
-
                 ],
               ),
             ),
@@ -121,9 +147,46 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class UserProfileSection1 extends StatelessWidget {
+
+class UserProfileSection1 extends StatefulWidget {
+  @override
+  _UserProfileSection1State createState() => _UserProfileSection1State();
+}
+
+class _UserProfileSection1State extends State<UserProfileSection1> {
+  bool? isSignedIn; // Nullable bool to handle loading state
+  bool _isLoading = false; // Track loading state
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // Fetch login status when widget is initialized
+  }
+
+  String? userImageUrl;
+  String? userName;
+
+  Future<void> _checkLoginStatus() async {
+    final status = await SessionManager.checkUserLoginStatus();
+    if (status) {
+      userImageUrl = await SessionManager.getUserProfileImage();
+      userName = await SessionManager.getUserName();
+    }
+    setState(() {
+      isSignedIn = status; // Update state with login status
+    });
+
+  }
+
   @override
   Widget build(BuildContext context) {
+    AnalyticsService.logScreenView("SettingsPage");
+
+    if (isSignedIn == null) {
+      // Show loading indicator while fetching login status
+      return Center(child: CircularProgressIndicator());
+    }
+
     return Container(
       padding: EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -131,23 +194,46 @@ class UserProfileSection1 extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, // Align items at the top
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            child: Icon(
-              Icons.person,
-            ),
-            radius: 35,
+          Column(
+            children: [
+              CircleAvatar(
+                radius: 35,
+                backgroundImage: isSignedIn! && userImageUrl != null
+                    ? NetworkImage(userImageUrl!)
+                    : null,
+                child: isSignedIn! && userImageUrl != null
+                    ? null
+                    : Icon(Icons.person, size: 35),
+              ),
+              if (isSignedIn! && userName != null)
+                Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text(
+                    userName!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+
+            ],
           ),
+
           SizedBox(width: 16),
-          Expanded( // Ensures text and button fit within the available space
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Align text to the start
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Sign in and Synchronize your data",
-                  softWrap: true, // Enables text wrapping
-                  overflow: TextOverflow.clip, // Prevents text overflow
+                  isSignedIn!
+                      ? "Synchronize your data"
+                      : "Sign in and Synchronize your data",
+                  softWrap: true,
+                  overflow: TextOverflow.clip,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -156,7 +242,7 @@ class UserProfileSection1 extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Align(
-                  alignment: Alignment.centerLeft, // Align button to the left
+                  alignment: Alignment.centerLeft,
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
@@ -165,7 +251,7 @@ class UserProfileSection1 extends StatelessWidget {
                     ),
                     child: TextButton(
                       child: Text(
-                        "Sign In",
+                        isSignedIn! ? "Sync Data" : "Sign In",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -173,12 +259,45 @@ class UserProfileSection1 extends StatelessWidget {
                         ),
                       ),
                       onPressed: () async {
-                        DialogHelper.showSignInStatus(context);
+                        if (isSignedIn!) {
+                          AnalyticsService.logEvent("sync_data_initiated", parameters: {
+                            "action": "Syncing Data",
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Syncing Data..."),
+                              backgroundColor: Colors.blue,
+                            ),
+                          );
+                          // Ensure cycle data is saved correctly
+                          Provider.of<CycleProvider>(context, listen: false)
+                              .saveCycleDataToFirestore();
+                        } else {
+                          AnalyticsService.logEvent("sign_in_initiated", parameters: {
+                            "action": "User  initiated sign-in",
+                          });
+                          // Call the sign-in method and handle the loading state
+                          setState(() {
+                            _isLoading = true; // Set loading to true during sign-in
+                          });
+
+                          await AuthService().signInWithGoogle(context, (bool isLoading) {
+                            setState(() {
+                              _isLoading = isLoading; // Update loading state
+                            });
+                          });
+                          // After sign-in, re-check the login status
+                          await _checkLoginStatus();
+                        }
                       },
                     ),
-
                   ),
                 ),
+                if (_isLoading)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: CircularProgressIndicator(),
+                  ),
               ],
             ),
           ),
@@ -187,6 +306,7 @@ class UserProfileSection1 extends StatelessWidget {
     );
   }
 }
+
 
 class GoalSection extends StatelessWidget {
   @override
@@ -219,16 +339,21 @@ class GoalSection extends StatelessWidget {
                 child: CustomButton(
                   text: "Track my period",
                   onPressed: () {
+                    AnalyticsService.logEvent("track_period_initiated", parameters: {
+                      "action": "Tracking period",
+                    });
                     pregnancyModeProvider.togglePregnancyMode(false);
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => PeriodLength()),
                     );
                   },
-                  textColor:  pregnancyModeProvider.isPregnancyMode ? Colors.black : Colors.white!,
-
-                  backgroundColor: pregnancyModeProvider.isPregnancyMode ? secondaryColor! : primaryColor,
-
+                  textColor: pregnancyModeProvider.isPregnancyMode
+                      ? Colors.black
+                      : Colors.white!,
+                  backgroundColor: pregnancyModeProvider.isPregnancyMode
+                      ? secondaryColor!
+                      : primaryColor,
                 ),
               ),
               SizedBox(width: 15),
@@ -236,16 +361,21 @@ class GoalSection extends StatelessWidget {
                 child: CustomButton(
                   text: "Track my pregnancy",
                   onPressed: () {
+                    AnalyticsService.logEvent("track_pregnancy_initiated", parameters: {
+                      "action": "Tracking pregnancy",
+                    });
                     pregnancyModeProvider.togglePregnancyMode(true);
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => congrats()),
                     );
                   },
-                  backgroundColor: pregnancyModeProvider.isPregnancyMode ? primaryColor : secondaryColor!,
-
-                  textColor:  pregnancyModeProvider.isPregnancyMode ? Colors.white : Colors.black!,
-
+                  backgroundColor: pregnancyModeProvider.isPregnancyMode
+                      ? primaryColor
+                      : secondaryColor!,
+                  textColor: pregnancyModeProvider.isPregnancyMode
+                      ? Colors.white
+                      : Colors.black!,
                 ),
               ),
             ],
@@ -257,6 +387,9 @@ class GoalSection extends StatelessWidget {
                 title: "Period Length",
                 trailing: Text("${cycleProvider.periodLength} Days"),
                 onTap: () {
+                  AnalyticsService.logEvent("navigate_to_update_period_length", parameters: {
+                    "from_screen": "SettingsPage",
+                  });
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => PeriodLength()),
@@ -268,25 +401,30 @@ class GoalSection extends StatelessWidget {
                 title: "Cycle Length",
                 trailing: Text("${cycleProvider.cycleLength} Days"),
                 onTap: () {
+                  AnalyticsService.logEvent("navigate_to_update_cycle_length", parameters: {
+                    "from_screen": "SettingsPage",
+                  });
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => CycleLength()),
                   );
                 },
               ),
-
               if (showHideProvider.visibilityMap['Ovulation / Fertile'] == true)
                 SettingsOption(
-                icon: Icons.calendar_today,
-                title: "Ovulation and fertile",
-                trailing: Text("Details"),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Ovulation()),
-                  );
-                },
-              ),
+                  icon: Icons.calendar_today,
+                  title: "Ovulation and fertile",
+                  trailing: Text("Details"),
+                  onTap: () {
+                    AnalyticsService.logEvent("navigate_to_ovulation_fertile_settings", parameters: {
+                      "from_screen": "SettingsPage",
+                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Ovulation()),
+                    );
+                  },
+                ),
             ],
           ),
         ],
@@ -308,10 +446,14 @@ class SettingsOptionSection extends StatelessWidget {
       child: Column(
         children: [
           SettingsOption(
-              onTap: (){
+              onTap: () {
+                AnalyticsService.logEvent("Navigate to Backup and Restore Screen", parameters: {
+                  "from_screen": "SettingsPage",
+                });
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BackupAndRestoreScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => BackupAndRestoreScreen()),
                 );
               },
               icon: Icons.backup,
@@ -319,16 +461,21 @@ class SettingsOptionSection extends StatelessWidget {
           SettingsOption(
               icon: Icons.lock,
               title: "Password",
-              onTap: (){
+              onTap: () {
+                AnalyticsService.logEvent("Navigate to set Pin/Password Screen", parameters: {
+                  "from_screen": "SettingsPage",
+                });
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => PasswordScreen()),
                 );
-              }
-
-          ),
-          SettingsOption(icon: Icons.person,
+              }),
+          SettingsOption(
+              icon: Icons.person,
               onTap: () {
+                AnalyticsService.logEvent("Navigate to Link with Partner Screens", parameters: {
+                  "from_screen": "SettingsPage",
+                });
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => PartnerModeScreen()),
@@ -339,38 +486,31 @@ class SettingsOptionSection extends StatelessWidget {
               icon: Icons.document_scanner,
               title: "Export document to Doctor",
               onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ExportCyclePage())
-                );
+                AnalyticsService.logEvent("Export document to Doctor", parameters: {
+                  "from_screen": "SettingsPage",
+                });
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => ExportCyclePage()));
               }),
 
           SettingsOption(
             icon: Icons.calendar_today,
             title: "Calendar",
             onTap: () {
+              AnalyticsService.logEvent("Navigate to Calendar/Show/Hide settings", parameters: {
+                "from_screen": "SettingsPage",
+              });
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => CalendarSetting()),
               );
             },
           ),
-          // SettingsOption(icon: Icons.person_add,
-          //     onTap: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(builder: (context) => TrackCycleScreen()),
-          //       );
-          //     },
-          //
-          //     title: "Track other’s Cycles"),
         ],
       ),
     );
   }
 }
-
-
 
 class FAQOptionSection extends StatelessWidget {
   @override
@@ -387,6 +527,9 @@ class FAQOptionSection extends StatelessWidget {
           SettingsOption(
             icon: Icons.question_answer,
             onTap: () {
+              AnalyticsService.logEvent("faq_accessed", parameters: {
+                "action": "Accessed FAQ",
+              });
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => FAQScreen()),
@@ -397,6 +540,9 @@ class FAQOptionSection extends StatelessWidget {
           SettingsOption(
             icon: Icons.bug_report,
             onTap: () {
+              AnalyticsService.logEvent("feedback_accessed", parameters: {
+                "action": "Accessed Report & Feedback",
+              });
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => FeedbackScreen()),
@@ -408,6 +554,9 @@ class FAQOptionSection extends StatelessWidget {
             icon: Icons.featured_play_list,
             title: "Request a new feature",
             onTap: () {
+              AnalyticsService.logEvent("feature_request_initiated", parameters: {
+                "action": "Requested a new feature",
+              });
               launchEmail();
             },
           ),
@@ -415,15 +564,21 @@ class FAQOptionSection extends StatelessWidget {
             icon: Icons.star,
             title: "Rate us on Google Play",
             onTap: () {
-              DialogHelper.showRatingPopup(context, (rating) {
-                print('Selected Rating: $rating');
+              AnalyticsService.logEvent("rate_us_initiated", parameters: {
+                "action": "Initiated rating on Google Play",
               });
+              DialogHelper.showRatingPopup(context, (rating) {
+                  });
             },
           ),
           // Share with Friends Section
           SettingsOption(
             icon: Icons.share,
             onTap: () {
+
+              AnalyticsService.logEvent("share_app", parameters: {
+                "action": "Share with friends",
+              });
               _shareApp();
             },
             title: "Share with friends",
@@ -433,6 +588,9 @@ class FAQOptionSection extends StatelessWidget {
             icon: Icons.privacy_tip,
             title: "Privacy",
             onTap: () {
+              AnalyticsService.logEvent("privacy_accessed", parameters: {
+                "action": "Accessed Privacy Policy",
+              });
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
@@ -445,36 +603,6 @@ class FAQOptionSection extends StatelessWidget {
   }
 }
 
-// Functionality to share the app link
-Future<void> _shareApp() async {
-  // Get the package info
-  PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
-  // Use final instead of const
-  final appLink = 'https://play.google.com/store/apps/details?id=${packageInfo.packageName}&hl=en';
-
-  // Share the app link
-  Share.share('Check out this awesome app for tracking your period, symptoms, and ovulation! $appLink');
-}
-
-// Method to launch email
-Future<void> launchEmail() async {
-  final Uri emailLaunchUri = Uri(
-    scheme: 'mailto',
-    path: 'yamnaisrailkhan@gmail.com',
-    queryParameters: {
-
-      'subject': 'Request a New Feature',
-      'body': 'I request a new feature.\n\nPlease describe your request here.',
-    },
-  );
-
-  if (await canLaunchUrl(emailLaunchUri)) {
-    await launchUrl(emailLaunchUri);
-  } else {
-    throw 'Could not launch $emailLaunchUri';
-  }
-}
 
 class SettingsOption extends StatelessWidget {
   final IconData icon;
@@ -498,8 +626,39 @@ class SettingsOption extends StatelessWidget {
       onTap: onTap ??
           () {
             // Default action if no onTap function is provided
-            print('Tapped on $title');
+            // print('Tapped on $title');
           },
     );
+  }
+}
+// Functionality to share the app link
+Future<void> _shareApp() async {
+  // Get the package info
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+  // Use final instead of const
+  final appLink =
+      'https://play.google.com/store/apps/details?id=${packageInfo.packageName}&hl=en';
+
+  // Share the app link
+  Share.share(
+      'Check out this awesome app for tracking your period, symptoms, and ovulation! $appLink');
+}
+
+// Method to launch email
+Future<void> launchEmail() async {
+  final Uri emailLaunchUri = Uri(
+    scheme: 'mailto',
+    path: 'so2os.lab@gmail.com',
+    queryParameters: {
+      'subject': 'Request a New Feature',
+      'body': 'I request a new feature.\n\nPlease describe your request here.',
+    },
+  );
+
+  if (await canLaunchUrl(emailLaunchUri)) {
+    await launchUrl(emailLaunchUri);
+  } else {
+    throw 'Could not launch $emailLaunchUri';
   }
 }

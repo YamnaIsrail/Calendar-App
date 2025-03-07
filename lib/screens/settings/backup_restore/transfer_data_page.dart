@@ -7,6 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
+import '../settings_page.dart';
+
 class TransferDataPage extends StatelessWidget {
   final String transferTo;
 
@@ -56,8 +58,11 @@ class TransferDataPage extends StatelessWidget {
                               // Trigger cycle data transfer after successful sign-in
                               await Provider.of<CycleProvider>(context, listen: false)
                                   .saveCycleDataToFirestore();
-                              Navigator.pop(context);  // Close the page after transfer
-                            },
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => SettingsPage()),
+                              );
+                              },
                           text: "Continue"
                           ),
                         ],
@@ -99,19 +104,24 @@ class TransferDataPage extends StatelessWidget {
       final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Store session after successful login
-      await storeUserSession(userCredential.user!.uid);
+      await SessionManager.storeUserSession(userCredential.user!.uid,
+        userCredential.user!.displayName ?? 'Unknown User',
+        userCredential.user!.photoURL ?? '',
+      );
 
       // Return the signed-in user
       return userCredential.user;
     } catch (e) {
-      print("Error during Google Sign-In: $e");
+      //print("Error during Google Sign-In: $e");
       return null;
     }
   }
 
-  Future<void> storeUserSession(String userId) async {
-    await SessionManager.storeUserSession(userId);
-  }
+  // Future<void> storeUserSession(String userId) async {
+  //   await SessionManager.storeUserSession(userId,
+  //
+  //   );
+  // }
 
   Future<void> handleSignOut(BuildContext context) async {
     final GoogleSignIn googleSignIn = GoogleSignIn();

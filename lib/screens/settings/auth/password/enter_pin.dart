@@ -1,8 +1,10 @@
 import 'package:calender_app/auth/auth_provider.dart';
 import 'package:calender_app/hive/cycle_model.dart';
+import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/flow2/home_flow2.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/homeScreen.dart';
+import 'package:calender_app/screens/partner_mode/partner_flow/home_partner_flow.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 
+import 'package:calender_app/provider/partner_provider.dart';
 class EnterPinScreen extends StatelessWidget {
   final TextEditingController pinController = TextEditingController();
 
@@ -37,6 +40,9 @@ class EnterPinScreen extends StatelessWidget {
                 TextField(
                   controller: pinController,
                   obscureText: true,
+                  keyboardType: TextInputType.number,
+
+                  maxLength: 4,
                   decoration: InputDecoration(
                     labelText: 'PIN',
                     filled: true,
@@ -45,6 +51,8 @@ class EnterPinScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
+                    counterText: '',  // Hides the max length counter
+
                   ),
                 ),
                 SizedBox(height: 20),
@@ -53,13 +61,22 @@ class EnterPinScreen extends StatelessWidget {
                   onPressed: () async {
                     final authProvider = Provider.of<AuthProvider>(context, listen: false);
                     if (pinController.text == authProvider.pin) {
+                      bool hasPartnerCycleData = await checkIfPartnerCycleDataExists();
                       bool hasCycleData = await checkIfCycleDataExists();
                       if (hasCycleData) {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => Flow2Page()),
                         );
-                      } else {
+                      }
+                     else if (hasPartnerCycleData) {
+                        final partnerProvider = Provider.of<PartnerProvider>(context, listen: false);
+                        await partnerProvider.listenForCycleUpdates();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => HomePartnerFlow()),
+                        );}
+                      else {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -85,5 +102,16 @@ class EnterPinScreen extends StatelessWidget {
     CycleData? cycleData = box.get('cycle'); // Retrieve the cycle data
     return cycleData != null; // Return true if data exists, otherwise false
   }
+  Future<bool> checkIfPartnerCycleDataExists() async {
+    try {
+      var box = Hive.box('partnerCycleData');
+      var partnerCycleData = box.get('partnerData');
+      return partnerCycleData != null;
+    } catch (e) {
+      // print("Error accessing partnerCycleData box: $e");
+      return false;
+    }
+  }
+
 
 }

@@ -1,3 +1,4 @@
+import 'package:calender_app/firebase/analytics/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../provider/moods_symptoms_provider.dart';
@@ -13,10 +14,15 @@ class Symptoms extends StatefulWidget {
 class _SymptomsState extends State<Symptoms> {
   late Future<List<CategoryItem>> _symptomList;
 
+  DateTime _startTime = DateTime.now(); // Track screen time start
+
   @override
   void initState() {
     super.initState();
     _symptomList = _loadAllSymptoms();
+    _startTime = DateTime.now();
+    AnalyticsService.logScreenView("Symptoms Screen");
+    // Add this line in initState
   }
 
   // Load symptoms from multiple folders
@@ -102,7 +108,12 @@ class _SymptomsState extends State<Symptoms> {
       ),
     );
   }
-
+  @override
+  void dispose() {
+    int duration = DateTime.now().difference(_startTime).inSeconds;
+    AnalyticsService.logScreenTime("Symptoms Screen", duration);
+    super.dispose();
+  }
   Widget _buildCategory(BuildContext context, String title, String folderName) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

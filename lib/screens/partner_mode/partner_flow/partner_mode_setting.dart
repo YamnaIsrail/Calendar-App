@@ -8,6 +8,7 @@ import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:calender_app/provider/partner_provider.dart';
 class PartnerModeSetting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -92,15 +93,7 @@ class PartnerModeSetting extends StatelessWidget {
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.read<PartnerProvider>().listenForCycleUpdates(); // Call the sync method
-                  },
-                  child: Text('Sync with Partner Data'),
-                ),
-              ),
+
             ],
           ),
         ),

@@ -121,7 +121,7 @@ class PregnancyProgressPainter extends CustomPainter {
     final backgroundPaint = Paint()
       ..color = const Color(0xFFE0E0E0)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 15;
+      ..strokeWidth = 20;
     canvas.drawCircle(center, radius, backgroundPaint);
 
     // Progress Arc

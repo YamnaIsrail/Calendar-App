@@ -1,6 +1,7 @@
 import 'package:calender_app/firebase/user_session.dart';
 import 'package:calender_app/hive/cycle_model.dart';
 import 'package:calender_app/provider/date_day_format.dart';
+import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:provider/provider.dart'; // Import Provider package// Import the settings model
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/globals.dart';
@@ -16,108 +17,110 @@ import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../auth/auth_model.dart';
+import '../../auth/auth_services.dart';
 import '../../hive/notes_model.dart';
 import '../../hive/timeline_entry.dart';
 import '../../notifications/notification_model.dart';
 import 'backup_restore/transfer_data_page.dart';
+import 'package:intl/intl.dart'; // Add this at the top
 
-class DialogHelper {
+  class DialogHelper {
 
 
-  static void showRatingPopup(BuildContext context, ValueChanged<int> onRatingSelected) {
-    int _rating = 0; // Default rating is 0
+    static void showRatingPopup(BuildContext context, ValueChanged<int> onRatingSelected) {
+      int _rating = 0; // Default rating is 0
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "We are working hard for a better user experience. "
-                    "We would greatly appreciate it if you can rate us.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 10),
-              Text(
-                "Tap the star to rate it.".toUpperCase(),
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 10),
-              StatefulBuilder(
-                builder: (BuildContext context, setState) {
-                  return Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          5,
-                              (index) => GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _rating = index + 1;
-                              });
-                              onRatingSelected(_rating);
-                            },
-                            child: Icon(
-                              _rating > index ? Icons.star : Icons.star_border,
-                              color: Colors.amber,
-                              size: 40,
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "We are working hard for a better user experience. "
+                      "We would greatly appreciate it if you can rate us.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Tap the star to rate it.".toUpperCase(),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 10),
+                StatefulBuilder(
+                  builder: (BuildContext context, setState) {
+                    return Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            5,
+                                (index) => GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _rating = index + 1;
+                                });
+                                onRatingSelected(_rating);
+                              },
+                              child: Icon(
+                                _rating > index ? Icons.star : Icons.star_border,
+                                color: Colors.amber,
+                                size: 40,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Current Rating: $_rating',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  );
+                        SizedBox(height: 10),
+                        Text(
+                          'Current Rating: $_rating',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  if (_rating <= 3) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Thank you for your feedback! We will continue to improve the app."),
+                          duration: Duration(seconds: 3),
+                        ),
+                    );
+                    // Navigator.of(context).pop(); // Close the popup
+
+                  } else {
+                    // Redirect to the Play Store for ratings 4 or 5
+                    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+                    final googlePlayUri = Uri.parse(
+                      'https://play.google.com/store/apps/details?id=${packageInfo.packageName}&hl=en',
+                    );
+                    if (await canLaunchUrl(googlePlayUri)) {
+                      await launchUrl(googlePlayUri);
+                    } else {
+                      throw 'Could not launch $googlePlayUri';
+                    }
+                  }
+
+                  Navigator.of(context).pop(); // Close the popup
                 },
+                child: Text(
+                  "Submit",
+                  style: TextStyle(color: Colors.blue),
+                ),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                if (_rating <= 3) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("Thank you for your feedback! We will continue to improve the app."),
-                        duration: Duration(seconds: 3),
-                      ),
-                  );
-                  // Navigator.of(context).pop(); // Close the popup
-
-                } else {
-                  // Redirect to the Play Store for ratings 4 or 5
-                  PackageInfo packageInfo = await PackageInfo.fromPlatform();
-                  final googlePlayUri = Uri.parse(
-                    'https://play.google.com/store/apps/details?id=${packageInfo.packageName}&hl=en',
-                  );
-                  if (await canLaunchUrl(googlePlayUri)) {
-                    await launchUrl(googlePlayUri);
-                  } else {
-                    throw 'Could not launch $googlePlayUri';
-                  }
-                }
-
-                Navigator.of(context).pop(); // Close the popup
-              },
-              child: Text(
-                "Submit",
-                style: TextStyle(color: Colors.blue),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+          );
+        },
+      );
+    }
 
 
   static void showConfirmPopup(BuildContext context, VoidCallback onDelete) {
@@ -177,145 +180,159 @@ class DialogHelper {
     await Hive.deleteFromDisk();
   }
 
-  static void showSignOutPopup(BuildContext context, VoidCallback onSignOut) async {
-    // Check if the user is signed in using FirebaseAuth
-    User? user = FirebaseAuth.instance.currentUser;
+    static void showSignOutPopup(BuildContext context, VoidCallback onSignOut)
+    async {
+      bool isLoggedIn = await SessionManager.checkUserLoginStatus();
+      if (!isLoggedIn) {
+        // If no user is signed in, show a message indicating that the user is not signed in
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("You are not signed in."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return; // Exit the method early
+      }
 
-    if (user == null) {
-      // If no user is signed in, show a message indicating that the user is not signed in
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("You are not signed in."),
-          backgroundColor: Colors.red,
-        ),
+      // If the user is signed in, show the sign-out confirmation dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Are You Sure You Want To Sign Out Of Your Account?",
+              style: TextStyle(fontSize: 16),),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      onPressed: () async {
+                        // Sign out logic
+                        await _googleSignIn.signOut(); // Sign out from Google
+                        await SessionManager.logoutUser();
+                        await FirebaseAuth.instance.signOut();
+                        onSignOut();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Successfully signed out."),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> SettingsPage()));
+
+                      },
+                      backgroundColor: primaryColor,
+                      text: 'Sign Out',
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: CustomButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      backgroundColor: secondaryColor,
+                      textColor: Colors.black,
+                      text: 'Cancel',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       );
-      return; // Exit the method early
     }
 
-    // If the user is signed in, show the sign-out confirmation dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Are You Sure You Want To Sign Out Of Your Account?"),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: CustomButton(
-                    onPressed: () async {
-                      // Sign out logic
-                      await _googleSignIn.signOut(); // Sign out from Google
-                      await SessionManager.logoutUser(); // Your custom logout logic
-                      Navigator.of(context).pop();
-                      onSignOut();
-
-                      // Show Snackbar indicating successful sign-out
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Successfully signed out."),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    },
-                    backgroundColor: primaryColor,
-                    text: 'Sign Out',
-                  ),
-                ),
-                SizedBox(width: 5),
-                Expanded(
-                  child: CustomButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    backgroundColor: secondaryColor,
-                    textColor: Colors.black,
-                    text: 'Cancel',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  static void showDeleteAccountPopup(BuildContext context, VoidCallback onDelete) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Delete Account?"),
-          content: Text(
-            "All your cloud and local data will be completely cleared.",
+    static Future<void> showDeleteAccountPopup(BuildContext context,
+        VoidCallback onDelete) async  {
+      bool isLoggedIn = await SessionManager.checkUserLoginStatus();
+      if (!isLoggedIn) {
+        // If no user is signed in, show a message indicating that the user is not signed in
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("You are not signed in."),
+            backgroundColor: Colors.red,
           ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: CustomButton(
-                    onPressed: () async {
-                      Navigator.of(context).pop();
-                      await deleteUserAccount(); // Perform account deletion
-                      onDelete();
-
-                      // Automatically sign out after account deletion
-                      await SessionManager.logoutUser();
-
-                      // Show Snackbar indicating successful account deletion
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Your account has been deleted and logged out."),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    },
-                    backgroundColor: primaryColor,
-                    text: 'Delete',
-                  ),
-                ),
-                SizedBox(width: 5),
-                Expanded(
-                  child: CustomButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    backgroundColor: secondaryColor,
-                    text: 'Keep',
-                    textColor: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ],
         );
-      },
-    );
-  }
+        return; // Exit the method early
+      }
+
+      // If the user is signed in, show the sign-out confirmation dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Are You Sure You Want To Delete Your Account?",
+              style: TextStyle(fontSize: 16),),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      onPressed: () async {
+                        // Sign out logic
+                        await SessionManager.logoutUser();
+                        await deleteUserAccount(); // Perform account deletion
+                        onDelete();
+
+                        await _googleSignIn.signOut(); // Sign out from Google
+                        await FirebaseAuth.instance.signOut();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Account Deleted."),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> SettingsPage()));
+
+                      },
+                      backgroundColor: primaryColor,
+                      text: 'Delete',
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: CustomButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      backgroundColor: secondaryColor,
+                      textColor: Colors.black,
+                      text: 'Cancel',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+    }
 
   /// Deletes user's account data from Firebase & Hive
   static Future<void> deleteUserAccount() async {
     try {
       String? userId = await SessionManager.getUserId();
       if (userId != null) {
-        // Firestore logic: Delete user data from Firebase
         final userDocRef = FirebaseFirestore.instance.collection('users').doc(
             userId);
 
-        await userDocRef.delete();
-        print("User's Firestore account deleted.");
+  final userCycleRef = FirebaseFirestore.instance.collection('cycles').doc(
+            userId);
 
+        await userDocRef.delete();
+        await userCycleRef.delete();
         // Also clear session and local Hive data
         await SessionManager.logoutUser();
         final box = await Hive.openBox('user_session');
         await box.clear();
-        print("Local session cleared.");
+        //print("Local session cleared.");
       }
     } catch (e) {
-      print("Error during account deletion: $e");
+      //print("Error during account deletion: $e");
     }
   }
 
@@ -572,89 +589,51 @@ class DialogHelper {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Transfer data to new device"),
+          title: Text("Transfer data"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Android button
-                  GestureDetector(
-                    onTap: ()  {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TransferDataPage(transferTo: "Android"),
-                        ),
-                      );
-                      },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xffE893FF),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text("Transfer to Android"),
-                          Icon(Icons.android_rounded, color: Colors.white),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // iOS button
-                  GestureDetector(
-                    onTap: ()  {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TransferDataPage(transferTo: "Ios"),
-                        ),
-                      );
-                    },
+           mainAxisAlignment: MainAxisAlignment.center,
+           children: [
+             GestureDetector(
+               onTap: () {
+                 Navigator.push(
+                   context,
+                   MaterialPageRoute(
+                     builder: (context) => TransferDataPage(transferTo: "Android"),
+                   ),
+                 );
+               },
+               child: Container(
+                 decoration: BoxDecoration(
+                   color: Color(0xffE893FF),
+                   borderRadius: BorderRadius.circular(16),
+                   boxShadow: [
+                     BoxShadow(
+                       color: Colors.grey.withOpacity(0.3),
+                       spreadRadius: 2,
+                       blurRadius: 5,
+                       offset: Offset(0, 3),
+                     ),
+                   ],
+                 ),
+                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                 child: Column(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   crossAxisAlignment: CrossAxisAlignment.end,
+                   children: [
+                     Text("Transfer to Android"),
+                     Icon(Icons.android_rounded, color: Colors.white),
+                   ],
+                 ),
+               ),
+             ),
 
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                      decoration: BoxDecoration(
-                        color: Color(0xff939AFF),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text("Transfer to iOS"),
-                          Icon(Icons.apple, color: Colors.white),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              ListTile(
+             SizedBox(height: 10),
+
+             ListTile(
                 title: Text("Cloud storage"),
                 leading: Icon(Icons.cloud, color: Colors.blue),
-                onTap: ()  {
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -662,22 +641,8 @@ class DialogHelper {
                     ),
                   );
                 },
-
               ),
-              ListTile(
-                title: Text("Email attachment"),
-                leading: Icon(Icons.mail, color: Colors.black),
-                onTap: ()  {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TransferDataPage(transferTo: "Email"),
-                    ),
-                  );
-                },
-
-              ),
-            ],
+               ],
           ),
           actions: [
             TextButton(
@@ -688,8 +653,8 @@ class DialogHelper {
         );
       },
     );
-  }
 
+  }
 
 
 
@@ -700,7 +665,7 @@ class DialogHelper {
 
     if (userId != null) {
       // User is signed in
-      GoogleSignInAccount? currentUser = await GoogleSignIn().signInSilently();  // Check if signed in silently
+      GoogleSignInAccount? currentUser = await GoogleSignIn().signInSilently();
       showDialog(
         context: context,
         builder: (context) {
@@ -714,10 +679,10 @@ class DialogHelper {
                   Text("Email: ${currentUser.email}"),
                   ElevatedButton(
                     onPressed: () async {
-                      await _googleSignIn.signOut();  // Log out from Google
-                      await SessionManager.logoutUser();  // Clear session
-                      Navigator.pop(context);  // Close the dialog
-                      showSignIn(context);  // Show sign-in dialog again
+                      await _googleSignIn.signOut();
+                      await SessionManager.logoutUser();
+                      Navigator.pop(context);
+                      showSignIn(context);
                     },
                     child: Text("Sign Out"),
                   ),
@@ -734,7 +699,6 @@ class DialogHelper {
   }
 
   static void showSignIn(BuildContext context) {
-    // Show the sign-in dialog
     showDialog(
       context: context,
       builder: (context) {
@@ -748,28 +712,40 @@ class DialogHelper {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    // Check network connectivity using dart:io
+                    // Show loading indicator while checking internet connection
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 20),
+                            Text("Please wait..."),
+                          ],
+                        ),
+                      ),
+                    );
+
                     final result = await InternetAddress.lookup('google.com');
                     if (result.isEmpty || result[0].rawAddress.isEmpty) {
                       throw Exception("No internet connection. Please try again.");
                     }
 
-
                     await _googleSignIn.signIn();
-                    Navigator.pop(context); // Close the dialog
+                    Navigator.pop(context); // Close loading dialog
                     showSignInStatus(context);
 
-                    } catch (error) {
+                  } catch (error) {
+                    Navigator.pop(context); // Close loading dialog
                     String errorMessage;
 
-                    // Handle different error scenarios
                     if (error is Exception) {
                       errorMessage = error.toString().replaceAll("Exception: ", "");
                     } else {
                       errorMessage = "An unexpected error occurred. Please try again.";
                     }
 
-                    // Show error message to user
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(errorMessage),
@@ -795,8 +771,7 @@ class DialogHelper {
 
 
 
-
-    //other backups
+  //other backups
   static void showOtherBackupMethods(BuildContext context) {
     showDialog(
       context: context,
@@ -1050,7 +1025,7 @@ class ShowTransferDialog {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data transfer successful')));
       Navigator.pop(context);
     } catch (error) {
-      print('Data Transfer Error: $error');
+      ////print('Data Transfer Error: $error');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data transfer failed. Please try again.')));
     } finally {
       _isLoading = false;
@@ -1079,7 +1054,10 @@ class ShowTransferDialog {
           final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
-          await SessionManager.storeUserSession(userCredential.user?.uid ?? '');
+          await SessionManager.storeUserSession(userCredential.user?.uid ?? '',
+            userCredential.user!.displayName ?? 'Unknown User',
+            userCredential.user!.photoURL ?? '',
+          );
 
           // After successful Google Sign-In, proceed with data transfer
           await _handleDataTransfer(context);
@@ -1090,7 +1068,7 @@ class ShowTransferDialog {
           );
         }
       } catch (error) {
-        print('Google Sign-In Error: $error');
+        ////print('Google Sign-In Error: $error');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Google Sign-In failed. Please try again.')),
         );
@@ -1130,27 +1108,6 @@ class ShowTransferDialog {
   }
 }
 
-
-  // void showLoginDialog(BuildContext context) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text("Login Required"),
-  //         content: Text("Please log in to access your cycle data."),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop(); // Close dialog
-  //               // Redirect user to login screen or trigger login flow
-  //             },
-  //             child: Text("Log In"),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   void showCycleUpdateDialog(BuildContext context, CycleProvider provider, int? fetchedCycleLength, int? fetchedPeriodLength, DateTime? fetchedLastPeriodStart) {
     showDialog(
@@ -1238,77 +1195,70 @@ class ShowTransferDialog {
 
 class DataHandler {
   static Future<void> handleDataLost(BuildContext context) async {
-    // Check if the user is logged in
-    User? user = FirebaseAuth.instance.currentUser;
+    User? user = FirebaseAuth.instance.currentUser ;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("You are not signed in")),
-      );
-
-    } else {
-      // If logged in, proceed with data fetching
-      await retrieveCycleDataFromFirestore(context);
+      _showSnackBar(context, "You are not signed in");
+      return;
     }
-
+    await retrieveCycleDataFromFirestore(context);
   }
 
   static Future<void> retrieveCycleDataFromFirestore(BuildContext context) async {
     try {
       String? userId = await SessionManager.getUserId();
-
       if (userId == null) {
         showLoginDialog(context);
         return;
       }
 
       var data = await FirebaseFirestore.instance.collection('cycles').doc(userId).get();
-
       if (data.exists) {
-        // Retrieve data from Firestore with type casting
-        int? fetchedCycleLength = data['cycleLength'] as int?;
-        int? fetchedPeriodLength = data['periodLength'] as int?;
-        DateTime? fetchedLastPeriodStart = data['cycleStartDate'] != null
-            ? DateTime.parse(data['cycleStartDate'] as String)
-            : null;
-
-        List<Map<String, String>> restoredPastPeriods = [];
-        if (data['pastPeriods'] != null) {
-          List<dynamic> pastPeriodsFromFirestore = data['pastPeriods'] as List<dynamic>;
-          for (var item in pastPeriodsFromFirestore) {
-            if (item is Map<String, dynamic>) {
-              String startDate = item['startDate'] ?? '';
-              String endDate = item['endDate'] ?? '';
-              restoredPastPeriods.add({'startDate': startDate, 'endDate': endDate});
-            }
-          }
-        }
-
-        // Check if widget is still mounted before showing SnackBar
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Data found: Cycle Length: $fetchedCycleLength, Period Length: $fetchedPeriodLength"),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-
-        final provider = Provider.of<CycleProvider>(context, listen: false);
-        await mergeCycleData(context, provider, fetchedCycleLength, fetchedPeriodLength, fetchedLastPeriodStart, restoredPastPeriods);
+        await _processFetchedData(context, data);
       } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("No cycle data found for your account.")),
-          );
-        }
+        _showSnackBar(context, "No cycle data found for your account.");
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("An error occurred while fetching data: $e")),
-        );
+      _showSnackBar(context, "An error occurred while fetching data: $e");
+    }
+  }
+
+  static Future<void> _processFetchedData(BuildContext context,
+      DocumentSnapshot data) async {
+    int? fetchedCycleLength = data['cycleLength'] as int?;
+    int? fetchedPeriodLength = data['periodLength'] as int?;
+    DateTime? fetchedLastPeriodStart = data['cycleStartDate'] != null
+        ? DateTime.parse(data['cycleStartDate'] as String)
+        : null;
+
+    List<Map<String, String>> restoredPastPeriods = _getRestoredPastPeriods(data['pastPeriods']);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Data found: Cycle Length: $fetchedCycleLength, Period Length: $fetchedPeriodLength"), backgroundColor: Colors.green),
+      );
+    }
+
+    final provider = Provider.of<CycleProvider>(context, listen: false);
+    await mergeCycleData(context, provider, fetchedCycleLength, fetchedPeriodLength, fetchedLastPeriodStart, restoredPastPeriods);
+  }
+
+  static List<Map<String, String>> _getRestoredPastPeriods(dynamic pastPeriodsData) {
+    List<Map<String, String>> restoredPastPeriods = [];
+    if (pastPeriodsData != null) {
+      List<dynamic> pastPeriodsFromFirestore = pastPeriodsData as List<dynamic>;
+      for (var item in pastPeriodsFromFirestore) {
+        if (item is Map<String, dynamic>) {
+          String startDate = item['startDate'] ?? '';
+          String endDate = item['endDate'] ?? '';
+          restoredPastPeriods.add({'startDate': startDate, 'endDate': endDate});
+        }
       }
     }
+    return restoredPastPeriods;
+  }
+
+  static void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   static Future<void> mergeCycleData(
@@ -1331,43 +1281,48 @@ class DataHandler {
       builder: (context) {
         return AlertDialog(
           title: Text("Merge Cycle Data"),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Fetched Cycle Length: $fetchedCycleLength\n"
-                  "Fetched Period Length: $fetchedPeriodLength\n"
-                  "Fetched Last Period Start: ${fetchedLastPeriodStart?.toIso8601String()}\n"),
-              SizedBox(height: 10),
-              Text("Fetched Past Periods:"),
-              // Display fetched past periods if available
-              if (restoredPastPeriods.isNotEmpty)
-                ...restoredPastPeriods.map((period) {
-                  return Text("Start Date: ${period['startDate']}, End Date: ${period['endDate']}");
-                }).toList(),
-              if (restoredPastPeriods.isEmpty) Text("No past periods available."),
-              SizedBox(height: 10),
-              Text("Do you want to merge or use the fetched past periods data?"),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Fetched Cycle Length: $fetchedCycleLength\n"
+                    "Fetched Period Length: $fetchedPeriodLength\n"
+
+            "Fetched Last Period Start: ${fetchedLastPeriodStart != null ? DateFormat('yyyy-MM-dd').format(fetchedLastPeriodStart) : "N/A"}\n"),
+
+               SizedBox(height: 10),
+                Text("Fetched Past Periods:"),
+                if (restoredPastPeriods.isNotEmpty)
+                  ...restoredPastPeriods.map((period) {
+                    return
+
+                     Text("Start: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(period['startDate']!))}, "
+                        "End: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(period['endDate']!))}");
+
+                      }).toList(),
+                if (restoredPastPeriods.isEmpty) Text("No past periods available."),
+                SizedBox(height: 10),
+                Text("Do you want to merge or use the fetched past periods data?"),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                // Update provider with the current data
                 provider.MergeCycleData(
                   cycleLength: currentCycleLength,
                   periodLength: currentPeriodLength,
                   lastPeriodStart: currentLastPeriodStart,
                   pastPeriods: currentPastPeriods,
                 );
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Current data retained.")));
-                Navigator.pop(context); // Close dialog
+                _showSnackBar(context, "Current data retained.");
+                Navigator.pop(context);
               },
               child: Text("Use Current Data"),
             ),
             TextButton(
               onPressed: () {
-                // Use fetched data
                 provider.MergeCycleData(
                   cycleLength: fetchedCycleLength ?? currentCycleLength,
                   periodLength: fetchedPeriodLength ?? currentPeriodLength,
@@ -1376,8 +1331,8 @@ class DataHandler {
                       : currentLastPeriodStart,
                   pastPeriods: restoredPastPeriods,
                 );
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Fetched data retained.")));
-                Navigator.pop(context); // Close dialog
+                _showSnackBar(context, "Fetched data retained.");
+                Navigator.pop(context);
               },
               child: Text("Use Fetched Data"),
             ),
@@ -1401,9 +1356,10 @@ class DataHandler {
           actions: [
             TextButton(
               onPressed: () async {
+                await AuthService().signInWithGoogle(context, (bool isLoading) {
 
-                  await handleSignIn(context);
-                  signInSuccess = true;  // Set success flag
+                });
+
 
                   Navigator.of(context).pop();
               },
@@ -1424,27 +1380,41 @@ class DataHandler {
   // Handle user sign-in
   static Future<void> handleSignIn(BuildContext context) async {
     final GoogleSignIn googleSignIn = GoogleSignIn();
+
     try {
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         return; // User canceled sign-in
       }
+
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
 
-      String? userId = FirebaseAuth.instance.currentUser?.uid;
-      print("User ID: $userId");  // Debugging line
-      if (userId != null) {
-        await SessionManager.storeUserSession(userId);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed in successfully!")));
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        ////print("User ID: ${user.uid}"); // Debugging line
+
+        // Store user session
+        await SessionManager.storeUserSession(
+          user.uid,
+          user.displayName ?? 'Unknown User',
+          user.photoURL ?? '',
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Signed in successfully!")),
+        );
       }
     } catch (e) {
-      print("Sign-in error: $e");  // Debugging line
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error during sign-in: $e")));
+      ////print("Sign-in error: $e"); // Debugging line
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error during sign-in: $e")),
+      );
     }
   }
 }

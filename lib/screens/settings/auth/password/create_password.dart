@@ -110,7 +110,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
               padding: EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(),
-                color: Colors.white,
+             //   color: Colors.white,
               ),
               child: DropdownButton<String>(
                 value: _selectedSecurityQuestion.isEmpty ? null : _selectedSecurityQuestion,

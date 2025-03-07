@@ -20,9 +20,9 @@ class ToggleStateService {
   // Load the state of the toggles
   static Future<Map<String, bool>> loadToggleState() async {
     final box = await Hive.openBox('toggleBox');
-    bool isPeriodReminderOn = box.get(periodReminderKey, defaultValue: false);
-    bool isFertilityReminderOn = box.get(fertilityReminderKey, defaultValue: false);
-    bool isLutealReminderOn = box.get(lutealReminderKey, defaultValue: false);
+    bool isPeriodReminderOn = box.get(periodReminderKey, defaultValue: true);
+    bool isFertilityReminderOn = box.get(fertilityReminderKey, defaultValue: true);
+    bool isLutealReminderOn = box.get(lutealReminderKey, defaultValue: true);
 
     return {
       periodReminderKey: isPeriodReminderOn,

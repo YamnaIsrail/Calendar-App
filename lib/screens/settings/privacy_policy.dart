@@ -14,6 +14,7 @@ class PrivacyPolicyPage extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,19 +104,7 @@ By using our app, you consent to the collection and use of your personal informa
 ''',
               style: TextStyle(fontSize: 16),
             ),
-            Text(
-              "7. Contact Us:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '''If you have any questions or concerns about this Privacy Policy or our practices, please contact us at:
-- Email: support@[AppName].com
-- Address: [App Company Address]
 
-Thank you for trusting us with your health data. Your privacy is our priority.''',
-              style: TextStyle(fontSize: 16),
-            ),
           ],
         ),
       ),

@@ -23,14 +23,24 @@ import 'package:hive/hive.dart';
 
     DateTime? get dueDate => gestationStart!.add(Duration(days: 280)); // 280 days after gestation start
 
-    // DateTime? get dueDate => _dueDate;
-
     List<String> get loggedSymptoms => _loggedSymptoms;
     int get gestationWeeks => _gestationStart == null ? 0 : daysSinceGestation ~/ 7;
 
     // Calculate remaining gestation days within the week
     int get gestationDays => _gestationStart == null ? 0 : daysSinceGestation % 7;
 
+    DateTime? get secondTrimesterStart {
+      if (gestationStart != null) {
+        return gestationStart!.add(Duration(days: 13*7)); // 13 weeks after gestation start
+      }
+      return null;
+    }
+    DateTime? get thirdTrimesterStart {
+      if (gestationStart != null) {
+        return gestationStart!.add(Duration(days: 27 * 7)); // 27 weeks as days, third trimester starts
+      }
+      return null;
+    }
     // int? get gestationWeeks => _gestationWeeks;
     // int? get gestationDays => _gestationDays;
 
@@ -88,7 +98,7 @@ import 'package:hive/hive.dart';
           }
         }
       } catch (e) {
-        print("Error fetching initial gestation data: $e");
+        // print("Error fetching initial gestation data: $e");
       }
     }
 

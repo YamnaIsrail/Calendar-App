@@ -21,13 +21,13 @@ class QuestionScreen3 extends StatefulWidget {
 }
 
 class _QuestionScreen3State extends State<QuestionScreen3> {
-  int selectedYear = 2024;
+  int selectedYear = 2025;
   int selectedMonthIndex = 0;
   int selectedDate = 1;
 
   @override
   Widget build(BuildContext context) {
-    List<String> years = List.generate(2, (index) => (2024 + index).toString());
+    List<String> years = List.generate(1, (index) => (2025 + index).toString());
     List<String> dates = List.generate(31, (index) => (index + 1).toString());
     List<String> months = [
       "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -73,7 +73,7 @@ class _QuestionScreen3State extends State<QuestionScreen3> {
                       unselectedColor: Colors.grey,
                       onSelectedItemChanged: (index) {
                         setState(() {
-                          selectedYear = 2024 + index;
+                          selectedYear = 2025 + index;
                         });
                       },
                     ),
@@ -116,11 +116,11 @@ class _QuestionScreen3State extends State<QuestionScreen3> {
               var box = await Hive.openBox<CycleData>('cycleData');
                await box.put('cycle', cycleData); // Save data with key 'cycle'
 
-              print("Saved cycle data: $cycleData");
+              // print("Saved cycle data: $cycleData");
               // Update the CycleProvider with this data
               Provider.of<CycleProvider>(context, listen: false).updateLastPeriodStart(lastPeriodStart);
 
-              print("Selected Date: $lastPeriodStart");
+              // print("Selected Date: $lastPeriodStart");
 
               // Navigate to the next screen
               Navigator.push(

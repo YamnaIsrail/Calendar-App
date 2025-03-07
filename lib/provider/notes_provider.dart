@@ -27,7 +27,7 @@ class NoteProvider extends ChangeNotifier {
           .map((note) => NoteWithDate(content: note.content, date: DateTime.now()))
           .toList();
     } catch (e) {
-      print("Error initializing Hive: $e"); // Log the error
+      // print("Error initializing Hive: $e"); // Log the error
     }
 
     notifyListeners(); // Notify listeners that initialization is complete

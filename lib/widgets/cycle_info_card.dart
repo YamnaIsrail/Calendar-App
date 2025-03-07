@@ -1,12 +1,67 @@
 
 import 'package:flutter/material.dart';
+import 'dart:async';
+
+class CustomProgressBar extends StatefulWidget {
+  final double progress; // Target progress value (0 to 100)
+
+  const CustomProgressBar({Key? key, required this.progress}) : super(key: key);
+
+  @override
+  _CustomProgressBarState createState() => _CustomProgressBarState();
+}
+
+
+class _CustomProgressBarState extends State<CustomProgressBar> {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 320,
+        height: 10,
+        decoration: BoxDecoration(
+          color: Color(0xffe6e5e5), // Background color
+          border: Border.all(color: Colors.grey, width: 0.5), // Border
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Stack(
+          children: [
+            Container(
+              width: (320 * widget.progress) / 100, // Progress width
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.pink, // Progress fill color
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            Center(
+              child: Text(
+                "${widget.progress.toInt()}%", // Display the progress value
+                style: TextStyle(
+                  color: widget.progress < 44
+                      ? Colors.pink
+                      : widget.progress > 54
+                      ? Colors.white
+                      : Colors.black,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 Widget buildCycleInfoCard({
   required String title,
   required String subtitle,
-  required String progressLabelStart,
-  required String progressLabelEnd,
-  required double progressValue,
+  String? progressLabelStart,
+  String? progressLabelEnd,
+  double? progressValue,
   required IconData icon,
 }) {
   return Container(
@@ -30,45 +85,46 @@ Widget buildCycleInfoCard({
             Icon(icon, color: Colors.pink, size: 24),
             SizedBox(width: 8),
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         SizedBox(height: 8),
-        Text(
-          subtitle,
-          style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-        ),
-        SizedBox(height: 16),
-        LinearProgressIndicator(
-          value: progressValue,
-          backgroundColor: Colors.grey[200],
-          color: Colors.pink,
-        ),
-        SizedBox(height: 8),
+        if (progressLabelStart != null)
+          CustomProgressBar(
+            progress: (progressValue ?? 0) * 100, // Convert to percentage
+          ),
+        if (progressLabelStart != null)
+          SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(progressLabelStart),
-            Text(progressLabelEnd),
+            if (progressLabelStart != null) Text(progressLabelStart),
+            if (progressLabelEnd != null) Text(progressLabelEnd),
           ],
         ),
       ],
     ),
   );
 }
-
-
 
 Widget buildPregnancyInfoCard({
   required String title,
   required String subtitle,
-  required String progressLabelStart,
-  required String progressLabelEnd,
-  required double progressValue,
   required IconData icon,
 }) {
   return Container(
@@ -104,21 +160,10 @@ Widget buildPregnancyInfoCard({
           subtitle,
           style: TextStyle(fontSize: 16, color: Colors.grey[700]),
         ),
-        SizedBox(height: 16),
-        LinearProgressIndicator(
-          value: progressValue,
-          backgroundColor: Colors.grey[200],
-          color: Colors.pink,
-        ),
-        SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(progressLabelStart),
-            Text(progressLabelEnd),
-          ],
-        ),
+
       ],
     ),
   );
 }
+
+

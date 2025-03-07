@@ -2,7 +2,6 @@
 import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
 import 'package:calender_app/widgets/contain.dart';
 import 'package:flutter/material.dart';
-
 class NoteSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -13,38 +12,27 @@ class NoteSection extends StatelessWidget {
 
       },
       child: CardContain(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Notes",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: Icon(Icons.arrow_forward_ios_rounded),
-                  onPressed: (){
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => Notes()));
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Notes",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8,),
 
-                  },
-                ),
-              ],
-            ),
-           TextButton(
-               onPressed: () {
-                 Navigator.push(
-                     context,
-                     MaterialPageRoute(
-                     builder: (context)=>Notes()
-                     )
-                 );
-               },
-               child:   Text("Enter your note here...")
-               )
-          ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.edit, color: Colors.grey,) ,
+                  SizedBox(width: 5,),
+                  Text("Write Something here", style: TextStyle(color: Colors.grey),),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
