@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:calender_app/main.dart';
-import 'package:workmanager/workmanager.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tz; // For initializing time zones
 import 'package:timezone/timezone.dart' as tz; // For TZDateTime and timezone manipulation
 import 'package:hive/hive.dart';
 
-//ID 100+ loop for water, 2 for backup, 3 for periods, 4 for fertility window, 5 for Luteal Phase,
+//ID 100+ loop for water, 2 for backup, 7-12 for periods, 13 for fertility window, 14 for Luteal Phase,
 class NotificationService {
   static Future<void> _createNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -45,9 +44,35 @@ class NotificationService {
     // Request notification permissions
     await requestNotificationPermission();
   }
+  static Future<void> rscheduleNotification(
+      int id, String title, String body, DateTime scheduledTime) async {
+
+
+    await flutterLocalNotification.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledTime, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'your_channel_id', // Use the same channel ID
+          'Your Channel Name', // Use the same channel name
+          channelDescription: 'This channel is used for notifications.',
+          importance: Importance.max,
+          priority: Priority.max,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      // Remove this line to avoid daily repetition
+      // matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
 
   static Future<void> scheduleNotification(
-      int id, String title, String body, DateTime scheduledTime) async {
+      int id, String title, String body,
+      DateTime scheduledTime) async {
+
     await flutterLocalNotification.zonedSchedule(
       id,
       title,
@@ -93,7 +118,8 @@ class NotificationService {
 
 
   static Future<void> cancelScheduledTask(int notificationId) async {
-    await flutterLocalNotification.cancel(notificationId); // Cancel the notification using the ID
+    await flutterLocalNotification.cancel(notificationId);
+     // Cancel the notification using the ID
   }
 
   static Future<void> onDidReceiveNotification(NotificationResponse response) async {
@@ -131,16 +157,4 @@ class NotificationService {
   }
 
 
-}
-
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    if (inputData != null) {
-      String title = inputData['title'] ?? "Default Title";
-      String body = inputData['body'] ?? "Default Body";
-
-      await NotificationService.showInstantNotification(title, body);
-    }
-    return Future.value(true);
-  });
 }
