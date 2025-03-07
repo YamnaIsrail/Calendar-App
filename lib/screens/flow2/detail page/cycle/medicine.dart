@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import '../../../../firebase/analytics/analytics_service.dart';
 import '../../../../widgets/buttons.dart';
 import 'medicine_reminder_form.dart';
 
@@ -25,12 +26,25 @@ class _ContraceptivePageState extends State<ContraceptivePage> {
 
   List<String> selectedMedicines = [];
   Map<String, bool> notificationsStatus = {};
+  DateTime? _startTime;
 
   @override
   void initState() {
     super.initState();
+    _startTime = DateTime.now(); // Record the entry time
+    AnalyticsService.logScreenView("Medicine Reminder");
     _loadMedicines(); // Load saved medicines from Hive
   }
+
+  @override
+  void dispose() {
+    if (_startTime != null) {
+      int duration = DateTime.now().difference(_startTime!).inSeconds;
+      AnalyticsService.logScreenTime("Medicine Reminder", duration);
+    }
+    super.dispose();
+  }
+
 
   Future<void> _loadMedicines() async {
     var box = await Hive.openBox<List<String>>('medicinesBox');

@@ -1,4 +1,4 @@
-
+import 'package:calender_app/firebase/analytics/analytics_service.dart';
 import 'package:calender_app/provider/moods_symptoms_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/intercourse.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +54,9 @@ class CategorySection extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
+        AnalyticsService.logEvent("navigate_to_$targetPage", parameters: {
+          "from_screen": "My Cycle",
+        });
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => targetPage),
@@ -87,6 +90,9 @@ class CategorySection extends StatelessWidget {
                 ),
                 GestureDetector(
                   onTap: () {
+                    AnalyticsService.logEvent("navigate_to_$targetPage", parameters: {
+                      "from_screen": "My Cycle",
+                    });
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => targetPage),

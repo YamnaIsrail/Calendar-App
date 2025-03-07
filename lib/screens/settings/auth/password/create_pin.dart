@@ -1,6 +1,5 @@
 import 'package:calender_app/auth/auth_provider.dart';
 import 'package:calender_app/screens/globals.dart';
-import 'package:calender_app/screens/settings/auth/password/enter_pin.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +13,7 @@ class CreatePinScreen extends StatefulWidget {
 
 class _CreatePinScreenState extends State<CreatePinScreen> {
   final List<TextEditingController> _controllers = List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   String _pin = "";
   bool _isPinValid = true;
 
@@ -21,27 +21,23 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   void _submitPin() {
     _pin = _controllers.map((controller) => controller.text).join();
     if (_pin.length != 4) {
-      setState(() {
-        _isPinValid = false; // PIN is invalid
-      });
+      setState(() => _isPinValid = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("PIN must be 4 digits")),
       );
     } else {
-      setState(() {
-        _isPinValid = true;
-      });
-      // If valid,
-
+      setState(() => _isPinValid = true);
+      Provider.of<AuthProvider>(context, listen: false).savePin(_pin);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("PIN Saved")),
+        SnackBar(content: Text("PIN Saved Successfully")),
       );
+
+      Navigator.pop(context);
     }
   }
 
   // Function to handle fingerprint authentication
   Future<void> _authenticateWithFingerprint() async {
-    // Assuming you have the LocalAuthentication plugin set up
     final LocalAuthentication _auth = LocalAuthentication();
     bool authenticated = await _auth.authenticate(
       localizedReason: 'Please authenticate to proceed',
@@ -51,19 +47,21 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
         biometricOnly: true,
       ),
     );
-    if (authenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Fingerprint authentication successful")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Fingerprint authentication failed")),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(authenticated ? "Fingerprint authentication successful" : "Fingerprint authentication failed")),
+    );
   }
 
-  // Function to handle 'Forgot PIN' action
-
+  @override
+  void dispose() {
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    for (var focusNode in _focusNodes) {
+      focusNode.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +74,6 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
           centerTitle: true,
         ),
         body: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -88,12 +85,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
               SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildPinField(0),
-                  _buildPinField(1),
-                  _buildPinField(2),
-                  _buildPinField(3),
-                ],
+                children: List.generate(4, (index) => _buildPinField(index)),
               ),
               SizedBox(height: 20),
               if (!_isPinValid)
@@ -101,22 +93,12 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                   'PIN must be 4 digits',
                   style: TextStyle(color: Colors.red),
                 ),
-              SizedBox(height: 20),
-
               SizedBox(height: 30),
               CustomButton(
-                onPressed: () {
-                  if (_pin.length == 4) {
-                    Provider.of<AuthProvider>(context, listen: false).savePin(_pin);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("PIN saved successfully")));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("PIN must be 4 digits")));
-                  }
-                },
+                onPressed: _submitPin,
                 text: 'Save',
                 backgroundColor: primaryColor,
               ),
-
             ],
           ),
         ),
@@ -124,17 +106,26 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
     );
   }
 
-  // Pin input field widget
+  // Pin input field widget with focus movement logic
   Widget _buildPinField(int index) {
     return Container(
       width: 50,
       child: TextField(
-        controller: _controllers[index], // Using the corresponding controller
+        controller: _controllers[index],
+        focusNode: _focusNodes[index],
         onChanged: (value) {
           setState(() {
-            // Ensure PIN is updated as user types
             _pin = _controllers.map((controller) => controller.text).join();
           });
+
+          // Move to next field if filled
+          if (value.length == 1 && index < 3) {
+            FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+          }
+          // Move to previous field on backspace
+          else if (value.isEmpty && index > 0) {
+            FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
+          }
         },
         obscureText: true,
         textAlign: TextAlign.center,

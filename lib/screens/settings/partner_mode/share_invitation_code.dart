@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:hive/hive.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:share_plus/share_plus.dart';
@@ -19,6 +19,9 @@ class ShareCodeScreen extends StatefulWidget {
 }
 
 class _ShareCodeScreenState extends State<ShareCodeScreen> {
+  bool isLoading = false; // Track loading state
+
+
   String? code;
   String? expiryTime;
   @override
@@ -28,9 +31,13 @@ class _ShareCodeScreenState extends State<ShareCodeScreen> {
   }
 
   String _generateUniqueCode() {
-    return Uuid().v4().substring(0, 6); // Generate a random 6-character code
+    return Uuid().v4().substring(0, 6);
   }
   Future<void> _generateCode() async {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+
     final generatedCode = _generateUniqueCode();
     final expiration = DateTime.now().add(Duration(hours: 24)).toIso8601String();
 
@@ -50,7 +57,11 @@ class _ShareCodeScreenState extends State<ShareCodeScreen> {
         expiryTime = DateTime.now().add(Duration(hours: 24)).toLocal().toString().split(' ')[1];
       });
     }
-    }
+    setState(() {
+      isLoading = false; // Stop loading
+    });
+
+  }
 
   void _copyToClipboard(BuildContext context) {
     if (code != null) {
@@ -61,11 +72,19 @@ class _ShareCodeScreenState extends State<ShareCodeScreen> {
     }
   }
 
-  void _shareCode(BuildContext context) {
+  Future<void> _shareCode(BuildContext context) async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    final appLink =
+        'https://play.google.com/store/apps/details?id=${packageInfo.packageName}&hl=en';
+
     if (code != null) {
-      Share.share('Here is the invitation code for Partner Mode: $code');
+      Share.share(
+          'To view your partner’s details, first download the app: $appLink. '
+              'Here is your invitation code for Partner Mode: $code');
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -140,8 +159,11 @@ class _ShareCodeScreenState extends State<ShareCodeScreen> {
                   CustomButton(
                     backgroundColor: primaryColor,
                     onPressed: _generateCode,
-                    text: "Generate Code",
+                    text: isLoading ? "Loading .." :"Generate Code",
                   ),
+                  SizedBox(height: 15,),
+                  if (isLoading)
+                    CircularProgressIndicator()
                 ],
               ],
             ),

@@ -30,11 +30,15 @@ class GoogleSignInService {
       final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Store session after successful login
-      await SessionManager.storeUserSession(userCredential.user?.uid ?? '');
+      await SessionManager.storeUserSession(userCredential.user?.uid ?? '',
+        userCredential.user!.displayName ?? 'Unknown User',
+        userCredential.user!.photoURL ?? '',
+
+      );
 
       return true;
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      // print('Google Sign-In Error: $e');
       return false;
     }
   }

@@ -1,14 +1,16 @@
+import '../../../firebase/analytics/analytics_service.dart';
+import '../detail page/cycle/water_reminders.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/preg_provider.dart';
-import 'package:calender_app/screens/flow2/detail%20page/cycle/notes.dart';
+import '../../pets/pets_row.dart';
 import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
-import 'package:calender_app/widgets/date_format.dart';
 import 'package:calender_app/widgets/flow2_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import '../../../admob/banner_ad.dart';
 import '../../../widgets/contain.dart';
 import '../detail page/cycle/cycle_page_components/category_selection.dart';
 import '../detail page/cycle/cycle_page_components/cycle_info_card.dart';
@@ -34,6 +36,7 @@ class CycleTrackerScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cycleProvider = Provider.of<CycleProvider>(context);
     final pregnancyProvider = Provider.of<PregnancyModeProvider>(context);
+    AnalyticsService.logScreenView("My Cycle");
 
     String formatDate(DateTime date) {
       String selectedFormat = context.watch<SettingsModel>().dateFormat;
@@ -44,13 +47,12 @@ class CycleTrackerScreen extends StatelessWidget {
       }
     }
 
-
     return bgContainer(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: CustomAppBar(
           pageTitle: "Today",
-         // userImageUrl: userImageUrl,
+          // userImageUrl: userImageUrl,
           onCancel: () {},
           onBack: () {
             Navigator.push(context,
@@ -64,36 +66,51 @@ class CycleTrackerScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DateNavigation(),
-                const SizedBox(height: 20),
-                if (!pregnancyProvider.isPregnancyMode) // Check if pregnancy mode is off
+                const SizedBox(height: 10),
+                if (!pregnancyProvider
+                    .isPregnancyMode) // Check if pregnancy mode is off
                   PeriodButtons(),
-                  const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 FlowSection(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
-                if (!pregnancyProvider.isPregnancyMode) // Check if pregnancy mode is off
-                 CycleInfoCard(
-                  title: "My Cycles",
-                  subtitle: "${cycleProvider.logCycle()} cycles logged", // Dynamic subtitle
-                  progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
-                  progressLabelEnd: formatDate(cycleProvider.getNextPeriodDate()),
+                if (!pregnancyProvider
+                    .isPregnancyMode) // Check if pregnancy mode is off
+                  CycleInfoCard(
+                    title: "My Cycles",
+                    subtitle:
+                        "${cycleProvider.logCycle()} cycles logged", // Dynamic subtitle
+                    progressLabelStart:
+                        formatDate(cycleProvider.lastPeriodStart),
+                    progressLabelEnd:
+                        formatDate(cycleProvider.getNextPeriodDate()),
 
-                  progressValue: (cycleProvider.daysElapsed / cycleProvider.cycleLength).clamp(0.0, 1.0),
-                  click: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MyCyclesScreen()),
-                    );
-                  },
-                ),
+                    progressValue:
+                        (cycleProvider.daysElapsed / cycleProvider.cycleLength)
+                            .clamp(0.0, 1.0),
+                    click: () {
+                      AnalyticsService.logEvent("navigate_to_my_cycles", parameters: {
+                        "from_screen": "My Cycle",
+                      });
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MyCyclesScreen()),
+                      );
+                    },
+                  ),
 
-                if (!pregnancyProvider.isPregnancyMode) // Check if pregnancy mode is off
-                  const SizedBox(height: 20),
+                if (!pregnancyProvider
+                    .isPregnancyMode) // Check if pregnancy mode is off
+                  const SizedBox(height: 10),
 
+                PetRow(),
+
+                const SizedBox(height: 10),
 
                 NoteSection(),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 CategorySection(
                   title: "Intercourse",
                   folderName: "intercourse",
@@ -109,9 +126,14 @@ class CycleTrackerScreen extends StatelessWidget {
                   folderName: "emoji",
                   targetPage: Moods(),
                 ),
+                //ovul
                 GestureDetector(
-                  onTap:  ()  {
-                    showDialog(
+                  onTap: () {
+                    AnalyticsService.logEvent("open_ovulation_dialog", parameters: {
+                      "from_screen": "My Cycle",
+                    });
+
+    showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return Dialog(
@@ -119,7 +141,8 @@ class CycleTrackerScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Container(
-                            child: OvulationScreen(), // Your ContraceptivePage widget here
+                            child:
+                                OvulationScreen(), // Your ContraceptivePage widget here
                           ),
                         );
                       },
@@ -140,7 +163,7 @@ class CycleTrackerScreen extends StatelessWidget {
                               ),
                             ),
                             IconButton(
-                              onPressed: ()  {
+                              onPressed: () {
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
@@ -149,7 +172,8 @@ class CycleTrackerScreen extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Container(
-                                      child: OvulationScreen(), // Your ContraceptivePage widget here
+                                        child:
+                                            OvulationScreen(), // Your ContraceptivePage widget here
                                       ),
                                     );
                                   },
@@ -184,7 +208,8 @@ class CycleTrackerScreen extends StatelessWidget {
                                   ),
                                   Text(
                                     "Positive",
-                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   )
                                 ],
                               ),
@@ -211,7 +236,8 @@ class CycleTrackerScreen extends StatelessWidget {
                                   ),
                                   Text(
                                     "Negative",
-                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   )
                                 ],
                               ),
@@ -222,12 +248,15 @@ class CycleTrackerScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                GestureDetector(
-                  onTap:  (){
-          Navigator.push(context,
-          MaterialPageRoute(builder: (context) => ContraceptivePage()));
-          },
 
+                //medicine
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ContraceptivePage()));
+                  },
                   child: CardContain(
                     child: Column(
                       children: [
@@ -242,28 +271,104 @@ class CycleTrackerScreen extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            IconButton(
-                              onPressed: (){
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder: (context) => ContraceptivePage()));
-                              },
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                SizedBox(
+                                  width: 25,
+                                  height: 25,
+                                  child: Image(image: AssetImage("assets/pill.png")),
+                                ),
 
-                              icon: Icon(Icons.arrow_forward_ios_rounded),
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ContraceptivePage()));
+                                  },
+                                  icon: Icon(Icons.arrow_forward_ios_rounded),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            SvgPicture.asset("assets/ovulation/drug.svg"),
                           ],
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                WaterIntakeSection(),
+
+                const SizedBox(height: 10),
+
+                //water
+                GestureDetector(
+                  onTap: () {
+                    AnalyticsService.logEvent("navigate_to_water_reminder", parameters: {
+                      "from_screen": "My Cycle",
+                    });
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => WaterReminderScreen()));
+                  },
+                  child: CardContain(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceBetween, // To space out the text and button
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  "Water Intake",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.settings),
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              WaterReminderScreen(),
+                                        ));
+                                  },
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                SizedBox(
+                                  width: 25,
+                                  height: 25,
+                                  child: Image(image: AssetImage("assets/water.png")),
+                                ),
+
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                WaterReminderScreen()));
+                                  },
+                                  icon: Icon(Icons.arrow_forward_ios_rounded),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                BannerAdWidget(),
+                SizedBox(height: 12),
               ],
             ),
           ),

@@ -98,7 +98,7 @@ class _QuestionScreen1State extends State<QuestionScreen1> {
                   onNextPressed: () {
                   // Save the period length and cycle days using globals
                   Provider.of<CycleProvider>(context, listen: false).updatePeriodLength(globals.selectedDays);
-                  print("Selected Days: ${globals.selectedDays}");
+                  // print("Selected Days: ${globals.selectedDays}");
 
                   // Navigate to the next screen
                   Navigator.push(

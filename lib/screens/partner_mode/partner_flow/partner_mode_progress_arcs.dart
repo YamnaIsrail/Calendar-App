@@ -2,6 +2,7 @@ import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:flutter/material.dart'; // For UI widgets and painting
 import 'dart:math';
 
+import 'package:calender_app/provider/partner_provider.dart';
 class DualProgress extends CustomPainter {
   final PartnerProvider partnerProvider;
 

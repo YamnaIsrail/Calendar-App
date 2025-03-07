@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:calender_app/auth/auth_provider.dart';
-import 'package:calender_app/provider/cycle_provider.dart';
+import 'package:calender_app/provider/partner_provider.dart';
 import 'package:calender_app/screens/partner_mode/partner_flow/home_partner_flow.dart';
 import 'package:calender_app/screens/partner_mode/partner_flow/partner_mode_today.dart';
 import 'package:calender_app/screens/settings/auth/password/enter_password.dart';
@@ -12,6 +12,7 @@ import '../hive/cycle_model.dart';
 import 'flow2/home_flow2.dart';
 import 'homeScreen.dart';
 
+
 class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -21,6 +22,8 @@ class _SplashScreenState extends State<SplashScreen> {
   bool showRipple = false;
   bool showHeart = false;
   bool showText = false;
+  bool isLoading = true; // New loading state
+  bool showCircularIndicator = false; // New state for circular indicator
 
   @override
   void initState() {
@@ -32,105 +35,91 @@ class _SplashScreenState extends State<SplashScreen> {
     setState(() {
       showRipple = true;
     });
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 600));
 
     setState(() {
       showRipple = false;
       showHeart = true;
     });
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 600));
 
     setState(() {
       showHeart = false;
       showText = true;
     });
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(milliseconds: 800));
 
-    // Wait until auth is initialized before navigation
+    // Start a timer for 2 seconds
+    await Future.delayed(Duration(milliseconds: 200));
+
+    // Check if loading is still in progress
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     while (!authProvider.isInitialized) {
       await Future.delayed(Duration(milliseconds: 100));
     }
-    Future<bool> checkIfCycleDataExists() async {
-      var box = await Hive.openBox<CycleData>('cycleData');
-      CycleData? cycleData = box.get('cycle'); // Retrieve the cycle data
-      return cycleData != null; // Return true if data exists, otherwise false
-    }
-    //
-    // Future<bool> checkIfPartnerCycleDataExists() async {
-    //   try {
-    //     if (!Hive.isBoxOpen('partnerCycleData')) {
-    //       await Hive.openBox('partnerCycleData');
-    //     }
-    //
-    //     var box = Hive.box('partnerCycleData');
-    //     var partnerCycleData = box.get('partnerCycleKey'); // Ensure this key is correct
-    //     return partnerCycleData != null;
-    //   } catch (e) {
-    //     print("Error accessing partnerCycleData box: $e");
-    //     return false; // Return false if there was an error
-    //   }
-    // }
-    Future<bool> checkIfPartnerCycleDataExists() async {
-      try {
 
-        var box = Hive.box('partnerCycleData');
-        var partnerCycleData = box.get('partnerData');
-        print("Partner cycle data: $partnerCycleData");  // Debug log
-        return partnerCycleData != null;
-      } catch (e) {
-        print("Error accessing partnerCycleData box: $e");
-        return false;
-      }
-    }
+    // Check if data exists
+    bool hasCycleData = await checkIfCycleDataExists();
+    bool hasPartnerCycleData = await checkIfPartnerCycleDataExists();
 
+    // Set loading to false after checking data
+    setState(() {
+      isLoading = false; // Loading is complete
+      showCircularIndicator = !authProvider.isInitialized; // Show circular indicator if loading is not complete
+    });
+
+    // Navigate based on the data existence
     if (authProvider.hasPasswordOrPin) {
       if (authProvider.usePassword) {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => EnterPasswordScreen()),
         );
-      }
-      else {
-        Navigator.push(
+      } else {
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => EnterPinScreen()),
         );
       }
-     } else
-     {
-      bool hasCycleData = await checkIfCycleDataExists();
-      bool hasPartnerCycleData = await checkIfPartnerCycleDataExists();
-
+    } else {
       if (hasCycleData) {
-        // If data exists, navigate to the main screen or the next page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => Flow2Page()),
         );
-      } else  if (hasPartnerCycleData) {
+      } else if (hasPartnerCycleData) {
         final partnerProvider = Provider.of<PartnerProvider>(context, listen: false);
-        await partnerProvider.listenForCycleUpdates();  // Pass the user1Id here
-
-
-        print("Navigating to PregnancyStatusScreen"); // Debug log
-
+        await partnerProvider.listenForCycleUpdates();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePartnerFlow()),
         );
       } else {
-        // If no data exists, navigate to homescreen
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
         );
       }
-
-    //   Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
     }
   }
+
+  Future<bool> checkIfCycleDataExists() async {
+    var box = await Hive.openBox<CycleData>('cycleData');
+    CycleData? cycleData = box.get('cycle');
+    return cycleData != null;
+  }
+
+  Future<bool> checkIfPartnerCycleDataExists() async {
+    try {
+      var box = Hive.box('partnerCycleData');
+      var partnerCycleData = box.get('partnerData');
+      return partnerCycleData != null;
+    } catch (e) {
+      // print("Error accessing partnerCycleData box: $e");
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,7 +132,7 @@ class _SplashScreenState extends State<SplashScreen> {
             children: [
               AnimatedOpacity(
                 opacity: showRipple ? 1.0 : 0.0,
-                duration: Duration(seconds: 1),
+                duration: Duration(milliseconds: 300),
                 child: AnimatedContainer(
                   duration: Duration(seconds: 1),
                   width: showRipple ? 208 : 0,
@@ -156,27 +145,36 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               AnimatedOpacity(
                 opacity: showHeart ? 1.0 : 0.0,
-                duration: Duration(seconds: 1),
+                duration: Duration(milliseconds: 300),
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 200),
                   child: Image.asset(
-                    "assets/splash.png", height: 126, width: 126,
+                    "assets/splash.png",
+                    height: 126,
+                    width: 126,
                   ),
                 ),
               ),
               AnimatedPositioned(
-                duration: Duration(seconds: 1),
+                duration: Duration(milliseconds: 400),
                 top: showText ? 150.0 : 300.0,
                 child: AnimatedOpacity(
                   opacity: showText ? 1.0 : 0.0,
-                  duration: Duration(seconds: 1),
-                  child: Text(
-                    "My Calendar",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.pink,
-                    ),
+                  duration: Duration(milliseconds: 400),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "My Calendar",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.pink,
+                        ),
+                      ),
+                      if (showCircularIndicator) // Show circular indicator if needed
+                        CircularProgressIndicator(),
+                    ],
                   ),
                 ),
               ),

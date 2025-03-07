@@ -9,9 +9,9 @@ Future<void> uploadBackupToFirestore(String uid, String data) async {
       'backupData': data, // Store the backup data under 'backupData' field
       'timestamp': FieldValue.serverTimestamp(), // Optional: store timestamp of backup
     });
-    print("Backup uploaded to Firestore.");
+    //print("Backup uploaded to Firestore.");
   } catch (e) {
-    print("Upload failed: $e");
+    //print("Upload failed: $e");
   }
 }
 
@@ -22,14 +22,14 @@ Future<String?> fetchBackupFromFirestore(String uid) async {
     if (snapshot.exists) {
       // Get the backup data from the document
       String data = snapshot['backupData'];
-      print("Backup retrieved from Firestore.");
+      //print("Backup retrieved from Firestore.");
       return data;
     } else {
-      print("No backup data available.");
+      //print("No backup data available.");
       return null;
     }
   } catch (e) {
-    print("Error retrieving data: $e");
+    //print("Error retrieving data: $e");
     return null;
   }
 }
@@ -37,7 +37,7 @@ Future<String?> fetchBackupFromFirestore(String uid) async {
 void handleGoogleRecovery(BuildContext context) async {
   final userId = await SessionManager.getUserId();
   if (userId == null) {
-    print("No user ID found. Cannot recover.");
+    //print("No user ID found. Cannot recover.");
     return;
   }
 
@@ -46,9 +46,9 @@ void handleGoogleRecovery(BuildContext context) async {
 
   if (recoveryData != null) {
     // Restore user data from `recoveryData`
-    print("Restoring user data...");
+    //print("Restoring user data...");
     // Example: Decode/deserialize data here
   } else {
-    print("No backup data available.");
+    //print("No backup data available.");
   }
 }

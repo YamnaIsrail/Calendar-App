@@ -3,7 +3,6 @@ import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 class FeedbackScreen extends StatefulWidget {
@@ -19,51 +18,47 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     'Ads',
     'Translation',
     'Others',
-    'Backup & Restore',
+    'Backup',
   ];
   final Set<String> _selectedOptions = {}; // To store selected options
   File? _imageFile; // To store selected image file
+  String? _errorMessage; // To store error message if there's an issue with email
 
-  // Function to open the image picker and select an image
-  Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      setState(() {
-        _imageFile = File(image.path);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Image selected successfully.")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No image selected.")),
-      );
-    }
-  }
-
-  // Function to open email client
   Future<void> _openEmailClient() async {
     String subject = 'Feedback on ${_selectedOptions.isEmpty ? 'App' : _selectedOptions.join(', ')}';
     String body = 'I found an issue in the following areas: ${_selectedOptions.isEmpty ? 'No specific feedback' : _selectedOptions.join(', ')}.\n\n';
 
-    // Prepare the email
+    List<String> attachments = [];
+
+    if (_imageFile != null) {
+      // Use file URI for Android 13+ compatibility
+      if (Platform.isAndroid && _imageFile!.existsSync()) {
+        attachments.add(_imageFile!.path); // Add file URI directly (file://)
+      }
+    }
+
     final Email email = Email(
       body: body,
       subject: subject,
-      recipients: ['yamnaisrailkhan@gmail.com'],
-      attachmentPaths: _imageFile != null ? [_imageFile!.path] : [],
+      recipients: ['so2os.lab@gmail.com'],
+      attachmentPaths: attachments.isNotEmpty ? attachments : [], // Only include if attachment exists
       isHTML: false,
     );
 
     try {
       await FlutterEmailSender.send(email);
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text("Email sent successfully.")),
-      // );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Email sent successfully.")),
+      );
     } catch (error) {
-      print("Error sending email: $error");
+      //print("Error sending email: $error");
+
+      setState(() {
+        _imageFile = null;
+        _errorMessage = "Please attach the image manually \nif there is an issue with the attachment.";
+
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error sending email.")),
       );
@@ -126,35 +121,46 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
             ),
             SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.white,
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Kindly send us a detailed explanation of your issue via email to ensure a quicker resolution.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                  _imageFile != null
-                      ? Image.file(
-                    _imageFile!,
-                    height: 76,
-                    width: 76,
-                    fit: BoxFit.cover,
-                  )
-                      : IconButton(
-                    icon: Icon(Icons.add_photo_alternate_outlined),
-                    color: Colors.grey,
-                    iconSize: 76,
-                    onPressed: _pickImage,
-                  ),
-                ],
-              ),
-            ),
+            // Container(
+            //   padding: const EdgeInsets.all(8.0),
+            //   decoration: BoxDecoration(
+            //     borderRadius: BorderRadius.circular(16),
+            //     color: Colors.white,
+            //   ),
+            //   child: Column(
+            //     children: [
+            //       Text(
+            //         'Kindly send us a detailed explanation of your issue via email to ensure a quicker resolution.',
+            //         style: TextStyle(fontSize: 16, color: Colors.grey),
+            //         textAlign: TextAlign.center,
+            //       ),
+            //       _imageFile != null
+            //           ? Image.file(
+            //         _imageFile!,
+            //         height: 76,
+            //         width: 76,
+            //         fit: BoxFit.cover,
+            //       )
+            //           : IconButton(
+            //         icon: Icon(Icons.add_photo_alternate_outlined),
+            //         color: Colors.grey,
+            //         iconSize: 76,
+            //         onPressed: _pickImage,
+            //       ),
+            //
+            //       if (_errorMessage != null)
+            //         Padding(
+            //           padding: const EdgeInsets.only(top: 8.0),
+            //           child: Text(
+            //             _errorMessage!,
+            //             style: TextStyle(color: Colors.red, fontSize: 14),
+            //             textAlign: TextAlign.center,
+            //           ),
+            //         ),
+            //
+            //     ],
+            //   ),
+            // ),
             SizedBox(height: 24),
             CustomButton(
               text: 'Submit',

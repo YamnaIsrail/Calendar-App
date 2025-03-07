@@ -47,6 +47,6 @@ Future<void> generateAndSharePdf(String fileName, CycleProvider cycleProvider) a
     await Share.shareXFiles([XFile(filePath)], text: "Cycle Data Report");
   } catch (e) {
     // Handle errors if any
-    print("Error generating or sharing PDF: $e");
+    //print("Error generating or sharing PDF: $e");
   }
 }

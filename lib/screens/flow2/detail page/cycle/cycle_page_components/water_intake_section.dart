@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../water.dart';
+import '../water_reminders.dart';
 
 
 class WaterIntakeSection extends StatefulWidget {
@@ -47,7 +48,7 @@ class _WaterIntakeSectionState extends State<WaterIntakeSection> {
             IconButton(
               icon: Icon(Icons.settings),
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => WaterReminderScreen(),));
               },
             ),
           ],
@@ -64,11 +65,15 @@ class _WaterIntakeSectionState extends State<WaterIntakeSection> {
                   size: 50,
                   color: index < selectedGlasses ? Colors.blue : Colors.grey[300],
                 ),
-                onPressed: () {
+                onPressed: () async{
                   setState(() {
                     selectedGlasses = index + 1;  // Update selected glasses based on the clicked glass
                   });
-                  _saveSelectedGlasses();  // Save the updated number of selected glasses
+                 await _saveSelectedGlasses();
+
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => WaterReminderScreen(),
+                  ));
+                  // Save the updated number of selected glasses
                 },
               );
             }),

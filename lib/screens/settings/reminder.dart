@@ -2,6 +2,7 @@ import 'package:calender_app/hive/settingsPageNotifications.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/cycle/medicine_reminder_form.dart';
+import 'package:calender_app/screens/flow2/detail%20page/cycle/water_reminders.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,9 +17,9 @@ class ReminderScreen extends StatefulWidget {
 }
 
 class _ReminderScreenState extends State<ReminderScreen> {
-  bool isPeriodReminderOn = false;
-  bool isFertilityReminderOn = false;
-  bool isLutealReminderOn = false;
+  bool isPeriodReminderOn = true;
+  bool isFertilityReminderOn = true;
+  bool isLutealReminderOn = true;
   bool _waterReminderEnabled = false; // Water reminder toggle
 
   @override
@@ -42,63 +43,11 @@ class _ReminderScreenState extends State<ReminderScreen> {
   void _loadToggleStates() async {
     final states = await ToggleStateService.loadToggleState();
     setState(() {
-      isPeriodReminderOn = states['isPeriodReminderOn'] ?? false;
-      isFertilityReminderOn = states['isFertilityReminderOn'] ?? false;
-      isLutealReminderOn = states['isLutealReminderOn'] ?? false;
-      _waterReminderEnabled = states['waterReminderEnabled'] ?? false; // Load water reminder state
+      isPeriodReminderOn = states['isPeriodReminderOn'] ?? true;
+      isFertilityReminderOn = states['isFertilityReminderOn'] ?? true;
+      isLutealReminderOn = states['isLutealReminderOn'] ?? true;
+      _waterReminderEnabled = states['waterReminderEnabled'] ?? true; // Load water reminder state
     });
-  }
-  void handleReminder({
-    required int id,
-    required String title,
-    required String body,
-    required DateTime startDate,
-    required String phaseType,
-  }) async {
-    DateTime now = DateTime.now();
-
-    if (startDate.isBefore(now)) {
-      // Immediate notification for past event
-      await NotificationService.showInstantNotification(
-        title,
-        "Your $phaseType started on ${startDate.toLocal()}.",
-      );
-    }
-
-    // Schedule notifications for future cycles
-    const int monthsToSchedule = 12;
-    final cycleProvider = Provider.of<CycleProvider>(context, listen: false); // Get the instance of CycleProvider
-    final int cycleLength = cycleProvider.cycleLength; // Access the cycleLength instance member
-
-    for (int i = 0; i < monthsToSchedule; i++) {
-      DateTime nextDate = startDate.add(Duration(days: cycleLength  * i));
-      if (nextDate.isAfter(now)) {
-        await scheduleNotification(
-          id: id + i, // Unique ID for each month's notification
-          title: title,
-          body: body,
-          dateTime: nextDate,
-        );
-      }
-    }
-  }
-
-  Future<void> scheduleNotification({
-    required int id,
-    required String title,
-    required String body,
-    required DateTime dateTime,
-  }) async {
-    await NotificationService.scheduleNotification(
-      id,
-      title,
-      body,
-      dateTime,
-    );
-  }
-
-  Future<void> cancelNotification(int id) async {
-    await NotificationService.cancelScheduledTask(id);
   }
 
   @override
@@ -123,80 +72,6 @@ class _ReminderScreenState extends State<ReminderScreen> {
             children: [
               SectionHeader(title: 'Period & Ovulation'),
 
-             // CustomItem(
-             //    title: "Next Period Reminder",
-             //    onChanged: (bool value) {
-             //      setState(() {
-             //        isPeriodReminderOn = value;
-             //      });
-             //      ToggleStateService.saveToggleState(
-             //        isPeriodReminderOn: isPeriodReminderOn,
-             //        isFertilityReminderOn: isFertilityReminderOn,
-             //        isLutealReminderOn: isLutealReminderOn,
-             //      );
-             //
-             //      if (value) {
-             //        cycleProvider.rescheduleNotifications();
-             //      } else {
-             //        NotificationService.showInstantNotification(
-             //          "Reminder Canceled",
-             //          "Next period reminder has been canceled.",
-             //        );
-             //        cycleProvider.cancelNotification(1000);
-             //      }
-             //    },
-             //    isSwitched: isPeriodReminderOn,
-             //  ),
-             //
-             //  CustomItem(
-             //    title: "Fertile Window Reminder",
-             //    onChanged: (bool value) {
-             //      setState(() {
-             //        isFertilityReminderOn = value;
-             //      });
-             //      ToggleStateService.saveToggleState(
-             //        isPeriodReminderOn: isPeriodReminderOn,
-             //        isFertilityReminderOn: isFertilityReminderOn,
-             //        isLutealReminderOn: isLutealReminderOn,
-             //      );
-             //
-             //      if (value) {
-             //        cycleProvider.rescheduleNotifications();
-             //      } else {
-             //        NotificationService.showInstantNotification(
-             //          "Reminder Canceled",
-             //          "Fertile window reminder has been canceled.",
-             //        );
-             //        cycleProvider.cancelNotification(2000);
-             //      }
-             //    },
-             //    isSwitched: isFertilityReminderOn,
-             //  ),
-             //
-             //  CustomItem(
-             //    title: "Luteal Phase Reminder",
-             //    onChanged: (bool value) {
-             //      setState(() {
-             //        isLutealReminderOn = value;
-             //      });
-             //      ToggleStateService.saveToggleState(
-             //        isPeriodReminderOn: isPeriodReminderOn,
-             //        isFertilityReminderOn: isFertilityReminderOn,
-             //        isLutealReminderOn: isLutealReminderOn,
-             //      );
-             //
-             //      if (value) {
-             //        cycleProvider.rescheduleNotifications();
-             //      } else {
-             //        NotificationService.showInstantNotification(
-             //          "Reminder Canceled",
-             //          "Luteal phase reminder has been canceled.",
-             //        );
-             //        cycleProvider.cancelNotification(3000);
-             //      }
-             //    },
-             //    isSwitched: isLutealReminderOn,
-             //  ),
               CustomItem(
                 title: "Next Period Reminder",
                 onChanged: (bool value) async {
@@ -233,7 +108,12 @@ class _ReminderScreenState extends State<ReminderScreen> {
                       "Reminder Canceled",
                       "Next period reminder has been canceled.",
                     );
-                    cycleProvider.cancelNotification(1000);
+                    cycleProvider.cancelNotification(7);
+                    cycleProvider.cancelNotification(8);
+                    cycleProvider.cancelNotification(9);
+                    cycleProvider.cancelNotification(10);
+                    cycleProvider.cancelNotification(11);
+                    cycleProvider.cancelNotification(12);
                   }
                 },
                 isSwitched: isPeriodReminderOn,
@@ -271,7 +151,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
                       "Reminder Canceled",
                       "Fertile window reminder has been canceled.",
                     );
-                    cycleProvider.cancelNotification(2000);
+                    cycleProvider.cancelNotification(13);
                   }
                 },
                 isSwitched: isFertilityReminderOn,
@@ -309,7 +189,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
                       "Reminder Canceled",
                       "Luteal phase reminder has been canceled.",
                     );
-                    cycleProvider.cancelNotification(3000);
+                    cycleProvider.cancelNotification(14);
                   }
                 },
                 isSwitched: isLutealReminderOn,
@@ -321,6 +201,20 @@ class _ReminderScreenState extends State<ReminderScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 5),
                 color: Colors.white,
                 child: ListTile(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ContraceptivePage(),
+                      ),
+                    ).then((result) {
+                      if (result != null && result is bool && result) {
+                        setState(() {
+                          // Update the state if the user successfully added a medicine
+                        });
+                      }
+                    });
+                  },
                   title: Text("Medicine Reminders"),
                   trailing: IconButton(
                     icon: Icon(Icons.add, color: Colors.red,),
@@ -346,20 +240,20 @@ class _ReminderScreenState extends State<ReminderScreen> {
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 5),
                 color: Colors.white,
-                child: ListTile(
-                  title: Text("Drink Water"),
-                  trailing: IconButton(
-                    icon: Icon(Icons.local_drink_rounded, color: Colors.blueAccent,),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SettingsScreen(),
-                        )
-                      );
-                    },
-                  ),
-                ),
+                 child: ListTile(
+                   onTap: () {
+                     Navigator.push(
+                         context,
+                         MaterialPageRoute(
+                           builder: (_) => WaterReminderScreen(),
+                         )
+                     );
+                   },
+
+                   title: Text("Drink Water"),
+                  trailing:  Icon(Icons.local_drink_rounded, color: Colors.blueAccent,),
+
+                 ),
               ),
 
             ],

@@ -2,6 +2,7 @@
 // ignore_for_file: lines_longer_than_80_chars, avoid_classes_with_only_static_members
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
+
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class DefaultFirebaseOptions {
@@ -15,8 +16,6 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
-      case TargetPlatform.iOS:
-        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -40,19 +39,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDI5OdGwTMmXr9nAedyKuNlyQwlZ5l4Wts',
-    appId: '1:504954654175:android:7e2f1e71b3a6fe082ec86a',
-    messagingSenderId: '504954654175',
-    projectId: 'calendarapp-c3d79',
-    storageBucket: 'calendarapp-c3d79.firebasestorage.app',
+    apiKey: 'AIzaSyDH3bIEilLzNrZX6yoPC30wCLHTrnd5kDs',
+    appId: '1:459880197638:android:4288c1e4b54ffd54745d87',
+    messagingSenderId: '459880197638',
+    projectId: 'solab-period-calendar',
+    storageBucket: 'solab-period-calendar.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDI5OdGwTMmXr9nAedyKuNlyQwlZ5l4Wts',
-    appId: '1:504954654175:android:7e2f1e71b3a6fe082ec86a',
-    messagingSenderId: '504954654175',
-    projectId: 'calendarapp-c3d79',
-    storageBucket: 'calendarapp-c3d79.firebasestorage.app',
-    iosBundleId: 'com.example.calender_app',
-  );
+
 }

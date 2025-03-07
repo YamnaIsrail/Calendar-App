@@ -1,19 +1,18 @@
-//be2e48
-import 'package:calender_app/provider/cycle_provider.dart';
-import 'package:calender_app/provider/date_day_format.dart';
+
+import 'package:calender_app/admob/banner_ad.dart';
+import 'dart:math';
+import 'package:calender_app/widgets/cycle_info_card.dart';
 import 'package:calender_app/screens/partner_mode/partner_flow/partner_mode_progress_arcs.dart';
 import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:flutter/material.dart';
 import 'partner_mode_setting.dart';
 import 'package:provider/provider.dart';
-
-
 import 'package:intl/intl.dart';
-
-class PregnancyStatusScreen extends StatelessWidget {
+import 'package:calender_app/provider/partner_provider.dart';
+class PartnerStatusScreen extends StatelessWidget {
 
   String formatDate(DateTime date) {
-    return DateFormat('MMM d, y').format(date); // "Feb 12, 2024"
+    return DateFormat('MMM d, y').format(date);
   }
 
   @override
@@ -23,13 +22,27 @@ class PregnancyStatusScreen extends StatelessWidget {
 
     final currentCycleDay = partnerProvider.daysElapsed + 1;
 
+    final isPregnancyMode = partnerProvider.pregnancyMode;
 
     // Extract data dynamically
     final lastMenstrualPeriod = partnerProvider.lastMenstrualPeriod;
     final cyclePhase = partnerProvider.currentPhase;
     final dueDate = partnerProvider.dueDate;
-    final currentWeek = partnerProvider.getCurrentWeek() ?? 0; // Default to 0 if null
-    final daysUntilDueDate = partnerProvider.getDaysIntoPregnancy() ?? 0; // Default to 0 if null
+    final gestationStart = partnerProvider.gestationStart;
+    final currentPregWeek = partnerProvider.gestationWeeks ?? 0; // Default to 0 if null
+    final currentPregDay = partnerProvider.gestationDays ?? 0; // Default to 0 if null
+    final daysUntilDueDate = isPregnancyMode ? partnerProvider.daysUntilDueDate : null;
+    final daysUntilNextPeriod = partnerProvider.getDaysUntilNextPeriod() ?? 0; // Default to 0 if null
+    final daysElapsed = partnerProvider.daysElapsed;
+    final cycleLength = partnerProvider.cycleLength ?? 0;
+
+
+    double pregProgress =  (currentPregWeek + (currentPregDay / 7)) / 40;
+    double cycleProgress =  (daysElapsed /
+        cycleLength)
+
+        .clamp(0.0, 1.0);
+
 
     return bgContainer(
       child: Scaffold(
@@ -55,8 +68,9 @@ class PregnancyStatusScreen extends StatelessWidget {
             ),
           ),
           child: partnerProvider.isPregnancyMode
-              ? pregnancyUI(partnerProvider, dueDate, currentWeek, daysUntilDueDate)
-              : cycleUI(partnerProvider),
+              ? pregnancyUI(partnerProvider,
+              dueDate, currentPregWeek, daysUntilDueDate!,currentPregDay,pregProgress, context)
+              : cycleUI(partnerProvider, cycleProgress,context),
         ),
       ),
     );
@@ -68,16 +82,26 @@ class PregnancyStatusScreen extends StatelessWidget {
       DateTime? dueDate,
       int currentWeek,
       int daysUntilDueDate,
+      int currentPregDay,
+      double progress,
+
+      BuildContext context
       ) {
+    final screenSize = MediaQuery.of(context).size;
+    final containerSize =
+        screenSize.width * 0.5; // Adjust the multiplier as needed
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+
+
         Stack(
           children: [
             Container(
-              height: 280,
-              width: 280,
+              height: containerSize,
+              width: containerSize,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 image: DecorationImage(
@@ -91,13 +115,13 @@ class PregnancyStatusScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    dueDate != null ? "Pregnancy\n Week $currentWeek" : "Pregnancy Data Unavailable",
-                    style: TextStyle(fontSize: 18, color: Colors.black),
+                    dueDate != null ? "Expected due date\n ${formatDate(dueDate)}" : "Pregnancy Data Unavailable",
+                    style: TextStyle(fontSize: 12, color: Colors.black, ),textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),
                   Text(
                     dueDate != null
-                        ? "Day: $daysUntilDueDate"
+                        ? "Week $currentWeek Day $currentPregDay"
                         : "Due Date: Not Available",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: Colors.black),
@@ -106,62 +130,122 @@ class PregnancyStatusScreen extends StatelessWidget {
               ),
             ),
             SizedBox(
-              height: 280,
-              width: 280,
+              height: containerSize,
+              width: containerSize,
               child: CustomPaint(
                 painter: PregnancyProgress(partnerProvider: PartnerProvider()),
               ),
             ),
           ],
         ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                Color(0xc24396ea), // End button color
+                foregroundColor:
+                Colors.white, // Text color
+                padding: EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                      12), // Rounded corners
+                ),
+              ),
+
+              onPressed: () async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Syncing data...'),
+                    backgroundColor: Colors.blue,
+                  ),
+                );
+
+                bool isSuccess = await Provider.of<PartnerProvider>(context, listen: false).listenForCycleUpdates();
+
+                if (isSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Data synced successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Sync failed. Check your internet or try again later.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+
+              },
+
+
+              child: Text('Sync with Partner Data'),
+            ),
+          ),
+        ),
+
+
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                buildCycleInfoCard(
-                  icon: Icons.baby_changing_station,
+                CycleInfoCard(
                   title: 'Pregnancy Progress',
                   subtitle: daysUntilDueDate < 0
                       ? "You are overdue. Contact your doctor."
                       : "Your pregnancy is progressing normally.",
                   progressLabelStart: "Week 1",
                   progressLabelEnd: "Week 40",
-                  progressValue: currentWeek / 40,
-                ),
+                  progressValue: (progress ?? 0) * 100,  ),
+                BannerAdWidget(),
+                SizedBox(height: 12),
               ],
             ),
           ),
         ),
+
+
       ],
     );
   }
 
   /// UI for Cycle/Period Information
-  Widget cycleUI(PartnerProvider partnerProvider) {
-    // Assuming you have access to partnerProvider in your widget
+  Widget cycleUI(PartnerProvider partnerProvider,cycleProgress ,BuildContext context) {
+    final currentCycleDay = partnerProvider.daysElapsed + 1;
     int daysUntilNextPeriod = partnerProvider.getDaysUntilNextPeriod();
-    String nextPeriodDate = formatDate(partnerProvider.getNextPeriodDate());
+    String nextPeriodDate = formatDate(partnerProvider.getNextPeriodDate() ?? DateTime.now());
+    String endDate = formatDate(partnerProvider.cycleEndDate ?? DateTime.now());
+    final screenSize = MediaQuery.of(context).size;
+    final containerSize =
+        screenSize.width * 0.5;
 
-// Construct the subtitle
     String subtitle;
     if (daysUntilNextPeriod < 0) {
       // If the period is late
       subtitle = "Next cycle was expected on $nextPeriodDate ";
     } else {
       // If the period is on time or upcoming
-      subtitle = "Next cycle: $nextPeriodDate (In: $daysUntilNextPeriod days)";
+      subtitle = "Next cycle: $nextPeriodDate";
     }
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
 
       children: [
+
+
         Stack(
           children: [
+            //buttons for testing
+
             Container(
-              height: 280,
-              width: 280,
+              height: containerSize,
+              width: containerSize,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 image: DecorationImage(
@@ -172,61 +256,138 @@ class PregnancyStatusScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    daysUntilNextPeriod > 0
-                        ? "Periods\n${daysUntilNextPeriod} days Left"
-                        : "Periods\n${daysUntilNextPeriod.abs()} days Late",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.black),
-                  ),
-                  SizedBox(height: 8),
-
-                  Text(
-                    partnerProvider.currentPhase,
-                    style: TextStyle(fontSize: 18, color: Colors.black),
-                  ),
-
+                  if (currentCycleDay <= partnerProvider.periodLength! - 1) ...[
+                    // Show current cycle details
+                    Text(
+                      "Periods",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 8, color: Colors.black),
+                    ),
+                    Text(
+                      "Day ${currentCycleDay}",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.black),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      "Period will end on \n ${endDate}",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: Colors.black),
+                    ),
+                  ] else ...[
+                    // Period is over, show future period details
+                    Text(
+                      daysUntilNextPeriod == 0
+                          ? "Today"
+                          : (daysUntilNextPeriod < 0
+                          ? "${daysUntilNextPeriod.abs()} Day(s) Late"
+                          : "${daysUntilNextPeriod} Day(s) Left"),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.black),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      daysUntilNextPeriod == 0
+                          ? "Period is expected to begin \n ${nextPeriodDate}"
+                          : (daysUntilNextPeriod < 0
+                          ? "Your partner's period was expected\non ${nextPeriodDate}."
+                          : "Next period will start\non $nextPeriodDate"),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: Colors.black),
+                    ),
+                  ],
                 ],
               ),
             ),
             SizedBox(
-              height: 280,
-              width: 280,
+              height: containerSize,
+              width: containerSize,
               child: CustomPaint(
-                painter: DualProgress(partnerProvider: PartnerProvider()),
+                painter: PartnerProgressPainter(
+                  partnerProvider: partnerProvider,
+                ),
               ),
             ),
           ],
         ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                Color(0xc24396ea), // End button color
+                foregroundColor:
+                Colors.white, // Text color
+                padding: EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                      12), // Rounded corners
+                ),
+              ),
+
+              onPressed: () async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Syncing data...'),
+                    backgroundColor: Colors.blue,
+                  ),
+                );
+
+                bool isSuccess = await Provider.of<PartnerProvider>(context, listen: false).listenForCycleUpdates();
+
+                if (isSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Data synced successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Sync failed. Check your internet or try again later.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+
+              },
+
+
+              child: Text('Sync with Partner Data'),
+            ),
+          ),
+        ),
+
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                buildCycleInfoCard(
-                  icon: Icons.date_range,
-                  title: "Today Cycle Day ${partnerProvider.daysElapsed}",
-                  // subtitle:"Next cycle: ${formatDate(partnerProvider.getNextPeriodDate())}",
+                CycleInfoCard(
+                  title: "Today Cycle Day ${currentCycleDay}",
                   subtitle:"$subtitle",
                   progressLabelStart: "Start",
                   progressLabelEnd: "Next Period",
-                  progressValue: partnerProvider.daysElapsed + 1 / partnerProvider.cycleLength!,
-
+                  progressValue:  (cycleProgress ?? 0) * 100,
                 ),
+              SizedBox(height: 10),
+
+                BannerAdWidget(),
+                SizedBox(height: 12),
               ],
             ),
           ),
         ),
-
-
       ],
     );
   }
 
   /// Shared card builder
-  Widget buildCycleInfoCard({
-    required IconData icon,
-    required String title,
+  Widget CycleInfoCard({
+   required String title,
     required String subtitle,
     required String progressLabelStart,
     required String progressLabelEnd,
@@ -259,27 +420,123 @@ class PregnancyStatusScreen extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             subtitle,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
               color: Colors.blueGrey,
             ),
           ),
           SizedBox(height: 16),
+          CustomProgressBar(
+            progress: progressValue,
+          ),
           Row(
+mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(progressLabelStart),
-              Expanded(
-                child: LinearProgressIndicator(
-                  value: progressValue,
-                  color: Colors.blue,
-                  backgroundColor: Colors.grey[300],
-                ),
-              ),
+
               Text(progressLabelEnd),
             ],
           ),
         ],
       ),
     );
+  }
+}
+
+class PartnerProgressPainter extends CustomPainter {
+  final PartnerProvider partnerProvider;
+
+  PartnerProgressPainter({required this.partnerProvider});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final today = DateTime.now();
+    final daysSinceLastPeriod = today.difference(partnerProvider.lastMenstrualPeriod!).inDays;
+    final currentCycleDay = (daysSinceLastPeriod % partnerProvider.cycleLength!) + 1;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide / 2) - 10;
+
+    // Background Paint
+    final backgroundPaint = Paint()
+      ..color = const Color(0xFFE0E0E0) // Light gray
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 20;
+
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Check if the period is late
+    final expectedPeriodStart = partnerProvider.lastMenstrualPeriod!.add(Duration(days: partnerProvider.cycleLength!));
+    final isPeriodLate = today.isAfter(expectedPeriodStart) && daysSinceLastPeriod >= partnerProvider.cycleLength!;
+
+    final anglePerDay = 2 * pi / partnerProvider.cycleLength!;
+
+    // Check if the period is late
+    if (isPeriodLate) {
+      // Draw the entire circle in dark red (indicating period is late)
+      final latePeriodPaint = Paint()
+        ..color = const Color(0xFFD72626) // Dark Red for late periods
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 15;
+
+      canvas.drawCircle(center, radius, latePeriodPaint);
+      return; // Exit the painting as the entire circle is dark red
+    }
+
+    // Draw progress for current cycle
+    for (int day = 1; day <= partnerProvider.cycleLength!; day++) {
+      // Get the color for each day
+      final paint = Paint()
+        ..color = getDayColor(day, currentCycleDay, today)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 15;
+
+      drawArcForDay(canvas, day, center, radius, paint, anglePerDay);
+
+      if (day == currentCycleDay) break; // Stop drawing after the current day
+    }
+  }
+
+  // Function to determine the color of each day
+  Color getDayColor(int day, int currentCycleDay, DateTime today) {
+    final periodStartDay = 1; // Assuming period starts on the first day of the cycle
+    final periodEndDay = partnerProvider.periodLength; // Period end day
+
+
+    // Return colors for different conditions
+    if (day <= 3 && day <= periodEndDay!) {
+      return const Color(0xFFFF4D4D); // Bright Red for the first 3 days of the period
+    }
+
+    // After the first 3 days but within the period, use Warm Pink
+    if (day > 3 && day <= periodEndDay!) {
+      return const Color(0xFFFF6F91); // Warm Pink for the rest of the period
+    }
+
+    final daysUntilNextPeriod = partnerProvider.cycleLength! - currentCycleDay;
+    return (daysUntilNextPeriod < 3)
+        ? const Color(0xFF90CAF9) // Light Blue if period is near
+        : const Color(0xFFA7E5A5); // Pastel Green for normal days
+  }
+
+  // Function to draw arc for each day
+  void drawArcForDay(Canvas canvas, int day, Offset center, double radius, Paint paint, double anglePerDay) {
+    final startAngle = -pi / 2 + (day - 1) * anglePerDay;
+    final sweepAngle = anglePerDay;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweepAngle,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant PartnerProgressPainter oldDelegate) {
+    return oldDelegate.partnerProvider.lastMenstrualPeriod != partnerProvider.lastMenstrualPeriod ||
+        oldDelegate.partnerProvider.cycleLength != partnerProvider.cycleLength ||
+        oldDelegate.partnerProvider.periodLength != partnerProvider.periodLength;
   }
 }

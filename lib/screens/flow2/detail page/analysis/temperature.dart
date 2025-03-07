@@ -81,9 +81,9 @@ class TempChart extends StatelessWidget {
                       ? temperatureProvider.temperatureData.map((e) => e['temperature']).reduce((a, b) => a > b ? a : b) + 1 // Slight padding
                       : 101, // Default maximum when no data
                   titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
+                   rightTitles: AxisTitles(
                       sideTitles: SideTitles(
-                        showTitles: true,
+                        showTitles: false,
                         getTitlesWidget: (value, meta) {
                           return Text(
                             '${value.toStringAsFixed(1)}',
@@ -96,6 +96,22 @@ class TempChart extends StatelessWidget {
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        getTitlesWidget: (value, _) {
+                          if (value % 1 == 0) { // Only process whole numbers
+                            final int index = value.toInt();
+                            return Text(
+                              index.toString(),
+                              style: const TextStyle(fontSize: 10),
+                            );
+                          }
+                          return const SizedBox.shrink(); // Hide fractional values
+                        },
+                      ),
+                    ),
+
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: false,
                         getTitlesWidget: (value, meta) {
                           return Text(
                             'Day ${value.toInt()}',
@@ -282,7 +298,7 @@ class TempChart extends StatelessWidget {
                   temperatureProvider.addTemperature(temperature, currentDate);
                   Navigator.pop(context); // Close the dialog
                 } else {
-                  print("Invalid temperature. Please enter a valid value.");
+                  // print("Invalid temperature. Please enter a valid value.");
                 }
               },
               child: const Text('Save'),

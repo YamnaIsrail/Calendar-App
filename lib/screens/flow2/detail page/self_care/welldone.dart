@@ -5,10 +5,15 @@ import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
 import '../../../globals.dart';
+import 'pain_relief.dart';
+import 'pose_1.dart';
 
 class Welldone extends StatelessWidget {
-  const Welldone({super.key});
+  final String sourceScreen; // Add a parameter to identify the source screen
 
+  const Welldone({super.key, required this.sourceScreen});
+
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,7 +39,7 @@ class Welldone extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => SelfCare()));
+                        MaterialPageRoute(builder: (context) => Flow2Page()));
                   },
                   style: ElevatedButton.styleFrom(
                     shape: CircleBorder(),
@@ -68,10 +73,16 @@ class Welldone extends StatelessWidget {
                     height: 10,
                   ),
                   TextButton(
-                      child: Text("Do it again"),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> foot()))
+                    child: Text("Do it again"),
+                    onPressed: () {
+                      // Navigate based on the source screen
+                      if (sourceScreen == 'pose3') {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => painRelief()));
+                      } else if (sourceScreen == 'footExercise2') {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => foot()));
+                      }
+                    },
                   ),
-
                 ],
               ),
             ),

@@ -28,22 +28,40 @@ class PasswordScreen extends StatelessWidget {
               title: 'PIN',
               value: authProvider.pin != null &&
                   authProvider.pin!.isNotEmpty, // Reflects if PIN is set
+              // onChanged: (bool value) {
+              //   if (value) {
+              //     // If the user enables PIN, disable Password and navigate to PIN screen
+              //     context
+              //         .read<AuthProvider>()
+              //         .toggleAuthMode(false); // Disable Password
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => CreatePinScreen()),
+              //     );
+              //   } else {
+              //     if (authProvider.pin != null && authProvider.pin!.isNotEmpty) {
+              //       context.read<AuthProvider>().savePin(''); // Save empty PIN only if it's set
+              //     } }
+              // },
+
+              // PIN Toggle
               onChanged: (bool value) {
                 if (value) {
-                  // If the user enables PIN, disable Password and navigate to PIN screen
-                  context
-                      .read<AuthProvider>()
-                      .toggleAuthMode(false); // Disable Password
+                  // If the user enables PIN, disable Password
+                  context.read<AuthProvider>().toggleAuthMode(false); // Disable Password
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => CreatePinScreen()),
                   );
                 } else {
+                  // If the user disables PIN, save empty PIN only if it's set
                   if (authProvider.pin != null && authProvider.pin!.isNotEmpty) {
-                    context.read<AuthProvider>().savePin(''); // Save empty PIN only if it's set
-                  } }
+                    context.read<AuthProvider>().savePin(''); // Save empty PIN
+                  }
+                }
               },
-            ),
+
+               ),
 
             // Password Toggle
             buildToggleOption(
@@ -51,23 +69,39 @@ class PasswordScreen extends StatelessWidget {
               value: authProvider.password != null &&
                   authProvider
                       .password!.isNotEmpty, // Reflects if Password is set
+              // onChanged: (bool value) {
+              //   if (value) {
+              //     // If the user enables Password, disable PIN and navigate to Password screen
+              //     context
+              //         .read<AuthProvider>()
+              //         .toggleAuthMode(true); // Enable Password
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //           builder: (context) => CreatePasswordScreen()),
+              //     );
+              //   } else {
+              //     if (authProvider.pin != null && authProvider.pin!.isNotEmpty) {
+              //       context.read<AuthProvider>().savePassword(''); // Save empty PIN only if it's set
+              //     }
+              //   }
+              // },
               onChanged: (bool value) {
                 if (value) {
-                  // If the user enables Password, disable PIN and navigate to Password screen
-                  context
-                      .read<AuthProvider>()
-                      .toggleAuthMode(true); // Enable Password
+                  // If the user enables Password, disable PIN
+                  context.read<AuthProvider>().toggleAuthMode(true); // Enable Password
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => CreatePasswordScreen()),
+                    MaterialPageRoute(builder: (context) => CreatePasswordScreen()),
                   );
                 } else {
-                  if (authProvider.pin != null && authProvider.pin!.isNotEmpty) {
-                    context.read<AuthProvider>().savePassword(''); // Save empty PIN only if it's set
+                  // If the user disables Password, save empty Password only if it's set
+                  if (authProvider.password != null && authProvider.password!.isNotEmpty) {
+                    context.read<AuthProvider>().savePassword(''); // Save empty Password
                   }
                 }
               },
+
             ),
 
             // // Fingerprint Change Option (Optional)

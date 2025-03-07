@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../admob/ad_service.dart';
+
 
 //Corrected version
 class PeriodButtons extends StatelessWidget {
@@ -46,6 +48,7 @@ class PeriodButtons extends StatelessWidget {
       ],
     );
   }
+  final adManager = AdManager(); // Initialize the ad manager
 
   // Method to handle selecting the start date
   void _selectStartDate(BuildContext context) async {
@@ -55,7 +58,8 @@ class PeriodButtons extends StatelessWidget {
 
     if (pickedStartDate != null) {
       provider.updateLastPeriodStart(pickedStartDate);
-      print("Period start updated: $pickedStartDate");
+      // Show ad before proceeding
+      adManager.showInterstitialAd(context, () {});
     }
   }
 
@@ -72,7 +76,7 @@ class PeriodButtons extends StatelessWidget {
 
           final periodLength = pickedEndDate.difference(startDate).inDays+1;
           provider.updatePeriodLength(periodLength); // Update the period length
-          print("Period updated: Start: $startDate, End: $pickedEndDate, Period Length: $periodLength days");
+          adManager.showInterstitialAd(context, () {});
         } else {
           _showSnackbar(context, "End date cannot be before start date");
         }
@@ -122,7 +126,7 @@ class PeriodButtons extends StatelessWidget {
       if (startDate != null) {
         // Remove the selected period
         provider.removePastPeriod(startDate.toIso8601String());
-        print("Period removed: $startDate");
+        // print("Period removed: $startDate");
       }
     } else {
       _showSnackbar(context, "You cannot delete all records. At least one period is required.");

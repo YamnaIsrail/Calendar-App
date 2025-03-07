@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -23,24 +25,54 @@ class _SoundState extends State<Sound> {
     _setupAudio();
   }
 
+  // Future<void> _setupAudio() async {
+  //   await _audioPlayer.setAsset(widget.audioPath);
+  //
+  //   // Update max slider value once the audio duration is loaded
+  //   _audioPlayer.durationStream.listen((duration) {
+  //     if (duration != null) {
+  //       setState(() {
+  //         _maxSliderValue = duration.inSeconds.toDouble();
+  //       });
+  //     }
+  //   });
+  //
+  //   // Listen to position stream to update the slider in real-time
+  //   _audioPlayer.positionStream.listen((position) {
+  //     setState(() {
+  //       _sliderValue = position.inSeconds.toDouble();
+  //     });
+  //   });
+  // }
+  StreamSubscription? _durationSubscription;
+  StreamSubscription? _positionSubscription;
+
   Future<void> _setupAudio() async {
     await _audioPlayer.setAsset(widget.audioPath);
 
-    // Update max slider value once the audio duration is loaded
-    _audioPlayer.durationStream.listen((duration) {
-      if (duration != null) {
+    _durationSubscription = _audioPlayer.durationStream.listen((duration) {
+      if (duration != null && mounted) {
         setState(() {
           _maxSliderValue = duration.inSeconds.toDouble();
         });
       }
     });
 
-    // Listen to position stream to update the slider in real-time
-    _audioPlayer.positionStream.listen((position) {
-      setState(() {
-        _sliderValue = position.inSeconds.toDouble();
-      });
+    _positionSubscription = _audioPlayer.positionStream.listen((position) {
+      if (mounted) {
+        setState(() {
+          _sliderValue = position.inSeconds.toDouble();
+        });
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _durationSubscription?.cancel();
+    _positionSubscription?.cancel();
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   void _togglePlayPause() async {
@@ -109,11 +141,7 @@ class _SoundState extends State<Sound> {
     });
   }
 
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {

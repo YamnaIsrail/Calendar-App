@@ -12,6 +12,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
 import '../../../provider/showhide.dart';
+import '../../../admob/banner_ad.dart';
 
 class CustomCalendar extends StatelessWidget {
   @override
@@ -143,34 +144,43 @@ class CustomCalendar extends StatelessWidget {
                       }
                       // Cycle Mode Logic
                       else {
+                        bool isFertile = cycleProvider.fertileDays.contains(normalizedDate);
+                        bool isPredicted = cycleProvider.predictedDays.contains(normalizedDate);
+                        bool isInPeriod = false;
+
+                        // Check if the date falls within any past period
                         for (var period in cycleProvider.pastPeriods) {
                           final startDate = DateTime.parse(period['startDate']!);
                           final endDate = DateTime.parse(period['endDate']!);
 
-                          // Highlight past period days in red
                           if (normalizedDate.isAfter(startDate.subtract(Duration(days: 1))) &&
                               normalizedDate.isBefore(endDate)) {
                             isInPeriod = true;
-                            calendarCell = _buildCalendarCell(date: date, color: Colors.red);
+                            break;
                           }
                         }
 
-                        // Highlight predicted days
-                        if (cycleProvider.predictedDays.contains(normalizedDate)) {
+                        // Assign colors based on priority
+                        if (isInPeriod) {
+                          calendarCell = _buildCalendarCell(date: date, color: Colors.red);
+                        } else if (isPredicted && isFertile) {
+                          calendarCell = _buildCalendarCell(
+                            date: date,
+                            border: Border.all(color: Colors.blue, width: 2),
+                            color: Colors.purple[100], // Combined effect
+                          );
+                        } else if (isPredicted) {
                           calendarCell = _buildCalendarCell(
                             date: date,
                             border: Border.all(color: Colors.blue, width: 2),
                           );
-                        }
-                        // Highlight fertile days
-                        else if (cycleProvider.fertileDays.contains(normalizedDate)) {
+                        } else if (isFertile) {
                           calendarCell = _buildCalendarCell(
                             date: date,
                             color: Colors.purple[100],
                           );
                         }
                       }
-
                       // Overlay the heart icon if there are timeline entries
                       if (hasTimelineEntries) {
                         return Stack(
@@ -230,12 +240,12 @@ class CustomCalendar extends StatelessWidget {
                   ),
 
                   onDaySelected: (selectedDay, focusedDay) {
+
                     _showEntriesForSelectedDate(context, selectedDay);
                   },
                 )
 
                 ),
-
 
               // Legend
               Padding(
@@ -267,28 +277,18 @@ class CustomCalendar extends StatelessWidget {
                       title: 'Gestation Started ${formatDate(pregnancyProvider.gestationStart!)}',
                       subtitle: '${pregnancyProvider.daysSinceGestation} days ago',
                       icon: Icons.child_care,
-                      progressValue: pregnancyProvider.daysSinceGestation / 280,
-                      progressLabelStart: 'Gestation Period',
-                      progressLabelEnd: 'Today',
                     ),
                     SizedBox(height: 16),
                     buildPregnancyInfoCard(
-                      progressLabelStart: 'Gestation',
-                      progressLabelEnd: 'Week',
                       title: 'Weeks of Gestation: ${pregnancyProvider.gestationWeeks} weeks',
                       subtitle: 'Pregnancy progression',
                       icon: Icons.replay_5,
-                      progressValue: (pregnancyProvider.gestationWeeks! / 40),
-                    ),
+                 ),
                   ]
                       : [
                     buildCycleInfoCard(
                       title: 'Started: ${formatDate(cycleProvider.lastPeriodStart)}',
                       subtitle: '${cycleProvider.daysElapsed} days ago',
-                      progressLabelStart: 'Last Period',
-                      progressLabelEnd: 'Today',
-                      progressValue:  cycleProvider.cycleDay / cycleProvider.periodLength,
-
                       icon: Icons.timer_outlined,
                     ),
                     SizedBox(height: 16),
@@ -296,14 +296,7 @@ class CustomCalendar extends StatelessWidget {
                       icon: Icons.water_drop,
                       title: 'Period Length: ${cycleProvider.periodLength} days',
                       subtitle: 'Normal',
-                      progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
-                      progressLabelEnd: formatDate(
-                        cycleProvider.lastPeriodStart.add(
-                          Duration(days: cycleProvider.periodLength-1),
-                        ),
-                      ),
-                      progressValue: cycleProvider.cycleDay / cycleProvider.periodLength,
-                    ),
+                       ),
                     SizedBox(height: 16),
                     buildCycleInfoCard(
                       icon: Icons.replay_5,
@@ -317,17 +310,13 @@ class CustomCalendar extends StatelessWidget {
                           cycleProvider.cycleLength,
                           intercourseProvider)
                           : "Feature is disabled"),
-                      progressLabelStart: formatDate(cycleProvider.lastPeriodStart),
-                      progressLabelEnd: formatDate(
-                        cycleProvider.lastPeriodStart.add(
-                          Duration(days: cycleProvider.cycleLength),
-                        ),
-                      ),
-                      progressValue: cycleProvider.daysElapsed / cycleProvider.cycleLength,
-                    ),
+                     ),
                   ],
                 ),
               ),
+              BannerAdWidget(),
+              SizedBox(height: 12),
+
             ],
           ),
         ),

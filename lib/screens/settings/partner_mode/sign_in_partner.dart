@@ -5,6 +5,7 @@ import 'package:calender_app/widgets/backgroundcontainer.dart';
 import 'package:calender_app/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../settings_page.dart';
 import 'partner_link_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -39,7 +40,7 @@ class _PartnerModeSignInScreenState extends State<PartnerModeSignInScreen> {
         );
          }
     } catch (error) {
-      print('Error checking user session: $error');
+      //print('Error checking user session: $error');
     } finally {
       setState(() {
         _isLoading = false;
@@ -67,7 +68,11 @@ class _PartnerModeSignInScreenState extends State<PartnerModeSignInScreen> {
         final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
         // Store user session
-        await SessionManager.storeUserSession(userCredential.user?.uid ?? '');
+        await SessionManager.storeUserSession(userCredential.user?.uid ?? '',
+          userCredential.user!.displayName ?? 'Unknown User',
+          userCredential.user!.photoURL ?? '',
+
+        );
 
         // Navigate to PartnerLinkScreen after successful sign-in
         Navigator.pushReplacement(
@@ -82,7 +87,7 @@ class _PartnerModeSignInScreenState extends State<PartnerModeSignInScreen> {
       }
     } catch (error) {
       // Handle any errors
-      print('Google Sign-In Error: $error');
+      //print('Google Sign-In Error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Google Sign-In failed. Please try again.')),
       );
@@ -96,47 +101,70 @@ class _PartnerModeSignInScreenState extends State<PartnerModeSignInScreen> {
   @override
   Widget build(BuildContext context) {
     return bgContainer(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: Text(
-            "Partner Mode",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 27),
-          ),
-          centerTitle: true,
+      child:  WillPopScope(
+        onWillPop: () async {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => SettingsPage()),
+          );
+          return false; // Prevent default back navigation
+        },
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(35),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SvgPicture.asset("assets/partner_mode/Isolation_Mode.svg"),
-              SizedBox(height: 30),
-              Text(
-                'A tap to cloud sync,\n'
-                    'a step closer to partner',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+          appBar: AppBar(
+            title: Text(
+              "Partner Mode",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 27),
+            ),
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            leading: IconButton(
+              icon: Container(
+                padding: EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                    color: Color(0xFFFFC4E8),
+                    borderRadius: BorderRadius.circular(50)),
+                child: Icon(Icons.arrow_back),
               ),
-              SizedBox(height: 10),
-              Text(
-                'Real-time cloud sync ensures a more '
-                    'private and convenient experience for both of you. '
-                    'To access it, please sign in first.',
-                style: TextStyle(fontSize: 14),
-                textAlign: TextAlign.center,
+              onPressed: () =>   Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage()),
               ),
-              SizedBox(height: 30),
-              _isLoading
-                  ? CircularProgressIndicator() // Show loading indicator when processing
-                  : CustomButton(
-                onPressed: () => _handleGoogleSignIn(context),
-                text: "Sign in with Google",
-                backgroundColor: Colors.blueAccent,
-              ),
-            ],
+            ),
+
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(35),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SvgPicture.asset("assets/partner_mode/Isolation_Mode.svg"),
+                SizedBox(height: 30),
+                Text(
+                  'A tap to cloud sync,\n'
+                      'a step closer to partner',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Real-time cloud sync ensures a more '
+                      'private and convenient experience for both of you. '
+                      'To access it, please sign in first.',
+                  style: TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 30),
+                _isLoading
+                    ? CircularProgressIndicator() // Show loading indicator when processing
+                    : CustomButton(
+                  onPressed: () => _handleGoogleSignIn(context),
+                  text: "Sign in with Google",
+                  backgroundColor: Colors.blueAccent,
+                ),
+              ],
+            ),
           ),
         ),
       ),
