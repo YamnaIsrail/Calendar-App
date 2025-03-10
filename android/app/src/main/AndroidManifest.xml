@@ -18,7 +18,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:label="My Period Calendar"
+        android:label="Period &amp; Ovulation Tracker"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

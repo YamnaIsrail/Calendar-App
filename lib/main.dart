@@ -1,7 +1,10 @@
 import 'package:calender_app/provider/date_day_format.dart';
 import 'package:calender_app/provider/preg_provider.dart';
 import 'package:calender_app/provider/showhide.dart';
+import 'package:calender_app/screens/flow2/detail%20page/self_care/left_foot.dart';
+import 'package:calender_app/screens/flow2/home_flow2.dart';
 import 'package:calender_app/screens/settings/auth/password/enter_password.dart';
+import 'package:calender_app/screens/settings/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:calender_app/notifications/notification_service.dart';
 import 'package:calender_app/provider/analysis/temperature_provider.dart';
@@ -13,11 +16,10 @@ import 'package:calender_app/provider/partner_mode_provider.dart';
 import 'package:calender_app/screens/flow2/detail%20page/analysis/timeline/time_line_providers.dart';
 import 'package:calender_app/screens/globals.dart';
 import 'package:calender_app/screens/homeScreen.dart';
-import 'package:calender_app/screens/splash.dart';
+import 'package:periodtracker/screens/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:translator/translator.dart';
 import 'auth/auth_model.dart';
 import 'auth/auth_provider.dart';
 import 'firebase_option.dart';
@@ -25,79 +27,98 @@ import 'hive/cycle_model.dart';
 import 'hive/notes_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'hive/partner_model.dart';
+import 'hive/pets_services.dart';
 import 'hive/timeline_entry.dart';
+import 'kegel_excercise/kegel_excercises_pro/kegelDaysUnlocked_hive.dart';
 import 'notifications/notification_model.dart';
 import 'notifications/notification_storage.dart';
 import 'provider/analysis/weight_provider.dart';
 
+import 'package:calender_app/provider/partner_provider.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await NotificationService.init();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await Hive.initFlutter();
-  Hive.registerAdapter(AuthDataAdapter());
+  MobileAds.instance.initialize();
+  MobileAds.instance.updateRequestConfiguration(
+    RequestConfiguration(
+      testDeviceIds: [
+        "e6a9c878-a931-409d-ac41-51276adfe273",
+        "70c5122e-5518-4010-a78a-4f778409eba6",
+        ],
+    ),
+  );
+  await NotificationService.init();
 
-  // Open the authBox
+  await Hive.initFlutter();
+
+  // Register Hive Adapters
+  Hive.registerAdapter(AuthDataAdapter());
+  Hive.registerAdapter(TimelineEntryAdapter());
+  Hive.registerAdapter(PartnerDataAdapter());
+  Hive.registerAdapter(CycleDataAdapter());
+  Hive.registerAdapter(NotificationModelAdapter());
+  Hive.registerAdapter(NoteAdapter());
+
+  // Open necessary boxes
   final authBox = await Hive.openBox<AuthData>('authBox');
   final authData = authBox.get('authData', defaultValue: AuthData())!;
-  await Hive.openBox('partner_codes');
-  await Hive.openBox('timeBox');
-  tz.initializeTimeZones();
+  final ratingBox = await Hive.openBox('ratingBox');
 
-  Hive.registerAdapter(NoteAdapter());
-  await Hive.openBox<Note>('notesBox');
-  await Hive.openBox('temperatureBox'); // Open Hive box to store temperatures
+  // Get the current app open count
+  int openCount = ratingBox.get('appOpenCount', defaultValue: 0);
 
-  // await NotificationStorage.init();
-  var box = await Hive.openBox('myBox');
-  Hive.registerAdapter(NotificationModelAdapter());
+  // Increment the count
+  openCount += 1;
+  ratingBox.put('appOpenCount', openCount);
 
-  await Hive.openBox<NotificationModel>('notifications');
+  await Future.wait([
 
-  Hive.registerAdapter(CycleDataAdapter());
-  await Hive.openBox<CycleData>('cycleData');
+    Hive.openBox('kegel_storage'),
 
-  Hive.registerAdapter(PartnerDataAdapter());
-  await Hive.openBox('partnerCycleData');
-  await Hive.openBox('luteal_data');
+    Hive.openBox('partner_codes'),
+    Hive.openBox('timeBox'),
+    Hive.openBox<Note>('notesBox'),
+    Hive.openBox('temperatureBox'),
+    Hive.openBox('backupSettings'),
+    Hive.openBox<NotificationModel>('notifications'),
+    Hive.openBox<CycleData>('cycleData'),
+    Hive.openBox('partnerCycleData'),
+    Hive.openBox('luteal_data'),
+    Hive.openBox<TimelineEntry>('timelineBox'),
+    Hive.openBox<Map>('medicineReminders'),
+    Hive.openBox('formatsettingsBox'),
+    Hive.openBox('settingsBox'),
+    Hive.openBox('reminderBox'),
+    HiveService.init(),// Ensures default pet is set
+    Hive.openBox('visibleMoods'),
+    Hive.openBox('visibleSymptoms'),
+    Hive.openBox('weightBox'),
+   KegelStorage.init(),
+
+  ]);
 
   await CycleProvider().loadCycleDataFromHive();
-  Hive.registerAdapter(TimelineEntryAdapter()); // Register Hive Adapter
-  await Hive.openBox<TimelineEntry>('timelineBox');
-  await Hive.openBox<Map>('medicineReminders'); // Box to store reminders
 
-  await Hive.openBox('formatsettingsBox');
-  await Hive.openBox('settingsBox');
+  tz.initializeTimeZones();
 
-  await Hive.openBox<AuthData>('authBox');
+  // Initialize providers
   final showHideProvider = ShowHideProvider();
   await showHideProvider.initialize();
 
-  await Hive.openBox('visibleMoods');
-  // await Hive.openBox('recentMoods');
-  await Hive.openBox('visibleSymptoms');
-  // await Hive.openBox('recentSymptoms');
-
-
   final pregnancyModeProvider = PregnancyModeProvider();
-  await pregnancyModeProvider.initHive(); // Await initialization before running the app
-
+  await pregnancyModeProvider.initHive();
 
   runApp(
     MultiProvider(
       providers: [
-
         ChangeNotifierProvider(create: (_) => CycleProvider()),
         ChangeNotifierProvider.value(value: showHideProvider),
         ChangeNotifierProvider(create: (_) => PartnerProvider()),
-
-        ChangeNotifierProvider.value(value: pregnancyModeProvider), // Provide the initialized PregnancyModeProvider
-        // ChangeNotifierProvider(create: (_) => PregnancyModeProvider()..initHive()),
-
+        ChangeNotifierProvider.value(value: pregnancyModeProvider),
         ChangeNotifierProvider(create: (_) => IntercourseProvider()),
         ChangeNotifierProvider(create: (_) => NoteProvider()),
         ChangeNotifierProvider(create: (_) => WeightProvider()),
@@ -108,14 +129,13 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TimelineProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => SettingsModel()),
-        // Add the AuthProvider here
       ],
       child: CalenderApp(),
     ),
   );
 }
-
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+// final GlobalKey<_Flow2PageState> flow2PageKey = GlobalKey<_Flow2PageState>();
 
 class CalenderApp extends StatefulWidget {
   @override
@@ -123,7 +143,6 @@ class CalenderApp extends StatefulWidget {
 }
 
 class _CalenderAppState extends State<CalenderApp> {
-
   @override
   void initState() {
     super.initState();
@@ -156,8 +175,11 @@ class _CalenderAppState extends State<CalenderApp> {
       routes: {
     '/login': (context) => EnterPasswordScreen(),
     '/home': (context) => HomeScreen(),
+    '/flow2Home': (context) => Flow2Page(),
+    '/foot': (context) => LeftFoot(),
+        '/settings': (context) => SettingsPage(),
 
-    },
+      },
     );
   }
 }

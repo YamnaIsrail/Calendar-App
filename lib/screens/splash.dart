@@ -165,12 +165,16 @@ class _SplashScreenState extends State<SplashScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        "My Calendar",
+                        "Period & Ovulation Tracker",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.pink,
                         ),
+                        softWrap: true,
+                        overflow: TextOverflow.visible, // Ensures text wraps instead of being cut off
+                        textAlign: TextAlign.center, // Optional: Centers text
+
                       ),
                       if (showCircularIndicator) // Show circular indicator if needed
                         CircularProgressIndicator(),

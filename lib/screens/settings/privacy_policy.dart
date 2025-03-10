@@ -25,7 +25,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             ),
             SizedBox(height: 16),
            Text(
-              '''Thank you for choosing My Period Calendar. We value your privacy and are committed to protecting the personal information you share with us. This Privacy Policy explains how we collect, use, and share your information when you use our app, which tracks menstrual and pregnancy data and provides related health information.
+              '''Thank you for choosing Period & Ovulation Tracker. We value your privacy and are committed to protecting the personal information you share with us. This Privacy Policy explains how we collect, use, and share your information when you use our app, which tracks menstrual and pregnancy data and provides related health information.
 
 By using our app, you consent to the collection and use of your personal information in accordance with this policy. Please read this policy carefully.
 

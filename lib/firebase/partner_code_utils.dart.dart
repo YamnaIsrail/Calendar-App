@@ -1,4 +1,5 @@
 
+import 'package:calender_app/provider/partner_provider.dart';
 import 'package:calender_app/provider/cycle_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,12 +24,8 @@ Future<void> generatePartnerCode() async {
         'partnerCode': partnerCode,
         'expiresAt': expiresAt, // Store as Timestamp
       });
-      print("Partner code generated: $partnerCode");
-    } catch (e) {
-      print("Error generating partner code: $e");
-    }
-  } else {
-    print("User not signed in");
+        } catch (e) {
+     }
   }
 }
 
@@ -53,7 +50,6 @@ Future<bool> validatePartnerCode(BuildContext context, String enteredCode) async
         expirationTime = DateTime.parse(expirationField);
       } else {
         // Handle the case where expirationField is neither Timestamp nor String
-        print("Unexpected type for expiresAt field");
         return false;
       }
 
@@ -73,7 +69,7 @@ Future<bool> validatePartnerCode(BuildContext context, String enteredCode) async
       return false; // Invalid code
     }
   } catch (e) {
-    print("Error validating partner code: $e");
+    // print("Error validating partner code: $e");
     return false;
   }
 }
@@ -100,17 +96,16 @@ Future<void> validateAndGetCycleData(String enteredCode) async {
       if (cycleSnapshot.exists) {
         final cycleData = cycleSnapshot.data();
         if (cycleData != null) {
-          print("Cycle data: $cycleData");
-        } else {
-          print("Cycle data is null.");
+         } else {
+          // print("Cycle data is null.");
         }
       } else {
-        print("No cycle data found for this partner.");
+        // print("No cycle data found for this partner.");
       }
     } else {
-      print("Invalid partner code or expired.");
+      // print("Invalid partner code or expired.");
     }
   } catch (e) {
-    print("Error retrieving partner data: $e");
+    // print("Error retrieving partner data: $e");
   }
 }
